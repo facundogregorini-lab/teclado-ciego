@@ -9,6 +9,13 @@ async function typeLesson(page) {
   const text = await page.evaluate(() => [...document.querySelectorAll('#inner .c')].map(s => s.textContent).join(''));
   for (const ch of text) await page.keyboard.press(ch === ' ' ? 'Space' : ch);
 }
+// Long texts with accents and capitals: send the key events straight to the page.
+function typeText(page) {
+  return page.evaluate(() => {
+    const text = [...document.querySelectorAll('#inner .c')].map(s => s.textContent).join('');
+    for (const key of text) document.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
+  });
+}
 
 (async () => {
   const server = createServer(); await new Promise(r => server.listen(4191, '127.0.0.1', r));
@@ -29,9 +36,21 @@ async function typeLesson(page) {
     await a.click('#continue'); await typeLesson(a);
     await a.waitForSelector('#result:not([hidden])');
     await a.waitForTimeout(300);
-    await a.click('#rHome'); await a.click('#acctBtn');
-    await a.waitForFunction(() => document.querySelectorAll('#hist tbody tr').length === 1);
-    check('The finished lesson appears in the history', (await a.textContent('#hist tbody tr')).includes('Lección 1'));
+    await a.click('#rHome');
+
+    // Speed measurements by typing method
+    await a.click('.mc:nth-child(3) .btn');
+    check('Measurements hide the on-screen keyboard', await a.isHidden('#guide') && (await a.textContent('#lName')) === 'A ciegas');
+    await typeText(a); await a.waitForSelector('#result:not([hidden])');
+    check('The result names the method', (await a.textContent('#result h3')).includes('a ciegas'));
+    await a.waitForTimeout(300); await a.click('#rHome');
+    await a.click('.mc:nth-child(1) .btn'); await typeText(a); await a.waitForSelector('#result:not([hidden])');
+    await a.waitForTimeout(300); await a.click('#rHome');
+    check('The chart plots each measurement', (await a.locator('#chartSvg circle.dot').count()) === 2);
+    check('Blind and looking speeds are compared', (await a.textContent('#insight')).includes('mirando el teclado'));
+    await a.click('#acctBtn');
+    await a.waitForFunction(() => document.querySelectorAll('#hist tbody tr').length === 3);
+    check('Lessons and measurements appear in the history', (await a.textContent('#hist tbody')).includes('Lección 1') && (await a.textContent('#hist tbody')).includes('Medición a ciegas'));
     await a.click('#acctClose');
 
     // Second computer: log in and find the progress
@@ -43,6 +62,8 @@ async function typeLesson(page) {
     await b.fill('#pass', 'secreto1'); await b.click('#authSubmit');
     await b.waitForFunction(() => document.querySelector('#hStars').textContent !== '0/78');
     check('Progress follows the account to another browser', (await b.textContent('.lc')).includes('Mejor:'));
+    await b.click('#evoView [data-v="table"]');
+    check('Measurements follow the account too', (await b.locator('#evoTable tbody tr').count()) === 2);
     await b.reload(); await b.waitForSelector('#acctBtn .nm');
     check('The session survives a reload', (await b.textContent('#acctBtn .nm')) === 'ana');
     await b.click('#acctBtn'); await b.click('#logout');

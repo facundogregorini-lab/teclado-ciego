@@ -16,6 +16,7 @@
   --accent:#0B6E69; --accent-ink:#FFFFFF; --accent-soft:#D3EBE8;
   --bad:#C2303B; --bad-soft:#F8DADD; --warn:#B26B12; --gold:#D08A10;
   --f-p:#C64E6A; --f-r:#D5801F; --f-m:#3A9654; --f-i:#3B6BCB; --f-t:#8A70C4; --on-f:#FFFFFF;
+  --s-1:#2A78D6; --s-2:#EB6834; --s-3:#1BAF7A;
   --display:"Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
   --body:"Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
   --mono:"JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
@@ -25,12 +26,14 @@
   --accent:#3CC4B7; --accent-ink:#0B1614; --accent-soft:#173B39;
   --bad:#FF6B76; --bad-soft:#3B1D22; --warn:#E6A650; --gold:#F0B340;
   --f-p:#E97F97; --f-r:#EEA652; --f-m:#63C27D; --f-i:#739AEC; --f-t:#B19BEA; --on-f:#0E1116;
+  --s-1:#3987E5; --s-2:#D95926; --s-3:#199E70;
   color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#11151A; --panel:#171C22; --card:#1D232A; --ink:#E7EBF0; --muted:#98A3B0; --line:#2B333C;
   --accent:#3CC4B7; --accent-ink:#0B1614; --accent-soft:#173B39;
   --bad:#FF6B76; --bad-soft:#3B1D22; --warn:#E6A650; --gold:#F0B340;
   --f-p:#E97F97; --f-r:#EEA652; --f-m:#63C27D; --f-i:#739AEC; --f-t:#B19BEA; --on-f:#0E1116;
+  --s-1:#3987E5; --s-2:#D95926; --s-3:#199E70;
   color-scheme:dark}
 
 *{box-sizing:border-box}
@@ -73,6 +76,35 @@ select{background:var(--card);border:1px solid var(--line);border-radius:8px;pad
 .legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.8rem;color:var(--muted)}
 .legend span{display:inline-flex;align-items:center;gap:6px}
 .legend i{width:12px;height:12px;border-radius:3px;background:var(--c)}
+/* Speed by method */
+.evo{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:clamp(18px,3.5vw,28px);display:grid;gap:18px;min-width:0}
+.evo-head h2{font-family:var(--display);font-weight:800;font-size:1.5rem;margin:0 0 4px;letter-spacing:-.01em}
+.evo-head p{margin:0;color:var(--muted);font-size:.92rem;max-width:70ch}
+.methods{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.mc{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:grid;gap:10px;align-content:start;min-width:0}
+.mc h3{margin:0;font-size:1rem;display:flex;align-items:center;gap:8px}
+.mc h3 i{width:18px;height:3px;border-radius:2px;background:var(--sc)}
+.mc p{margin:0;color:var(--muted);font-size:.85rem}
+.mc dl{display:grid;grid-template-columns:repeat(3,auto);justify-content:start;gap:2px 18px;margin:0}
+.mc dt{font-size:.72rem;color:var(--muted);grid-row:2}
+.mc dd{margin:0;font-family:var(--display);font-weight:800;font-size:1.25rem;grid-row:1;font-variant-numeric:tabular-nums}
+.mc .btn{justify-self:start;padding:8px 14px;font-size:.9rem}
+.insight{margin:0;font-weight:700}
+.chart-top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px 16px}
+.legend2{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.82rem;color:var(--muted)}
+.legend2 span{display:inline-flex;align-items:center;gap:6px}
+.legend2 i{width:16px;height:2px;border-radius:2px;background:var(--sc)}
+.chart{position:relative;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 8px 4px;min-width:0}
+.chart svg{display:block;width:100%;height:260px;overflow:visible}
+.chart .ax{fill:var(--muted);font-size:11px;font-family:var(--body);font-variant-numeric:tabular-nums}
+.chart .lbl{fill:var(--ink);font-size:12px;font-weight:700;font-family:var(--body)}
+.chart .grid{stroke:var(--line);stroke-width:1}
+.chart .ln{fill:none;stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.chart .dot{stroke:var(--card);stroke-width:2}
+.chart .emptytxt{fill:var(--muted);font-size:14px;font-family:var(--body)}
+.tt{position:absolute;pointer-events:none;background:var(--ink);color:var(--bg);border-radius:8px;padding:8px 10px;font-size:.8rem;line-height:1.35;white-space:nowrap;z-index:2}
+.tt b{font-size:1rem}
+.tt i{display:inline-block;width:12px;height:2px;border-radius:2px;background:var(--sc);vertical-align:middle;margin-right:5px}
 .notice{background:var(--bad-soft);color:var(--ink);border-radius:10px;padding:10px 14px;font-size:.9rem}
 
 .path{display:grid;gap:26px}
@@ -211,7 +243,7 @@ dialog::backdrop{background:rgba(10,14,18,.45)}
         <p>Lecciones cortas, fila por fila, con el dedo correcto para cada tecla. Apoyá los índices en la F y la J: tienen un relieve para encontrarlas a ciegas.</p>
         <div class="actions">
           <button class="btn primary" id="continue"></button>
-          <button class="btn" id="testBtn">Prueba de 1 minuto</button>
+          <button class="btn" id="testBtn">Medir mi velocidad</button>
         </div>
         <div class="stats">
           <div class="stat"><b id="hStars">0</b><span>estrellas</span></div>
@@ -232,6 +264,23 @@ dialog::backdrop{background:rgba(10,14,18,.45)}
       </div>
     </section>
     <p class="notice" id="touchNote" hidden>Para practicar necesitás un teclado físico: usá una computadora o conectá un teclado a la tablet.</p>
+    <section class="evo" id="evo" aria-labelledby="evoTitle">
+      <div class="evo-head">
+        <h2 id="evoTitle">Tu velocidad según cómo escribís</h2>
+        <p>Medí un minuto de texto real eligiendo cómo vas a escribir. Repetilo cada tanto: al principio vas a ir más rápido mirando el teclado, y con el entrenamiento la línea "A ciegas" la alcanza y la supera. Durante la medición no hay ayuda en pantalla.</p>
+      </div>
+      <div class="methods" id="methods"></div>
+      <p class="insight" id="insight" hidden></p>
+      <div class="chart-top">
+        <div class="legend2" id="legend2"></div>
+        <div class="seg" role="group" aria-label="Ver como" id="evoView">
+          <button data-v="chart" aria-pressed="true">Gráfico</button>
+          <button data-v="table" aria-pressed="false">Tabla</button>
+        </div>
+      </div>
+      <div class="chart" id="chart"><svg id="chartSvg" role="img" aria-label="Palabras por minuto en cada medición, por método"></svg><div class="tt" id="tt" hidden></div></div>
+      <div class="hist" id="evoTable" hidden></div>
+    </section>
     <div class="path" id="path"></div>
   </main>
 
@@ -375,6 +424,11 @@ const TEXTS = [
   'Para la salsa, picá una cebolla, un diente de ajo y medio morrón. Cociná todo a fuego bajo con un chorrito de aceite y sumá los tomates cuando la cebolla esté transparente.',
   'El tren sale temprano de la estación. Llevamos mate, un libro y una campera por si refresca a la noche. En el camino se ven campos verdes, vacas y molinos que giran despacio.',
 ];
+const METHODS = [
+  { id: 'mirando', name: 'Mirando el teclado', short: 'Mirando', as: 'mirando el teclado', desc: 'Como escribías antes: buscás cada letra con la vista.', c: 'var(--s-1)' },
+  { id: 'hibrido', name: 'Híbrido', short: 'Híbrido', as: 'en modo híbrido', desc: 'Algunos dedos en su lugar y a veces mirás.', c: 'var(--s-2)' },
+  { id: 'ciegas', name: 'A ciegas', short: 'A ciegas', as: 'a ciegas', desc: 'Dedos en la fila guía y la vista en la pantalla.', c: 'var(--s-3)' },
+];
 const GROUPS = [
   { name: 'Fila guía', desc: 'La base de todo: cada dedo descansa sobre su tecla.', goal: 12, tip: 'Los índices descansan en F y J: tienen un relieve para encontrarlas sin mirar.' },
   { name: 'Fila superior', desc: 'Estirá el dedo hacia arriba y volvé a la fila guía.', goal: 15, tip: 'Después de cada tecla de arriba, el dedo vuelve a su lugar en la fila guía.' },
@@ -392,8 +446,9 @@ const LESSONS = [
 
 /* ---------- Storage ---------- */
 const STORE = 'teclado-ciego-v1';
-const S = { lessons: {}, test: null, layout: 'la', kb: 'always' };
+const S = { lessons: {}, test: null, tests: [], layout: 'la', kb: 'always' };
 try { Object.assign(S, JSON.parse(localStorage.getItem(STORE)) || {}); } catch {}
+if (!Array.isArray(S.tests)) S.tests = [];
 const save = () => { try { localStorage.setItem(STORE, JSON.stringify(S)); } catch {} };
 
 /* ---------- Helpers ---------- */
@@ -486,7 +541,9 @@ function renderHome() {
   const total = LESSONS.reduce((s, l) => s + (S.lessons[l.id]?.stars || 0), 0);
   $('hStars').textContent = `${total}/${LESSONS.length * 3}`;
   $('hDone').textContent = `${LESSONS.filter(l => S.lessons[l.id]?.stars >= 1).length}/${LESSONS.length}`;
-  $('hBest').textContent = S.test ? S.test.ppm : '—';
+  const bestTest = Math.max(0, S.test?.ppm || 0, ...S.tests.map(t => t.ppm));
+  $('hBest').textContent = bestTest || '—';
+  renderEvo();
   $('path').replaceChildren(...GROUPS.map((g, gi) => {
     const sec = document.createElement('section'); sec.className = 'group';
     sec.innerHTML = `<h2>${g.name}</h2><p>${g.desc} Meta para 3 estrellas: ${g.goal} palabras por minuto con 95% de precisión.</p>`;
@@ -506,6 +563,105 @@ function renderHome() {
   }));
 }
 
+/* ---------- Speed by method: cards, chart and table ---------- */
+let evoView = 'chart';
+function renderEvo() {
+  $('methods').replaceChildren(...METHODS.map(m => {
+    const ts = S.tests.filter(t => t.method === m.id), last = ts[ts.length - 1];
+    const best = ts.length ? Math.max(...ts.map(t => t.ppm)) : null;
+    const delta = ts.length > 1 ? last.ppm - ts[0].ppm : null;
+    const card = document.createElement('div'); card.className = 'mc'; card.style.setProperty('--sc', m.c);
+    card.innerHTML = `<h3><i></i><span></span></h3><p></p><dl><dt>última</dt><dd>${last ? last.ppm : '—'}</dd><dt>mejor</dt><dd>${best ?? '—'}</dd><dt>desde la primera</dt><dd>${delta == null ? '—' : (delta > 0 ? '+' : delta < 0 ? '−' : '±') + Math.abs(delta)}</dd></dl><button class="btn">Medir ${m.as}</button>`;
+    card.querySelector('span').textContent = m.name;
+    card.querySelector('p').textContent = ts.length ? `${ts.length} ${ts.length === 1 ? 'medición' : 'mediciones'} · palabras por minuto` : m.desc;
+    card.querySelector('.btn').onclick = () => start('test', m.id);
+    return card;
+  }));
+  const avg = id => { const ts = S.tests.filter(t => t.method === id).slice(-3); return ts.length ? ts.reduce((s, t) => s + t.ppm, 0) / ts.length : null; };
+  const look = avg('mirando'), blind = avg('ciegas'), ins = $('insight');
+  ins.hidden = !(look && blind);
+  if (look && blind) ins.textContent = blind >= look
+    ? `A ciegas ya escribís más rápido que mirando el teclado: ${Math.round(blind)} contra ${Math.round(look)} palabras por minuto (promedio de las últimas 3).`
+    : `A ciegas ya llegás al ${Math.round(100 * blind / look)}% de tu velocidad mirando el teclado: ${Math.round(blind)} de ${Math.round(look)} palabras por minuto (promedio de las últimas 3).`;
+  $('legend2').replaceChildren(...METHODS.map(m => { const s = document.createElement('span'); s.style.setProperty('--sc', m.c); s.append(document.createElement('i'), m.name); return s; }));
+  document.querySelectorAll('#evoView button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === evoView)));
+  $('chart').hidden = evoView !== 'chart'; $('evoTable').hidden = evoView !== 'table';
+  if (evoView === 'chart') drawChart(); else renderEvoTable();
+}
+const dayFmt = (t, withTime) => new Date(t).toLocaleString('es-AR', withTime ? { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' } : { day: 'numeric', month: 'short' });
+function drawChart() {
+  const svg = $('chartSvg'), NS = 'http://www.w3.org/2000/svg';
+  const W = Math.round(svg.clientWidth) || 600, H = 260, narrow = W < 520;
+  const el = (tag, attrs) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); svg.append(e); return e; };
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`); svg.replaceChildren(); $('tt').hidden = true;
+  const data = S.tests, M = { l: 34, r: narrow ? 12 : 92, t: 14, b: 26 };
+  const niceStep = v => { const raw = Math.max(v, 10) / 4, pow = 10 ** Math.floor(Math.log10(raw)), n = raw / pow; return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10) * pow; };
+  const maxY = data.length ? Math.max(...data.map(d => d.ppm)) : 40, step = niceStep(maxY), yMax = Math.max(step, Math.ceil(maxY * 1.1 / step) * step);
+  const Y = v => H - M.b - (v / yMax) * (H - M.t - M.b);
+  for (let v = 0; v <= yMax; v += step) {
+    el('line', { x1: M.l, x2: W - M.r, y1: Y(v), y2: Y(v), class: 'grid' });
+    el('text', { x: M.l - 6, y: Y(v) + 4, 'text-anchor': 'end', class: 'ax' }).textContent = v;
+  }
+  if (!data.length) {
+    el('text', { x: (M.l + W - M.r) / 2, y: H / 2, 'text-anchor': 'middle', class: 'emptytxt' }).textContent = 'Tus mediciones van a aparecer acá.';
+    svg.onpointermove = null; return;
+  }
+  let x0 = Math.min(...data.map(d => d.date)), x1 = Math.max(...data.map(d => d.date));
+  if (x1 - x0 < 864e5) { const mid = (x0 + x1) / 2; x0 = mid - 432e5; x1 = mid + 432e5; }
+  const X = t => M.l + 6 + (t - x0) / (x1 - x0) * (W - M.l - M.r - 12);
+  const short = x1 - x0 < 3 * 864e5, nt = short || narrow ? 2 : 4;
+  for (let i = 0; i < nt; i++) {
+    const t = x0 + (x1 - x0) * i / (nt - 1);
+    el('text', { x: X(t), y: H - 6, 'text-anchor': i === 0 ? 'start' : i === nt - 1 ? 'end' : 'middle', class: 'ax' }).textContent = dayFmt(t, short);
+  }
+  const pts = [], labels = [];
+  for (const m of METHODS) {
+    const ts = data.filter(d => d.method === m.id);
+    if (!ts.length) continue;
+    if (ts.length > 1) el('path', { d: ts.map((d, i) => (i ? 'L' : 'M') + X(d.date).toFixed(1) + ' ' + Y(d.ppm).toFixed(1)).join(' '), class: 'ln', style: `stroke:${m.c}` });
+    for (const d of ts) { el('circle', { cx: X(d.date), cy: Y(d.ppm), r: 4, class: 'dot', style: `fill:${m.c}` }); pts.push({ d, m, x: X(d.date), y: Y(d.ppm) }); }
+    const last = ts[ts.length - 1];
+    labels.push({ y: Y(last.ppm), text: `${m.short} ${last.ppm}` });
+  }
+  labels.sort((a, b) => a.y - b.y);
+  if (!narrow && labels.every((l, i) => !i || l.y - labels[i - 1].y >= 15))
+    for (const l of labels) el('text', { x: W - M.r + 10, y: l.y + 4, class: 'lbl' }).textContent = l.text;
+  const ring = el('circle', { r: 7, fill: 'none', 'stroke-width': 2, style: 'stroke:var(--ink)', visibility: 'hidden' });
+  const tt = $('tt');
+  svg.onpointermove = e => {
+    const r = svg.getBoundingClientRect(), px = (e.clientX - r.left) * W / r.width, py = (e.clientY - r.top) * H / r.height;
+    let best = null, bd = Infinity;
+    for (const p of pts) { const dd = (p.x - px) ** 2 + ((p.y - py) / 2) ** 2; if (dd < bd) { bd = dd; best = p; } }
+    if (!best || bd > 50 * 50) { tt.hidden = true; ring.setAttribute('visibility', 'hidden'); return; }
+    ring.setAttribute('cx', best.x); ring.setAttribute('cy', best.y); ring.setAttribute('visibility', 'visible');
+    tt.replaceChildren();
+    const b = document.createElement('b'); b.textContent = best.d.ppm + ' palabras/min';
+    const key = document.createElement('i'); key.style.setProperty('--sc', best.m.c);
+    tt.append(b, document.createElement('br'), key, best.m.name, document.createElement('br'), `${best.d.acc}% de precisión · ${dayFmt(best.d.date, true)}`);
+    tt.hidden = false;
+    const c = $('chart').getBoundingClientRect(), sx = r.left - c.left + best.x * r.width / W, sy = r.top - c.top + best.y * r.height / H;
+    const w = tt.offsetWidth, left = sx + 14 + w > c.width ? sx - 14 - w : sx + 14;
+    tt.style.left = Math.max(4, left) + 'px'; tt.style.top = Math.max(4, sy - tt.offsetHeight - 8) + 'px';
+  };
+  svg.onpointerleave = () => { tt.hidden = true; ring.setAttribute('visibility', 'hidden'); };
+}
+function renderEvoTable() {
+  const box = $('evoTable');
+  if (!S.tests.length) { box.innerHTML = '<p class="empty">Todavía no hay mediciones. Elegí un método y medí tu velocidad.</p>'; return; }
+  const table = document.createElement('table');
+  table.innerHTML = '<thead><tr><th>Fecha</th><th>Método</th><th class="n">Palabras/min</th><th class="n">Precisión</th></tr></thead>';
+  const tb = document.createElement('tbody');
+  for (const t of [...S.tests].reverse()) {
+    const tr = document.createElement('tr');
+    [dayFmt(t.date, true), METHODS.find(m => m.id === t.method)?.name || t.method, t.ppm, t.acc + '%'].forEach((v, i) => { const td = document.createElement('td'); td.textContent = v; if (i > 1) td.className = 'n'; tr.append(td); });
+    tb.append(tr);
+  }
+  table.append(tb); box.replaceChildren(table);
+}
+document.querySelectorAll('#evoView button').forEach(b => b.onclick = () => { evoView = b.dataset.v; renderEvo(); });
+let resizeRaf = 0;
+addEventListener('resize', () => { cancelAnimationFrame(resizeRaf); resizeRaf = requestAnimationFrame(() => { if (!$('home').hidden && evoView === 'chart') drawChart(); }); });
+
 /* ---------- Lesson engine ---------- */
 let mode = 'home', cur = null, text = '', spans = [], idx = 0, errors = 0, errBy = {}, missed = new Set();
 let deadPending = false, hintOn = false, running = false, accMs = 0, t0 = 0, timer = null, doneAt = 0;
@@ -517,15 +673,18 @@ function show(view) {
   $('home').hidden = view !== 'home'; $('lesson').hidden = view !== 'lesson';
   scrollTo({ top: 0 });
 }
-function start(l) {
+let testMethod = 'ciegas';
+function start(l, method) {
   cur = l; mode = 'typing';
+  if (l === 'test' && method) testMethod = method;
+  const tm = METHODS.find(m => m.id === testMethod);
   text = l === 'test' ? shuffle([...TEXTS, ...REFRANES]).join(' ') : genLesson(l);
   idx = 0; errors = 0; errBy = {}; missed = new Set(); deadPending = false; hintOn = false;
   running = false; accMs = 0; clearInterval(timer); timer = setInterval(tick, 200);
   const g = l === 'test' ? null : GROUPS[l.g];
-  $('lGroup').textContent = l === 'test' ? 'Prueba de velocidad' : `Lección ${l.n} · ${g.name}`;
-  $('lName').textContent = l === 'test' ? '1 minuto con textos variados' : l.name;
-  $('tip').textContent = l === 'test' ? 'Escribí todo lo que puedas en 60 segundos.' : g.tip;
+  $('lGroup').textContent = l === 'test' ? 'Medición de velocidad · 1 minuto' : `Lección ${l.n} · ${g.name}`;
+  $('lName').textContent = l === 'test' ? tm.name : l.name;
+  $('tip').textContent = l === 'test' ? `${tm.desc} Escribí todo lo que puedas en 60 segundos.` : g.tip;
   $('sTimeLbl').textContent = l === 'test' ? 'restante' : 'tiempo';
   const inner = $('inner'); inner.replaceChildren(); spans = [];
   let word = null;
@@ -565,8 +724,8 @@ function highlight() {
   kb.querySelectorAll('.next').forEach(k => k.classList.remove('next'));
   document.querySelectorAll('.fg.on').forEach(f => f.classList.remove('on'));
   const ch = text[idx], steps = stepsFor(ch);
-  const visible = S.kb === 'always' || (S.kb === 'error' && hintOn);
-  if (!visible || mode !== 'typing') { $('flabel').textContent = mode === 'typing' && S.kb === 'error' ? 'Mirá la pantalla, no el teclado.' : ''; return; }
+  const visible = cur !== 'test' && (S.kb === 'always' || (S.kb === 'error' && hintOn));
+  if (!visible || mode !== 'typing') { $('flabel').textContent = mode === 'typing' && cur !== 'test' && S.kb === 'error' ? 'Mirá la pantalla, no el teclado.' : ''; return; }
   for (const st of steps) {
     kb.querySelector(`[data-code="${st.code}"]`)?.classList.add('next');
     document.querySelectorAll(`.fg[data-f="${st.f}"]`).forEach(f => f.classList.add('on'));
@@ -627,18 +786,31 @@ function finish() {
   const acc = idx + errors ? Math.round(100 * idx / (idx + errors)) : 100;
   const isTest = cur === 'test', goal = isTest ? 0 : GROUPS[cur.g].goal;
   let st = 0, better = false;
-  if (isTest) { if (!S.test || ppm > S.test.ppm) { S.test = { ppm, acc }; better = true; } }
+  const tm = METHODS.find(m => m.id === testMethod);
+  let prevSame = null;
+  if (isTest) {
+    prevSame = [...S.tests].reverse().find(t => t.method === testMethod) || null;
+    S.tests.push({ method: testMethod, ppm, acc, date: Date.now() });
+    if (S.tests.length > 300) S.tests.splice(0, S.tests.length - 300);
+    if (!S.test || ppm > S.test.ppm) { S.test = { ppm, acc }; better = true; }
+  }
   else {
     st = acc < 90 ? 0 : acc < 95 ? 1 : ppm >= goal ? 3 : 2;
     const prev = S.lessons[cur.id];
     if (!prev || st > prev.stars || (st === prev.stars && ppm > prev.ppm)) { S.lessons[cur.id] = { stars: st, ppm, acc }; better = !!prev; }
   }
   save();
-  recordSession({ lesson: isTest ? 'test' : cur.id, name: isTest ? 'Prueba de 1 minuto' : `Lección ${cur.n} · ${cur.name}`, stars: st, ppm, acc, ms });
+  recordSession({ lesson: isTest ? 'test' : cur.id, name: isTest ? `Medición ${tm.as}` : `Lección ${cur.n} · ${cur.name}`, method: isTest ? testMethod : undefined, stars: st, ppm, acc, ms });
   const weak = Object.entries(errBy).sort((a, b) => b[1] - a[1]).slice(0, 4);
   const keyTxt = c => c === ' ' ? 'espacio' : c;
   let msg;
-  if (isTest) msg = acc < 90 ? 'Buena velocidad, pero con muchos errores. Bajá un cambio: la precisión viene primero.' : better ? '¡Nuevo récord personal!' : `Tu récord es de ${S.test.ppm} palabras por minuto.`;
+  if (isTest) {
+    const d = prevSame ? ppm - prevSame.ppm : 0;
+    msg = (prevSame
+      ? (d > 0 ? `${d} palabras por minuto más que tu medición anterior ${tm.as}.` : d < 0 ? `${-d} palabras por minuto menos que tu medición anterior ${tm.as}.` : `Igual que tu medición anterior ${tm.as}.`)
+      : `Primera medición ${tm.as}. Repetila en unos días para ver cómo evoluciona.`)
+      + (acc < 90 ? ' Hubo muchos errores: la precisión viene primero.' : '');
+  }
   else if (st === 0) msg = 'La precisión quedó debajo del 90%. Repetila más despacio, sin mirar el teclado: la velocidad llega sola.';
   else if (st < 3 && acc < 95) msg = 'Aprobada. Con 95% de precisión o más ganás la segunda estrella.';
   else if (st < 3) msg = `Muy preciso. Llegá a ${goal} palabras por minuto para la tercera estrella.`;
@@ -646,7 +818,7 @@ function finish() {
   const idxL = isTest ? -1 : LESSONS.indexOf(cur), next = LESSONS[idxL + 1];
   const r = $('result');
   r.innerHTML = `
-    <h3>${isTest ? 'Tiempo cumplido' : st ? 'Lección completa' : 'Casi: repetila'}</h3>
+    <h3>${isTest ? 'Medición ' + tm.as : st ? 'Lección completa' : 'Casi: repetila'}</h3>
     ${isTest ? '' : stars(st, 'bigstars')}
     <div class="nums">
       <div><b>${ppm}</b><span>palabras por minuto</span></div>
@@ -657,17 +829,17 @@ function finish() {
     <div class="weak">${weak.length ? 'Teclas para practicar: ' + weak.map(([c, n]) => `<kbd title="${n} errores">${keyTxt(c)}</kbd>`).join('') : 'Sin errores.'}</div>
     <div class="actions">
       ${!isTest && next ? `<button class="btn primary" id="rNext">Siguiente: ${next.name} <small>Enter</small></button>` : ''}
-      <button class="btn${isTest || !next ? ' primary' : ''}" id="rAgain">${isTest ? 'Otra prueba' : 'Repetir'}${isTest || !next ? ' <small>Enter</small>' : ''}</button>
-      <button class="btn" id="rHome">Lecciones</button>
+      <button class="btn${isTest || !next ? ' primary' : ''}" id="rAgain">${isTest ? 'Medir de nuevo' : 'Repetir'}${isTest || !next ? ' <small>Enter</small>' : ''}</button>
+      <button class="btn" id="rHome">${isTest ? 'Ver mi evolución' : 'Lecciones'}</button>
     </div>`;
   $('typing').hidden = true; r.hidden = false;
   $('rNext') && ($('rNext').onclick = () => start(next));
-  $('rAgain').onclick = () => start(cur);
-  $('rHome').onclick = goHome;
+  $('rAgain').onclick = () => start(cur, testMethod);
+  $('rHome').onclick = isTest ? () => { goHome(); $('evo').scrollIntoView(); } : goHome;
   highlight(); $('bar').style.width = '100%';
   (($('rNext') || $('rAgain'))).focus({ preventScroll: true });
 }
-function goHome() { mode = 'home'; running = false; clearInterval(timer); renderHome(); show('home'); }
+function goHome() { mode = 'home'; running = false; clearInterval(timer); show('home'); renderHome(); }
 
 /* ---------- Input ---------- */
 document.addEventListener('keydown', e => {
@@ -716,12 +888,18 @@ async function api(path, payload) {
   }
   return data;
 }
-const progress = () => ({ lessons: S.lessons, test: S.test, layout: S.layout, kb: S.kb });
+const progress = () => ({ lessons: S.lessons, test: S.test, tests: S.tests, layout: S.layout, kb: S.kb });
 function better(a, b) { if (!a) return b; if (!b) return a; return b.stars > a.stars || (b.stars === a.stars && b.ppm > a.ppm) ? b : a; }
 function merge(remote) {
   if (!remote) return;
   for (const [id, r] of Object.entries(remote.lessons || {})) S.lessons[id] = better(S.lessons[id], r);
   if (remote.test && (!S.test || remote.test.ppm > S.test.ppm)) S.test = remote.test;
+  if (Array.isArray(remote.tests)) {
+    const key = t => t.date + '|' + t.method, seen = new Set(S.tests.map(key));
+    for (const t of remote.tests) if (!seen.has(key(t))) S.tests.push(t);
+    S.tests.sort((a, b) => a.date - b.date);
+    S.tests = S.tests.slice(-300);
+  }
   if (remote.layout) S.layout = remote.layout;
   if (remote.kb) S.kb = remote.kb;
 }
@@ -762,7 +940,7 @@ async function signedIn(token, name) {
 function signedOut(msg) {
   auth = { token: null, name: null }; history = [];
   try { localStorage.removeItem(TOKEN); } catch {}
-  S.lessons = {}; S.test = null; save();
+  S.lessons = {}; S.test = null; S.tests = []; save();
   renderAccountBtn(); renderHome();
   if (msg) toast(msg);
 }
@@ -830,14 +1008,16 @@ $('logout').onclick = async () => {
 /* ---------- Settings ---------- */
 function applyKbMode() {
   document.querySelectorAll('#kbMode button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === S.kb)));
-  $('guide').hidden = S.kb === 'hidden'; $('hiddenKb').hidden = S.kb !== 'hidden';
+  const noGuide = S.kb === 'hidden' || cur === 'test';
+  $('guide').hidden = noGuide; $('hiddenKb').hidden = !noGuide;
+  $('hiddenKb').textContent = cur === 'test' ? 'Medición sin ayuda en pantalla: escribí como lo harías con este método.' : 'Teclado oculto. Mirá la pantalla y confiá en tus dedos.';
   hintOn = false; highlight();
 }
 document.querySelectorAll('#kbMode button').forEach(b => b.onclick = () => { S.kb = b.dataset.v; save(); pushProgress(); applyKbMode(); if (mode === 'typing') $('text').focus({ preventScroll: true }); });
 $('layout').value = S.layout in LAYOUTS ? S.layout : 'la';
 $('layout').onchange = () => { S.layout = $('layout').value; save(); pushProgress(); applyLayout(); renderHome(); };
 $('continue').onclick = () => start(nextLesson());
-$('testBtn').onclick = () => start('test');
+$('testBtn').onclick = () => $('evo').scrollIntoView();
 $('back').onclick = goHome;
 $('homeBtn').onclick = goHome;
 if (matchMedia('(hover: none) and (pointer: coarse)').matches) $('touchNote').hidden = false;

@@ -9,14 +9,14 @@ Aplicación para aprender a escribir sin mirar el teclado, en español. Es un so
 - **Guía de dedos:** teclado en pantalla con un color por dedo, la próxima tecla iluminada y el dedo que corresponde. Shift con la mano contraria y la tilde antes de la vocal.
 - **Tres niveles de ayuda:** teclado visible, solo si me equivoco u oculto.
 - **Medición:** palabras por minuto, precisión, tiempo y las teclas con más errores. Una estrella con 90% de precisión, dos con 95% y tres si además se llega a la velocidad meta del grupo.
-- **Prueba de 1 minuto** con refranes y textos variados.
+- **Velocidad según cómo escribís:** mediciones de 1 minuto con textos reales eligiendo el método (*mirando el teclado*, *híbrido* o *a ciegas*), sin ayuda en pantalla. Cada método muestra su última medición, su mejor marca y cuánto cambió desde la primera. Un gráfico (o tabla) muestra la evolución en el tiempo y compara a ciegas con mirando: "A ciegas ya llegás al 77% de tu velocidad mirando el teclado".
 - **Distribución** latinoamericana o de España. La computadora tiene que tener el teclado configurado en español.
 
 Sin cuenta, el progreso se guarda en el navegador (`localStorage`).
 
 ## Cuentas
 
-Con **Entrar** cada persona crea un usuario y contraseña. Desde ahí se guardan en el servidor las lecciones, las estrellas, la mejor prueba, las preferencias (distribución y ayuda del teclado) y cada sesión de práctica (fecha, lección, palabras por minuto, precisión y tiempo; las últimas 100). En **tu cuenta** se ven las estadísticas y las últimas sesiones.
+Con **Entrar** cada persona crea un usuario y contraseña. Desde ahí se guardan en el servidor las lecciones, las estrellas, las mediciones de velocidad por método, las preferencias (distribución y ayuda del teclado) y cada sesión de práctica (fecha, lección, palabras por minuto, precisión y tiempo; las últimas 100). En **tu cuenta** se ven las estadísticas y las últimas sesiones.
 
 - Al crear la cuenta o entrar, lo practicado en ese navegador se suma a la cuenta (se queda el mejor resultado de cada lección).
 - Al cerrar sesión, el navegador vuelve a empezar de cero; el progreso queda en la cuenta.
@@ -35,7 +35,7 @@ Si falta la base, la práctica funciona igual sin cuenta y el formulario avisa q
 ## Desarrollo
 
 - `npm run dev` levanta el sitio y la API en http://127.0.0.1:3000 con una base en memoria.
-- `npm test` prueba en Chromium: crear cuenta, practicar, entrar desde otro navegador, contraseña incorrecta y cerrar sesión.
+- `npm test` prueba en Chromium: crear cuenta, practicar, medir la velocidad por método, entrar desde otro navegador, contraseña incorrecta y cerrar sesión.
 
 ## Publicar en Vercel
 
