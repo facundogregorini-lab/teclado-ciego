@@ -779,19 +779,28 @@ function typeChar(ch) {
   tick();
 }
 // The hidden field receives what the person types. Accents typed with a dead key (´ then a)
-// arrive as a composition, so standalone accent marks are ignored while it is in progress.
-const DEAD_MARKS = '´`¨^~';
-let captured = 0;
-function takeInput(composing) {
-  const cap = $('cap'), v = cap.value;
+// usually arrive as a composition, but browsers differ (Safari may not flag it, some send
+// "´" and "a" apart, a few send "a" + combining mark), so a trailing accent mark is kept in
+// the field until the next key, and mark + vowel is joined into one character.
+const DEAD_MARKS = '´`¨^~ˆ˜', COMBINING = { '´': '\u0301', '`': '\u0300', '¨': '\u0308', '^': '\u0302', 'ˆ': '\u0302', '~': '\u0303', '˜': '\u0303' };
+const joinMarks = v => v.normalize('NFC').replace(/([´`¨^~ˆ˜])(\p{L})/gu, (m, d, l) => { const c = (l + COMBINING[d]).normalize('NFC'); return c.length === 1 ? c : m; });
+let captured = 0, composing = false;
+function takeInput(isComposing) {
+  const cap = $('cap'), v = joinMarks(cap.value), busy = isComposing || composing;
   if (v.length < captured) captured = v.length;
+  let held = false;
   for (const ch of v.slice(captured)) {
-    if (composing && DEAD_MARKS.includes(ch)) break;
+    if (mode !== 'typing') break;
+    if (DEAD_MARKS.includes(ch) && ch !== text[idx] && captured + ch.length === v.length) {
+      held = true;
+      if ('áéíóú'.includes(text[idx]) && !deadPending) { deadPending = true; highlight(); }
+      break;
+    }
     captured += ch.length;
     if (ch === '\n' || ch === '\r') continue;
     typeChar(ch);
   }
-  if (!composing) { cap.value = ''; captured = 0; }
+  if (!busy && !held) { cap.value = ''; captured = 0; }
 }
 function focusCap() { if (mode === 'typing') { $('cap').focus({ preventScroll: true }); checkFocus(); } }
 function finish() {
@@ -878,7 +887,8 @@ document.addEventListener('visibilitychange', () => { if (document.hidden && run
 $('veil').onclick = focusCap;
 $('stage').addEventListener('click', focusCap);
 $('cap').addEventListener('input', e => takeInput(e.isComposing));
-$('cap').addEventListener('compositionend', () => takeInput(false));
+$('cap').addEventListener('compositionstart', () => { composing = true; });
+$('cap').addEventListener('compositionend', () => { composing = false; takeInput(false); });
 $('cap').addEventListener('blur', () => setTimeout(checkFocus, 0));
 $('cap').addEventListener('focus', checkFocus);
 

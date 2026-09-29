@@ -53,6 +53,23 @@ function typeText(page) {
     await input('é', true);
     await a.evaluate(() => document.getElementById('cap').dispatchEvent(new CompositionEvent('compositionend', { data: 'é' })));
     check('The composed accent is accepted once', (await a.locator('#inner .c.ok').count()) === 3 && (await a.inputValue('#cap')) === '');
+    // Safari may not flag the dead key as a composition, or send "´" and the vowel apart
+    const lessonText = () => a.evaluate(() => [...document.querySelectorAll('#inner .c')].map(s => s.textContent).join(''));
+    const done = () => a.locator('#inner .c.ok, #inner .c.fix').count();
+    const bad = () => a.locator('#inner .c.bad').count();
+    const typeUpToAccent = async () => {
+      const t = await lessonText(); let at = await done();
+      while (!'áéíóú'.includes(t[at])) await input(t[at++], false);
+      return t[at];
+    };
+    let want = await typeUpToAccent(), n = await done(), errs = await bad();
+    await input('´', false);
+    check('An accent mark without the composition flag waits for the vowel', (await bad()) === errs && (await a.inputValue('#cap')) === '´');
+    await input('´' + want.normalize('NFD')[0], false);
+    check('Accent mark and vowel sent apart become one letter', (await done()) === n + 1 && (await bad()) === errs && (await a.inputValue('#cap')) === '');
+    want = await typeUpToAccent(); n = await done();
+    await input(want.normalize('NFD'), false);
+    check('Decomposed accents (vowel + combining mark) are accepted', (await done()) === n + 1 && (await bad()) === errs);
     await a.evaluate(() => document.getElementById('cap').blur());
     check('Losing focus shows how to continue', await a.isVisible('#veil'));
     await a.click('#veil');
