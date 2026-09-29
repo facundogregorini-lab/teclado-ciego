@@ -38,6 +38,27 @@ function typeText(page) {
     await a.waitForTimeout(300);
     await a.click('#rHome');
 
+    // On-screen keyboards (Android reports keys as "Unidentified"): text arrives only as input
+    await a.click('.lc >> nth=19');
+    const input = async (value, composing) => a.evaluate(([v, c]) => {
+      const cap = document.getElementById('cap'); cap.value = v;
+      cap.dispatchEvent(new InputEvent('input', { data: v, isComposing: c, bubbles: true }));
+    }, [value, composing]);
+    await input('á', false);
+    check('Typing into the field without key events works', (await a.locator('#inner .c.ok').count()) === 1);
+    // Dead key on a Mac: "´" then "é" as one composition
+    await input(' ', false);
+    await input('´', true);
+    check('A pending accent mark is not counted as an error', (await a.locator('#inner .c.bad').count()) === 0);
+    await input('é', true);
+    await a.evaluate(() => document.getElementById('cap').dispatchEvent(new CompositionEvent('compositionend', { data: 'é' })));
+    check('The composed accent is accepted once', (await a.locator('#inner .c.ok').count()) === 3 && (await a.inputValue('#cap')) === '');
+    await a.evaluate(() => document.getElementById('cap').blur());
+    check('Losing focus shows how to continue', await a.isVisible('#veil'));
+    await a.click('#veil');
+    check('Tapping the text takes the keyboard back', await a.evaluate(() => document.activeElement.id === 'cap'));
+    await a.keyboard.press('Escape');
+
     // Speed measurements by typing method
     await a.click('.mc:nth-child(3) .btn');
     check('Measurements hide the on-screen keyboard', await a.isHidden('#guide') && (await a.textContent('#lName')) === 'A ciegas');

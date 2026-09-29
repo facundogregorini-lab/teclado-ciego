@@ -162,6 +162,7 @@ select{background:var(--card);border:1px solid var(--line);border-radius:8px;pad
 @keyframes caret{50%{box-shadow:inset 0 -3px 0 transparent}}
 .hint{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px 16px;margin-top:14px;font-size:.88rem;color:var(--muted)}
 .caps-warn{color:var(--bad);font-weight:700}
+.cap{position:absolute;top:0;left:0;width:1px;height:1px;opacity:0;border:0;padding:0;font-size:16px;pointer-events:none}
 .veil{position:absolute;inset:0;border-radius:18px;background:color-mix(in srgb,var(--card) 82%,transparent);display:grid;place-items:center;text-align:center;padding:20px;border:0;width:100%;font-weight:700;backdrop-filter:blur(2px)}
 .guide{display:grid;gap:12px;justify-items:center;min-width:0}
 .hands{display:flex;gap:clamp(24px,6vw,70px);align-items:flex-end;height:64px}
@@ -263,7 +264,7 @@ dialog::backdrop{background:rgba(10,14,18,.45)}
         </div>
       </div>
     </section>
-    <p class="notice" id="touchNote" hidden>Para practicar necesitás un teclado físico: usá una computadora o conectá un teclado a la tablet.</p>
+    <p class="notice" id="touchNote" hidden>En el celular podés practicar con el teclado de la pantalla, pero el método de los dedos se aprende con un teclado físico: usá una computadora o conectá un teclado a la tablet.</p>
     <section class="evo" id="evo" aria-labelledby="evoTitle">
       <div class="evo-head">
         <h2 id="evoTitle">Tu velocidad según cómo escribís</h2>
@@ -299,11 +300,12 @@ dialog::backdrop{background:rgba(10,14,18,.45)}
     <div class="progress"><i id="bar"></i></div>
     <div class="stage" id="stage">
       <div id="typing">
-        <div class="text" id="text" tabindex="0" aria-label="Texto para escribir"><div class="inner" id="inner"></div></div>
+        <div class="text" id="text"><div class="inner" id="inner"></div></div>
+        <input id="cap" class="cap" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="next" aria-label="Escribí el texto acá">
         <div class="hint"><span id="tip"></span><span id="capsWarn" class="caps-warn" hidden>Bloq Mayús está activado</span><span id="startHint">El reloj arranca con la primera tecla · Esc para salir</span></div>
       </div>
       <div class="result" id="result" hidden aria-live="polite"></div>
-      <button class="veil" id="veil" hidden>Hacé clic acá para seguir escribiendo</button>
+      <button class="veil" id="veil" hidden>Tocá acá para seguir escribiendo</button>
     </div>
     <div class="guide" id="guide">
       <div class="hands" aria-hidden="true">
@@ -696,8 +698,8 @@ function start(l, method) {
   inner.style.transform = '';
   $('typing').hidden = false; $('result').hidden = true; $('startHint').hidden = false;
   show('lesson'); applyKbMode(); markCurrent(); tick();
-  $('text').focus({ preventScroll: true });
-  checkFocus();
+  $('cap').value = ''; captured = 0;
+  focusCap();
 }
 function markCurrent() {
   spans.forEach(s => s.classList.remove('cur'));
@@ -738,6 +740,7 @@ function highlight() {
   $('flabel').textContent = label;
 }
 function flash(code, wrong) {
+  if (!code) return;
   const k = $('kb').querySelector(`[data-code="${code}"]`);
   if (!k) return;
   k.classList.add('press'); if (wrong) k.classList.add('wrong');
@@ -757,26 +760,40 @@ function miss(target) {
   spans[idx].classList.add('bad');
   if (S.kb === 'error') { hintOn = true; highlight(); }
 }
-function type(e) {
+// One typed character, from any keyboard (physical or on screen).
+function typeChar(ch) {
+  if (mode !== 'typing') return;
   if (!running) { running = true; t0 = performance.now(); $('startHint').hidden = true; }
   const target = text[idx];
-  if (e.key === 'Dead') {
-    if ('áéíóú'.includes(target) && !deadPending) { deadPending = true; flash(e.code); highlight(); }
-    else { miss(target); flash(e.code, true); }
-    return;
-  }
   deadPending = false;
-  if (e.key === target) {
+  const code = MAP[ch.normalize('NFD')[0]]?.code;
+  if (ch === target) {
     const s = spans[idx];
     s.classList.remove('bad');
     s.classList.add(missed.has(idx) ? 'fix' : 'ok');
-    flash(e.code);
+    flash(code);
     idx++; hintOn = false;
     if (idx >= text.length) { finish(); return; }
     markCurrent();
-  } else { miss(target); flash(e.code, true); highlight(); }
+  } else { miss(target); flash(code, true); highlight(); }
   tick();
 }
+// The hidden field receives what the person types. Accents typed with a dead key (´ then a)
+// arrive as a composition, so standalone accent marks are ignored while it is in progress.
+const DEAD_MARKS = '´`¨^~';
+let captured = 0;
+function takeInput(composing) {
+  const cap = $('cap'), v = cap.value;
+  if (v.length < captured) captured = v.length;
+  for (const ch of v.slice(captured)) {
+    if (composing && DEAD_MARKS.includes(ch)) break;
+    captured += ch.length;
+    if (ch === '\n' || ch === '\r') continue;
+    typeChar(ch);
+  }
+  if (!composing) { cap.value = ''; captured = 0; }
+}
+function focusCap() { if (mode === 'typing') { $('cap').focus({ preventScroll: true }); checkFocus(); } }
 function finish() {
   if (mode !== 'typing') return;
   const ms = Math.min(elapsed(), cur === 'test' ? TEST_MS : Infinity);
@@ -848,20 +865,22 @@ document.addEventListener('keydown', e => {
     $('capsWarn').hidden = !e.getModifierState?.('CapsLock');
     if (e.metaKey || (e.ctrlKey && !e.altKey)) return;
     if (e.key === 'Escape') { e.preventDefault(); goHome(); return; }
-    if (e.key === 'Dead') { e.preventDefault(); type(e); return; }
-    if (e.key.length !== 1) return;
-    e.preventDefault();
-    type(e);
+    if (e.key === 'Dead' && 'áéíóú'.includes(text[idx]) && !deadPending) { deadPending = true; highlight(); }
+    if (e.target !== $('cap') && e.key.length === 1) { e.preventDefault(); focusCap(); typeChar(e.key); }
   } else if (mode === 'done' && e.key === 'Enter' && performance.now() - doneAt > 500) {
     e.preventDefault(); (($('rNext') || $('rAgain'))).click();
   } else if (mode === 'done' && e.key === 'Escape') goHome();
 });
-function checkFocus() { $('veil').hidden = mode !== 'typing' || document.hasFocus(); }
+function checkFocus() { $('veil').hidden = mode !== 'typing' || (document.hasFocus() && document.activeElement === $('cap')); }
 addEventListener('blur', () => { if (running) { accMs = elapsed(); running = false; } checkFocus(); });
 addEventListener('focus', checkFocus);
 document.addEventListener('visibilitychange', () => { if (document.hidden && running) { accMs = elapsed(); running = false; } });
-$('veil').onclick = () => { $('veil').hidden = true; $('text').focus(); };
-$('stage').addEventListener('click', () => { if (mode === 'typing') $('text').focus({ preventScroll: true }); });
+$('veil').onclick = focusCap;
+$('stage').addEventListener('click', focusCap);
+$('cap').addEventListener('input', e => takeInput(e.isComposing));
+$('cap').addEventListener('compositionend', () => takeInput(false));
+$('cap').addEventListener('blur', () => setTimeout(checkFocus, 0));
+$('cap').addEventListener('focus', checkFocus);
 
 /* ---------- Account: progress and sessions saved on the server ---------- */
 const TOKEN = 'teclado-ciego-token';
@@ -1013,7 +1032,7 @@ function applyKbMode() {
   $('hiddenKb').textContent = cur === 'test' ? 'Medición sin ayuda en pantalla: escribí como lo harías con este método.' : 'Teclado oculto. Mirá la pantalla y confiá en tus dedos.';
   hintOn = false; highlight();
 }
-document.querySelectorAll('#kbMode button').forEach(b => b.onclick = () => { S.kb = b.dataset.v; save(); pushProgress(); applyKbMode(); if (mode === 'typing') $('text').focus({ preventScroll: true }); });
+document.querySelectorAll('#kbMode button').forEach(b => b.onclick = () => { S.kb = b.dataset.v; save(); pushProgress(); applyKbMode(); focusCap(); });
 $('layout').value = S.layout in LAYOUTS ? S.layout : 'la';
 $('layout').onchange = () => { S.layout = $('layout').value; save(); pushProgress(); applyLayout(); renderHome(); };
 $('continue').onclick = () => start(nextLesson());
@@ -1023,7 +1042,11 @@ $('homeBtn').onclick = goHome;
 if (matchMedia('(hover: none) and (pointer: coarse)').matches) $('touchNote').hidden = false;
 
 applyLayout(); applyKbMode(); renderHome(); renderAccountBtn();
-if (auth.token) api('auth').then(r => signedIn(auth.token, r.user.name)).catch(err => { if (err.status === 401) signedOut(); });
+// Accounts need the server (Vercel functions). Without it (a local file or a static copy), hide the button.
+api('auth').then(r => signedIn(auth.token, r.user.name)).catch(err => {
+  if (err.status === 401) { if (auth.token) signedOut(); return; }
+  if (err.status === 0 || err.status === 404) { $('acctBtn').hidden = true; $('foot').textContent = 'Tu progreso se guarda en este navegador.'; }
+});
 })();
 </script>
 </body>
