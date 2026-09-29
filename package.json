@@ -1,0 +1,16 @@
+{
+  "name": "teclado-ciego",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Práctica para escribir sin mirar el teclado, con cuentas de usuario",
+  "scripts": {
+    "dev": "node tests/server.cjs",
+    "test": "node tests/smoke.cjs"
+  },
+  "dependencies": {
+    "redis": "^4.7.1"
+  },
+  "devDependencies": {
+    "playwright": "1.62.1"
+  }
+}

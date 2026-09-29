@@ -158,6 +158,31 @@ select{background:var(--card);border:1px solid var(--line);border-radius:8px;pad
 .weak kbd{min-width:30px;height:30px;padding:0 7px;display:inline-grid;place-items:center;border-radius:6px;border:1px solid var(--bad);background:var(--bad-soft);color:var(--ink);font-family:var(--mono)}
 .foot{color:var(--muted);font-size:.8rem;text-align:center}
 
+/* Account */
+.acct{display:inline-flex;align-items:center;gap:8px;border-radius:99px;padding:5px 14px 5px 5px;border:1px solid var(--line);background:var(--card);font-weight:700;font-size:.9rem}
+.acct .av{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:var(--accent);color:var(--accent-ink);font-size:.8rem;text-transform:uppercase}
+.acct.out{padding:7px 16px}
+dialog{border:1px solid var(--line);border-radius:18px;background:var(--card);color:var(--ink);padding:0;width:min(440px,calc(100vw - 32px));max-height:calc(100vh - 32px)}
+dialog.wide{width:min(720px,calc(100vw - 32px))}
+dialog::backdrop{background:rgba(10,14,18,.45)}
+.dlg{padding:clamp(20px,4vw,30px);display:grid;gap:16px}
+.dlg h2{margin:0;font-family:var(--display);font-weight:800;font-size:1.5rem;letter-spacing:-.01em}
+.dlg p{margin:0;color:var(--muted);font-size:.92rem}
+.field{display:grid;gap:5px;font-size:.85rem;font-weight:700}
+.field input{font:inherit;font-weight:400;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--ink)}
+.err{color:var(--bad);font-size:.88rem;min-height:1.3em;margin:0}
+.dlg .actions{justify-content:flex-start}
+.linkbtn{border:0;background:none;color:var(--muted);text-decoration:underline;padding:4px 0}
+.hist{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+.hist table{border-collapse:collapse;width:100%;font-size:.88rem;min-width:480px}
+.hist th,.hist td{padding:8px 12px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+.hist th{font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700;background:var(--panel)}
+.hist td.n{font-variant-numeric:tabular-nums;text-align:right}
+.hist th.n{text-align:right}
+.hist tr:last-child td{border-bottom:0}
+.empty{color:var(--muted);padding:14px}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:.9rem;max-width:calc(100vw - 32px);z-index:10}
+
 @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
 </style>
 
@@ -175,6 +200,7 @@ select{background:var(--card);border:1px solid var(--line);border-radius:8px;pad
         <button data-v="error" aria-pressed="false">Solo si me equivoco</button>
         <button data-v="hidden" aria-pressed="false">Oculto</button>
       </div>
+      <button class="acct out" id="acctBtn">Entrar</button>
     </div>
   </header>
 
@@ -253,8 +279,45 @@ select{background:var(--card);border:1px solid var(--line);border-radius:8px;pad
     <div class="hidden-kb" id="hiddenKb" hidden>Teclado oculto. Mirá la pantalla y confiá en tus dedos.</div>
   </main>
 
-  <p class="foot">Tu progreso se guarda en este navegador.</p>
+  <p class="foot" id="foot">Tu progreso se guarda en este navegador. Entrá con tu cuenta para guardarlo en cualquier computadora.</p>
 </div>
+
+<dialog id="authDlg" aria-labelledby="authTitle">
+  <form class="dlg" id="authForm" novalidate>
+    <h2 id="authTitle">Entrá a tu cuenta</h2>
+    <p id="authLead">Tus lecciones, estrellas y sesiones de práctica quedan guardadas para seguir desde cualquier computadora.</p>
+    <div class="seg" role="group" aria-label="Tengo cuenta o soy nuevo" id="authMode">
+      <button type="button" data-v="login" aria-pressed="true">Ya tengo cuenta</button>
+      <button type="button" data-v="register" aria-pressed="false">Crear cuenta</button>
+    </div>
+    <label class="field" for="user">Usuario<input id="user" autocomplete="username" maxlength="20" autocapitalize="none" spellcheck="false"></label>
+    <label class="field" for="pass">Contraseña<input id="pass" type="password" autocomplete="current-password" maxlength="100"></label>
+    <p class="err" id="authErr" role="alert"></p>
+    <div class="actions">
+      <button type="submit" class="btn primary" id="authSubmit">Entrar</button>
+      <button type="button" class="linkbtn" id="authCancel">Ahora no</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="acctDlg" class="wide" aria-labelledby="acctTitle">
+  <div class="dlg">
+    <h2 id="acctTitle">Tu cuenta</h2>
+    <div class="stats" style="margin:0">
+      <div class="stat"><b id="aStars">0</b><span>estrellas</span></div>
+      <div class="stat"><b id="aDone">0</b><span>lecciones aprobadas</span></div>
+      <div class="stat"><b id="aBest">—</b><span>mejor prueba (ppm)</span></div>
+      <div class="stat"><b id="aCount">0</b><span>sesiones guardadas</span></div>
+    </div>
+    <div class="hist" id="hist"></div>
+    <div class="actions">
+      <button class="btn primary" id="acctClose">Seguir practicando</button>
+      <button class="btn" id="logout">Cerrar sesión</button>
+    </div>
+  </div>
+</dialog>
+
+<div class="toast" id="toast" role="status" hidden></div>
 
 <script>
 (() => {
@@ -571,6 +634,7 @@ function finish() {
     if (!prev || st > prev.stars || (st === prev.stars && ppm > prev.ppm)) { S.lessons[cur.id] = { stars: st, ppm, acc }; better = !!prev; }
   }
   save();
+  recordSession({ lesson: isTest ? 'test' : cur.id, name: isTest ? 'Prueba de 1 minuto' : `Lección ${cur.n} · ${cur.name}`, stars: st, ppm, acc, ms });
   const weak = Object.entries(errBy).sort((a, b) => b[1] - a[1]).slice(0, 4);
   const keyTxt = c => c === ' ' ? 'espacio' : c;
   let msg;
@@ -607,6 +671,7 @@ function goHome() { mode = 'home'; running = false; clearInterval(timer); render
 
 /* ---------- Input ---------- */
 document.addEventListener('keydown', e => {
+  if (document.querySelector('dialog[open]')) return;
   if (mode === 'typing') {
     $('capsWarn').hidden = !e.getModifierState?.('CapsLock');
     if (e.metaKey || (e.ctrlKey && !e.altKey)) return;
@@ -626,22 +691,159 @@ document.addEventListener('visibilitychange', () => { if (document.hidden && run
 $('veil').onclick = () => { $('veil').hidden = true; $('text').focus(); };
 $('stage').addEventListener('click', () => { if (mode === 'typing') $('text').focus({ preventScroll: true }); });
 
+/* ---------- Account: progress and sessions saved on the server ---------- */
+const TOKEN = 'teclado-ciego-token';
+let auth = { token: null, name: null }, history = [], toastTimer = 0;
+try { auth.token = localStorage.getItem(TOKEN); } catch {}
+function toast(msg) {
+  const t = $('toast'); t.textContent = msg; t.hidden = false;
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, 3200);
+}
+async function api(path, payload) {
+  let res;
+  try {
+    res = await fetch('/api/' + path, {
+      method: payload ? 'POST' : 'GET',
+      headers: { 'Content-Type': 'application/json', ...(auth.token ? { Authorization: 'Bearer ' + auth.token } : {}) },
+      body: payload ? JSON.stringify(payload) : undefined,
+    });
+  } catch { throw Object.assign(new Error('No se pudo conectar. Revisá tu conexión y probá de nuevo.'), { status: 0 }); }
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const msg = data.error || (res.status === 404 ? 'Las cuentas funcionan en la versión publicada en Vercel.' : 'Algo salió mal. Probá de nuevo.');
+    if (res.status === 401 && auth.token && path !== 'auth') signedOut('Tu sesión expiró. Volvé a entrar para guardar tu progreso.');
+    throw Object.assign(new Error(msg), { status: res.status });
+  }
+  return data;
+}
+const progress = () => ({ lessons: S.lessons, test: S.test, layout: S.layout, kb: S.kb });
+function better(a, b) { if (!a) return b; if (!b) return a; return b.stars > a.stars || (b.stars === a.stars && b.ppm > a.ppm) ? b : a; }
+function merge(remote) {
+  if (!remote) return;
+  for (const [id, r] of Object.entries(remote.lessons || {})) S.lessons[id] = better(S.lessons[id], r);
+  if (remote.test && (!S.test || remote.test.ppm > S.test.ppm)) S.test = remote.test;
+  if (remote.layout) S.layout = remote.layout;
+  if (remote.kb) S.kb = remote.kb;
+}
+async function loadAccount() {
+  const data = await api('data');
+  const before = JSON.stringify(data.progress);
+  merge(data.progress); save();
+  history = data.history;
+  if (JSON.stringify(progress()) !== before) await api('data', { type: 'progress', progress: progress() });
+  $('layout').value = S.layout; applyLayout(); applyKbMode(); renderHome();
+}
+let pushTimer = 0;
+function pushProgress() {
+  if (!auth.name) return;
+  clearTimeout(pushTimer);
+  pushTimer = setTimeout(() => api('data', { type: 'progress', progress: progress() }).catch(() => {}), 800);
+}
+async function recordSession(entry) {
+  if (!auth.name) return;
+  try {
+    const r = await api('data', { type: 'finish', entry, progress: progress() });
+    history.unshift(r.entry); history.length = Math.min(history.length, 100);
+  } catch (err) { toast('No se pudo guardar la sesión en tu cuenta: ' + err.message); }
+}
+function renderAccountBtn() {
+  const b = $('acctBtn');
+  b.classList.toggle('out', !auth.name);
+  if (auth.name) { b.innerHTML = '<span class="av"></span><span class="nm"></span>'; b.querySelector('.av').textContent = auth.name[0]; b.querySelector('.nm').textContent = auth.name; b.setAttribute('aria-label', 'Tu cuenta: ' + auth.name); }
+  else { b.textContent = 'Entrar'; b.removeAttribute('aria-label'); }
+  $('foot').textContent = auth.name ? `Tu progreso se guarda en la cuenta de ${auth.name}.` : 'Tu progreso se guarda en este navegador. Entrá con tu cuenta para guardarlo en cualquier computadora.';
+}
+async function signedIn(token, name) {
+  auth = { token, name };
+  try { localStorage.setItem(TOKEN, token); } catch {}
+  renderAccountBtn();
+  try { await loadAccount(); } catch (err) { toast(err.message); }
+}
+function signedOut(msg) {
+  auth = { token: null, name: null }; history = [];
+  try { localStorage.removeItem(TOKEN); } catch {}
+  S.lessons = {}; S.test = null; save();
+  renderAccountBtn(); renderHome();
+  if (msg) toast(msg);
+}
+let authMode = 'login';
+function setAuthMode(m) {
+  authMode = m;
+  document.querySelectorAll('#authMode button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === m)));
+  $('authTitle').textContent = m === 'login' ? 'Entrá a tu cuenta' : 'Creá tu cuenta';
+  $('authSubmit').textContent = m === 'login' ? 'Entrar' : 'Crear cuenta';
+  $('pass').autocomplete = m === 'login' ? 'current-password' : 'new-password';
+  $('authLead').textContent = m === 'login'
+    ? 'Tus lecciones, estrellas y sesiones de práctica quedan guardadas para seguir desde cualquier computadora.'
+    : 'Elegí un usuario y una contraseña. Lo que ya practicaste en este navegador se suma a tu cuenta.';
+  $('authErr').textContent = '';
+}
+function openAuth() { setAuthMode('login'); $('pass').value = ''; $('authDlg').showModal(); $('user').focus(); }
+function renderHistory() {
+  const total = LESSONS.reduce((s, l) => s + (S.lessons[l.id]?.stars || 0), 0);
+  $('acctTitle').textContent = 'Hola, ' + auth.name;
+  $('aStars').textContent = `${total}/${LESSONS.length * 3}`;
+  $('aDone').textContent = `${LESSONS.filter(l => S.lessons[l.id]?.stars >= 1).length}/${LESSONS.length}`;
+  $('aBest').textContent = S.test ? S.test.ppm : '—';
+  $('aCount').textContent = history.length;
+  const box = $('hist');
+  if (!history.length) { box.innerHTML = '<p class="empty">Todavía no hay sesiones guardadas. Terminá una lección y aparece acá.</p>'; return; }
+  const date = d => new Date(d).toLocaleString('es-AR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+  const table = document.createElement('table');
+  table.innerHTML = '<caption class="sr" style="position:absolute;left:-9999px">Últimas sesiones de práctica</caption><thead><tr><th>Fecha</th><th>Práctica</th><th class="n">ppm</th><th class="n">Precisión</th><th class="n">Tiempo</th><th>Estrellas</th></tr></thead>';
+  const tb = document.createElement('tbody');
+  for (const h of history.slice(0, 30)) {
+    const tr = document.createElement('tr');
+    const cells = [date(h.date), h.name, h.ppm, h.acc + '%', fmt(h.ms)];
+    cells.forEach((v, i) => { const td = document.createElement('td'); td.textContent = v; if (i > 1) td.className = 'n'; tr.append(td); });
+    const td = document.createElement('td'); td.innerHTML = h.lesson === 'test' ? '—' : stars(h.stars); tr.append(td);
+    tb.append(tr);
+  }
+  table.append(tb); box.replaceChildren(table);
+}
+$('acctBtn').onclick = () => {
+  if (mode === 'typing') goHome();
+  if (!auth.name) { openAuth(); return; }
+  renderHistory(); $('acctDlg').showModal();
+  api('data').then(d => { history = d.history; renderHistory(); }).catch(() => {});
+};
+document.querySelectorAll('#authMode button').forEach(b => b.onclick = () => setAuthMode(b.dataset.v));
+$('authCancel').onclick = () => $('authDlg').close();
+$('authForm').onsubmit = async e => {
+  e.preventDefault();
+  $('authErr').textContent = ''; $('authSubmit').disabled = true;
+  try {
+    const r = await api('auth', { action: authMode, username: $('user').value, password: $('pass').value });
+    $('authDlg').close();
+    await signedIn(r.token, r.user.name);
+    toast(authMode === 'register' ? `Cuenta creada. Tu progreso se guarda en ${r.user.name}.` : `Hola, ${r.user.name}. Seguimos donde dejaste.`);
+  } catch (err) { $('authErr').textContent = err.message; }
+  $('authSubmit').disabled = false;
+};
+$('acctClose').onclick = () => $('acctDlg').close();
+$('logout').onclick = async () => {
+  $('acctDlg').close();
+  try { await api('auth', { action: 'logout' }); } catch {}
+  signedOut('Cerraste sesión. Tu progreso quedó guardado en tu cuenta.');
+};
+
 /* ---------- Settings ---------- */
 function applyKbMode() {
   document.querySelectorAll('#kbMode button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === S.kb)));
   $('guide').hidden = S.kb === 'hidden'; $('hiddenKb').hidden = S.kb !== 'hidden';
   hintOn = false; highlight();
 }
-document.querySelectorAll('#kbMode button').forEach(b => b.onclick = () => { S.kb = b.dataset.v; save(); applyKbMode(); if (mode === 'typing') $('text').focus({ preventScroll: true }); });
+document.querySelectorAll('#kbMode button').forEach(b => b.onclick = () => { S.kb = b.dataset.v; save(); pushProgress(); applyKbMode(); if (mode === 'typing') $('text').focus({ preventScroll: true }); });
 $('layout').value = S.layout in LAYOUTS ? S.layout : 'la';
-$('layout').onchange = () => { S.layout = $('layout').value; save(); applyLayout(); renderHome(); };
+$('layout').onchange = () => { S.layout = $('layout').value; save(); pushProgress(); applyLayout(); renderHome(); };
 $('continue').onclick = () => start(nextLesson());
 $('testBtn').onclick = () => start('test');
 $('back').onclick = goHome;
 $('homeBtn').onclick = goHome;
 if (matchMedia('(hover: none) and (pointer: coarse)').matches) $('touchNote').hidden = false;
 
-applyLayout(); applyKbMode(); renderHome();
+applyLayout(); applyKbMode(); renderHome(); renderAccountBtn();
+if (auth.token) api('auth').then(r => signedIn(auth.token, r.user.name)).catch(err => { if (err.status === 401) signedOut(); });
 })();
 </script>
 </body>
