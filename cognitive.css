@@ -46,6 +46,16 @@ body[data-view="quiz"]::before {background:linear-gradient(#f7f8f3b5,#f7f8f3a6),
 .nm-rank .rank-list .bar i {background:#9fe3c9}
 .house-copy h4.iq {font-size:clamp(2.2rem,5vw,3.2rem)}
 
+/* 3-minute run: intro and running feedback */
+.q-intro {display:grid;gap:12px;justify-items:start;max-width:62ch}
+.q-intro h3 {margin:0;font-family:var(--display);font-weight:600;font-size:1.6rem;letter-spacing:-.03em}
+.q-intro ol {margin:0;padding-left:20px;display:grid;gap:6px;line-height:1.55}
+.q-run {display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 16px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:8px 8px 8px 14px;margin-bottom:16px}
+.q-flash {font-weight:700;color:var(--muted)}
+.q-flash.ok {color:#2f9e5b}
+.q-flash.bad {color:var(--bad)}
+.q-run .btn {padding:8px 14px;font-size:.82rem}
+
 /* Question */
 .q-prompt {font-family:var(--display);font-weight:600;font-size:1.3rem;letter-spacing:-.02em;margin:0 0 16px}
 .q-row {display:flex;align-items:center;gap:6px;flex-wrap:wrap}
