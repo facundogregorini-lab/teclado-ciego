@@ -596,26 +596,32 @@ function genLesson(l) {
   return parts.join(' ');
 }
 
-/* ---------- Each group has a typist that evolves with every lesson passed (drawings in typists.js) ---------- */
-// Seven stages, the same as the speed levels: chimpanzee (nothing passed) … alien (the whole group passed).
+/* ---------- Each group is a level with its own typist (drawings in typists.js) ---------- */
+// Fila guía = chimpancé, fila superior = bebé, fila inferior = niño, mayúsculas y tildes = indigente, textos = intelectual.
+// Passing all 26 lessons makes you a premio Nobel; all of them with 3 stars, an alien.
 const cap1 = str => str[0].toUpperCase() + str.slice(1);
-const GROUP_SKY = ['linear-gradient(#fde6c8,#c4e6e7)', 'linear-gradient(#e3efe1,#bcd8c3)', 'linear-gradient(#d5e7f6,#eef4f8)', 'linear-gradient(#f4e6f0,#d3e5f3)', 'linear-gradient(#ffd8a8,#f4b3a8 55%,#c7b6e4)'];
-const stageFor = (done, total) => Math.round(done / total * 6);
+const GROUP_SKY = ['linear-gradient(#fde6c8,#c4e6e7)', 'linear-gradient(#e3efe1,#bcd8c3)', 'linear-gradient(#d5e7f6,#eef4f8)', 'linear-gradient(#f4e6f0,#d3e5f3)', 'linear-gradient(#ffd8a8,#f4b3a8 55%,#c7b6e4)', 'linear-gradient(#1d2140,#4b3f8a 60%,#c7b6e4)'];
+const NOBEL = 5, ALIEN = 6, FINAL = GROUPS.length; // the final level is shown after the last group
 function evoState(gi) {
-  const ls = LESSONS.filter(l => l.g === gi), done = ls.filter(l => S.lessons[l.id]?.stars >= 1).length;
-  return { done, total: ls.length, stage: stageFor(done, ls.length), gold: ls.every(l => S.lessons[l.id]?.stars === 3) };
+  const ls = gi === FINAL ? LESSONS : LESSONS.filter(l => l.g === gi), done = ls.filter(l => S.lessons[l.id]?.stars >= 1).length;
+  const gold = ls.every(l => S.lessons[l.id]?.stars === 3);
+  return { done, total: ls.length, complete: done === ls.length, gold, tier: gi === FINAL ? (gold ? ALIEN : NOBEL) : gi };
 }
-function evoText(st) {
-  if (st.stage >= 6) return st.gold ? '¡Alien con aura dorada! Todas las lecciones con 3 estrellas.' : 'Llegaste a alien. Con 3 estrellas en todas, aura dorada.';
-  const next = tierShort(stageFor(st.done + 1, st.total));
-  return st.done ? `${st.done} de ${st.total} lecciones · Próximo: ${next}.` : `Aprobá una lección para pasar a ${next}.`;
+function evoText(gi, st) {
+  if (gi === FINAL) return st.gold ? '¡Alien! Las 26 lecciones con 3 estrellas.'
+    : st.complete ? '¡Premio Nobel! Aprobaste las 26 lecciones. Con 3 estrellas en todas, alien.'
+    : `Aprobá las 26 lecciones para ser premio Nobel (llevás ${st.done}). Con 3 estrellas en todas, alien.`;
+  if (st.complete) return st.gold ? '¡Nivel superado con 3 estrellas en todas!' : `¡Nivel superado! Sigue: nivel ${tierShort(gi + 1 === FINAL ? NOBEL : gi + 1)}.`;
+  return st.done ? `${st.done} de ${st.total} lecciones para superarlo.` : `Aprobá las ${st.total} lecciones para superarlo.`;
 }
 function evoArt(gi, st, fresh = false) {
-  return `<div class="evo-art${st.gold ? ' gold' : ''}${fresh ? ' fresh' : ''}" style="background:${GROUP_SKY[gi]}">${Typists.typist(st.stage)}</div>`;
+  const cls = ((gi === FINAL ? st.complete : st.done) ? '' : ' locked') + (st.complete ? ' done' : '') + (st.gold ? ' gold' : '') + (fresh ? ' fresh' : '');
+  return `<div class="evo-art${cls}" style="background:${GROUP_SKY[Math.min(gi, GROUP_SKY.length - 1)]}">${Typists.typist(st.tier)}</div>`;
 }
 function evoCard(gi) {
   const st = evoState(gi);
-  return `<figure class="evo-card" data-stage="${st.stage}">${evoArt(gi, st)}<figcaption><b>Nivel ${tierShort(st.stage)}</b><span>${evoText(st)}</span><span class="evo-steps">${TIERS.slice(1).map((_, i) => `<i class="${i < st.stage ? 'on' : ''}"></i>`).join('')}</span></figcaption></figure>`;
+  const steps = gi === FINAL ? '' : `<span class="evo-steps">${Array.from({ length: st.total }, (_, i) => `<i class="${i < st.done ? 'on' : ''}"></i>`).join('')}</span>`;
+  return `<figure class="evo-card" data-tier="${st.tier}" data-done="${st.done}">${evoArt(gi, st)}<figcaption><b>Nivel ${tierShort(st.tier)}</b><span>${evoText(gi, st)}</span>${steps}</figcaption></figure>`;
 }
 
 /* ---------- Speed tiers: who types like you, from a chimpanzee to an alien, compared with the median ---------- */
@@ -736,7 +742,7 @@ function renderHome() {
     }
     sec.append(cards);
     return sec;
-  }));
+  }), Object.assign(document.createElement('section'), { className: 'group final', innerHTML: `<div class="group-head"><div><h2>La cima</h2><p>Después de los textos, el último salto de la evolución.</p></div>${evoCard(FINAL)}</div>` }));
 }
 
 /* ---------- Speed by method: cards, chart and table ---------- */
@@ -1024,7 +1030,7 @@ function finish() {
   let st = 0, better = false;
   const tm = METHODS.find(m => m.id === testMethod);
   let prevSame = null;
-  const evoBefore = isTest ? null : evoState(cur.g), prevStars = isTest ? 0 : S.lessons[cur.id]?.stars || 0;
+  const evoBefore = isTest ? null : evoState(cur.g), finalBefore = isTest ? null : evoState(FINAL), prevStars = isTest ? 0 : S.lessons[cur.id]?.stars || 0;
   if (isTest) {
     prevSame = [...S.tests].reverse().find(t => t.method === testMethod) || null;
     S.tests.push({ method: testMethod, ppm, acc, date: Date.now() });
@@ -1063,12 +1069,19 @@ function finish() {
       <p>${medianText(ppm)}${acc < 90 ? ' Y ojo: con tantos errores, parecés un chimpancé con guantes.' : ''}</p>
       ${speedScale(ppm)}${challengeResult(ppm)}<p id="rankLine">${auth.name ? '' : 'Entrá con tu cuenta para aparecer en el ranking de velocidad.'}</p></div></div>`;
   } else {
-    const after = evoState(cur.g), up = after.stage > evoBefore.stage, gold = after.gold && !evoBefore.gold;
-    const title = up ? `¡Evolucionaste! De ${tierShort(evoBefore.stage)} a ${tierShort(after.stage)}` : gold ? '¡Aura dorada!' : `Nivel ${tierShort(after.stage)}`;
-    const txt = gold ? 'Todas las lecciones de este grupo con 3 estrellas: tu alien brilla.'
-      : up && after.stage >= 6 ? 'Terminaste el grupo: ya escribís como un alien. Con 3 estrellas en todas, aura dorada.'
-      : !st && prevStars < 1 ? `Aprobala con 90% de precisión y evolucionás a ${tierShort(stageFor(after.done + 1, after.total))}.` : evoText(after);
-    extra = `<div class="result-evo">${evoArt(cur.g, after, up || gold)}<div><b>${title}</b><p>${txt}</p></div></div>`;
+    const after = evoState(cur.g), fin = evoState(FINAL), P = tierShort(cur.g);
+    let gi = cur.g, st2 = after, fresh = false, title = `Nivel ${P}`, txt = evoText(cur.g, after);
+    if (fin.tier > finalBefore.tier || (fin.complete && !finalBefore.complete)) {
+      gi = FINAL; st2 = fin; fresh = true;
+      title = fin.gold ? '¡Evolucionaste a alien!' : '¡Evolucionaste a premio Nobel!'; txt = evoText(FINAL, fin);
+    } else if (after.complete && !evoBefore.complete) {
+      const next = cur.g + 1;
+      gi = next; st2 = { ...evoState(next), done: 1 }; fresh = true; // show the next level unlocked
+      title = `¡Nivel ${P} superado!`;
+      txt = next === FINAL ? 'Terminaste los textos. Aprobá todas las lecciones para llegar a premio Nobel.' : `Evolucionaste: ahora vas por el nivel ${tierShort(next)}.`;
+    } else if (after.gold && !evoBefore.gold) { title = `¡Nivel ${P} con 3 estrellas!`; fresh = true; }
+    else if (!st && prevStars < 1) txt = `Aprobala con 90% de precisión para avanzar en el nivel ${P}.`;
+    extra = `<div class="result-evo">${evoArt(gi, st2, fresh)}<div><b>${title}</b><p>${txt}</p></div></div>`;
   }
   const r = $('result');
   r.innerHTML = `

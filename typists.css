@@ -16,7 +16,7 @@
 .hero-dots i {width:6px;height:6px;border-radius:50%;background:#ffffff70;transition:background .3s,width .3s}
 .hero-dots i.on {background:#fff;width:16px;border-radius:4px}
 
-/* Typist of each group: evolves with every lesson passed */
+/* Each group is a level with its own typist: grey until you start it, golden with 3 stars everywhere */
 .group-head {display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:14px 28px;align-items:center;margin-bottom:14px}
 .group-head p {margin-bottom:0}
 .evo-card {margin:0;display:grid;grid-template-columns:190px 1fr;gap:12px;align-items:center;background:#fffefa;border:1px solid var(--line);border-radius:16px;padding:8px 12px 8px 8px}
@@ -29,6 +29,10 @@
 .evo-steps i.on {background:var(--accent)}
 .evo-art {border-radius:10px;overflow:hidden;position:relative}
 .evo-art .typist-art {display:block;width:100%}
+.evo-art.locked .typist-art {filter:grayscale(1);opacity:.55}
+.evo-art.locked .typist-art .tap,.evo-art.locked .typist-art .fly {animation:none}
+.evo-art.locked .typist-art .fly {opacity:0}
+.evo-art.done:not(.gold)::after {content:"✓";position:absolute;top:4px;right:8px;color:var(--accent);font-weight:700}
 .evo-art.gold {box-shadow:0 0 0 2px #f0b340,0 0 18px #f0b34088}
 .evo-art.gold::after {content:"✦";position:absolute;top:4px;right:8px;color:#f0b340;font-size:1.1rem;animation:twinkle 2s ease-in-out infinite}
 .evo-art.fresh .typist-art {animation:pop .7s cubic-bezier(.2,1.4,.4,1) .2s both}
