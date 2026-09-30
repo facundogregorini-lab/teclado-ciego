@@ -25,6 +25,24 @@ function typeText(page) {
     // First computer: create an account and practice
     const a = await browser.newPage(); a.on('pageerror', e => errors.push(e.message));
     await a.goto(SITE);
+    check('Page IDs are unique', await a.evaluate(() => {
+      const ids = [...document.querySelectorAll('[id]')].map(el => el.id);
+      return new Set(ids).size === ids.length;
+    }));
+    await a.click('.scene-picker [data-scene="mountains"]');
+    await a.reload();
+    check('Landscape choice survives a reload', await a.getAttribute('html', 'data-scene') === 'mountains'
+      && await a.getAttribute('.scene-picker [data-scene="mountains"]', 'aria-pressed') === 'true');
+    for (const scene of ['beach', 'mountains', 'forest']) {
+      const asset = await a.request.get(SITE + '/assets/' + scene + '.jpg');
+      check('Landscape asset loads: ' + scene, asset.ok() && asset.headers()['content-type'] === 'image/jpeg');
+    }
+    await a.click('#continue');
+    await a.locator('.scene-picker [data-scene="forest"]').press('Space');
+    check('Changing the landscape by keyboard does not type into the exercise',
+      await a.getAttribute('html', 'data-scene') === 'forest' && await a.locator('#inner .c.ok, #inner .c.bad').count() === 0);
+    await a.click('.main-nav a[href="#learning"]');
+    check('Lesson navigation returns home', await a.isVisible('#home') && await a.isHidden('#lesson'));
     check('Guests see the login button', (await a.textContent('#acctBtn')).trim() === 'Entrar');
     await a.click('#acctBtn'); await a.click('#authMode [data-v="register"]');
     await a.fill('#user', 'ab'); await a.fill('#pass', 'secreto1'); await a.click('#authSubmit');

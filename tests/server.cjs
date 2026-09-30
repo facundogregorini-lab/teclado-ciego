@@ -9,8 +9,12 @@ function createServer() {
     const url = new URL(req.url, 'http://localhost');
     const match = /^\/api\/([a-z]+)$/.exec(url.pathname);
     if (!match) {
-      res.setHeader('Content-Type', 'text/html; charset=utf-8');
-      return res.end(fs.readFileSync(path.join(root, 'index.html')));
+      const publicFiles = new Set(['/scenery.css', '/scenery.js', ...['beach', 'mountains', 'forest'].flatMap(name => ['/assets/' + name + '.jpg', '/assets/' + name + '-thumb.jpg'])]);
+      const pathname = url.pathname === '/' ? '/index.html' : url.pathname;
+      if (pathname !== '/index.html' && !publicFiles.has(pathname)) { res.statusCode = 404; return res.end('Not found'); }
+      const types = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.jpg': 'image/jpeg' };
+      res.setHeader('Content-Type', types[path.extname(pathname)]);
+      return res.end(fs.readFileSync(path.join(root, pathname)));
     }
     const file = path.join(root, 'api', match[1] + '.js');
     if (!fs.existsSync(file)) { res.statusCode = 404; return res.end('{}'); }
