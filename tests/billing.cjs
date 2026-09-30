@@ -57,6 +57,9 @@ const check = (name, ok) => { assert.ok(ok, name); console.log('PASS', name); };
     check('Guests are asked to sign in to subscribe', (await guest.textContent('#planSubmit')).includes('Crear cuenta') && await guest.isHidden('#planEmailLabel'));
     await guest.click('#planClose'); await guest.reload(); await guest.waitForSelector('#planNote:not([hidden])');
     check('Reloading does not reset the daily limit', (await guest.textContent('#planNote')).includes('ya usaste'));
+    await guest.click('#cogCta'); await guest.click('#cogContinue');
+    check('The interview training uses the same daily limit', await guest.isVisible('#planDlg') && await guest.isHidden('#quiz'));
+    await guest.click('#planClose');
 
     // Account: the limit is counted on the server
     const ana = await open(); await register(ana, 'ana');

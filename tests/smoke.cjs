@@ -156,6 +156,39 @@ function typeText(page) {
     check('Lessons and measurements appear in the history', (await a.textContent('#hist tbody')).includes('Lección 1') && (await a.textContent('#hist tbody')).includes('Medición a ciegas'));
     await a.click('#acctClose');
 
+    // Interview training: abstract figures, same design as the lessons
+    await a.click('#cogCta');
+    check('The header CTA opens the interview training', await a.isVisible('#cog') && await a.isHidden('#home') && a.url().endsWith('#entrevistas'));
+    const cogLevels = await a.$$eval('#cogPath .evo-card b', els => els.map(e => e.textContent));
+    check('Each training level has its own typist', cogLevels.join() === 'Nivel chimpancé,Nivel bebé,Nivel niño,Nivel indigente,Nivel intelectual,Nivel premio Nobel');
+    check('There are 15 sessions and the mock test', await a.locator('#cogPath .lc').count() === 16);
+    await a.click('#cogContinue');
+    check('A session starts with a series of figures', await a.isVisible('#quiz') && (await a.textContent('#qPrompt')).includes('sigue') && await a.locator('#qFig .fig').count() === 5 && await a.locator('#qOpts .opt').count() === 4);
+    for (let i = 0; i < 6; i++) {
+      await a.keyboard.press(String(1 + (i % 4)));
+      if (!i) check('Each answer explains the rule', await a.isVisible('#qFeedback') && /^(✓|✗)/.test(await a.textContent('#qExplain')) && await a.locator('#qOpts .opt.right').count() === 1);
+      await a.keyboard.press('Enter');
+    }
+    await a.waitForSelector('#qResult:not([hidden])');
+    check('The session result shows stars and the level typist', await a.locator('#qResult .bigstars').count() === 1 && await a.locator('#qResult .result-evo .typist-art').count() === 1);
+    await a.click('#qrHome');
+    check('The session is saved in the path', (await a.textContent('#cogPath .lc >> nth=0')).includes('Mejor:'));
+    await a.click('#cogPath .group:nth-child(2) .lc >> nth=1');
+    check('Matrices show a 3×3 grid with a blank', await a.locator('#qFig .q-grid .fig').count() === 8 && await a.locator('#qFig .q-blank').count() === 1);
+    await a.keyboard.press('Escape');
+    await a.click('#cogPath .group:nth-child(2) .lc >> nth=2');
+    check('The odd one out shows five figures to choose from', await a.isHidden('#qFig') && await a.locator('#qOpts .opt').count() === 5);
+    await a.keyboard.press('Escape');
+    await a.click('#simBtn');
+    check('The mock test has 11 questions in 11 minutes', (await a.textContent('#qNum')) === '1/11' && (await a.textContent('#qTime')).startsWith('11:') || (await a.textContent('#qTime')).startsWith('10:5'));
+    for (let i = 0; i < 11; i++) await a.keyboard.press('b');
+    await a.waitForSelector('#qResult:not([hidden])');
+    check('The mock test says who you solve like', (await a.textContent('#qResult .house-copy h4')).length > 0 && await a.isVisible('#qResult .typist-art'));
+    await a.click('#qrHome');
+    check('The best mock test is shown', (await a.textContent('#cBest')).endsWith('%'));
+    await a.click('.main-nav a[href="#learning"]');
+    check('Lessons are one click away', await a.isVisible('#home') && !a.url().includes('#entrevistas'));
+
     // Challenge a friend: the link carries the score
     await a.click('#inviteBtn');
     const wa = await a.getAttribute('#chWhatsapp', 'href');
@@ -188,6 +221,10 @@ function typeText(page) {
     await b.fill('#pass', 'secreto1'); await b.click('#authSubmit');
     await b.waitForFunction(() => document.querySelector('#hStars').textContent !== '0/78');
     check('Progress follows the account to another browser', (await b.textContent('.lc')).includes('Mejor:'));
+    await b.goto(SITE + '/#entrevistas'); await b.waitForSelector('#acctBtn .nm');
+    await b.waitForFunction(() => document.querySelector('#cogPath .lc')?.textContent.includes('Mejor:'));
+    check('The interview training follows the account too', (await b.textContent('#cBest')).endsWith('%'));
+    await b.click('#homeBtn');
     await b.click('#evoView [data-v="table"]');
     check('Measurements follow the account too', (await b.locator('#evoTable tbody tr').count()) === 3);
     await b.reload(); await b.waitForSelector('#acctBtn .nm');

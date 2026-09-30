@@ -26,6 +26,12 @@ function cleanProgress(p) {
     layout: p.layout === 'es' ? 'es' : 'la',
     kb: ['always', 'error', 'hidden'].includes(p.kb) ? p.kb : 'always',
     tildes: p.tildes === 'loose' ? 'loose' : 'strict',
+    // Interview training: best result per session (serie1…distinta5) and the mock tests
+    cog: Object.fromEntries(Object.entries(p.cog && typeof p.cog === 'object' ? p.cog : {})
+      .filter(([id]) => /^(serie|matriz|distinta)[1-5]$/.test(id))
+      .map(([id, r]) => [id, { stars: num(r?.stars, 3), pct: num(r?.pct, 100), ms: num(r?.ms, 3_600_000) }])),
+    sims: (Array.isArray(p.sims) ? p.sims : []).filter(t => t && Number(t.date) > 0).slice(-100)
+      .map(t => ({ pct: num(t.pct, 100), ms: num(t.ms, 3_600_000), date: Math.round(Number(t.date)) })),
   };
 }
 
