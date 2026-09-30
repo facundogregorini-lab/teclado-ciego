@@ -7,6 +7,7 @@ const { updateRanks } = require('./_ranks');
 const MAX_HISTORY = 100, MAX_TESTS = 300;
 const METHODS = ['mirando', 'hibrido', 'ciegas'];
 const num = (v, max) => Math.min(max, Math.max(0, Math.round(Number(v) || 0)));
+const ninjaRun = t => ({ score: num(t.score, 1000), iq: num(t.iq, 200), ok: num(t.ok, 500), n: num(t.n, 500), date: Math.round(Number(t.date)) });
 const record = r => ({ stars: num(r?.stars, 3), ppm: num(r?.ppm, 400), acc: num(r?.acc, 100) });
 
 function cleanProgress(p) {
@@ -32,6 +33,11 @@ function cleanProgress(p) {
       .map(([id, r]) => [id, { stars: num(r?.stars, 3), pct: num(r?.pct, 100), ms: num(r?.ms, 3_600_000) }])),
     sims: (Array.isArray(p.sims) ? p.sims : []).filter(t => t && Number(t.date) > 0).slice(-100)
       .map(t => ({ pct: num(t.pct, 100), ms: num(t.ms, 3_600_000), date: Math.round(Number(t.date)) })),
+    // Ninja mental, 3-minute run: best score and the last runs
+    ninja: {
+      best: p.ninja?.best && Number(p.ninja.best.date) > 0 ? ninjaRun(p.ninja.best) : null,
+      runs: (Array.isArray(p.ninja?.runs) ? p.ninja.runs : []).filter(t => t && Number(t.date) > 0).slice(-50).map(ninjaRun),
+    },
   };
 }
 

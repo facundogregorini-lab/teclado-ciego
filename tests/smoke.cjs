@@ -52,6 +52,11 @@ function typeText(page) {
     await a.click('.main-nav a[href="#learning"]');
     check('Lesson navigation returns home', await a.isVisible('#home') && await a.isHidden('#lesson'));
     check('Guests see the login button', (await a.textContent('#acctBtn')).trim() === 'Entrar');
+    check('The header shows Ninja mental right after the brand', await a.evaluate(() => document.getElementById('homeBtn').nextElementSibling.id === 'cogCta') && (await a.textContent('#cogCta')).includes('Ninja mental'));
+    check('The upgrade CTA sits left of the login, also for guests', await a.isVisible('#upgradeCta') && await a.evaluate(() => document.getElementById('upgradeCta').nextElementSibling.id === 'acctBtn'));
+    await a.click('#upgradeCta');
+    check('Without payments the upgrade CTA explains the plan is coming', await a.isVisible('#planDlg') && (await a.textContent('#planReason')).includes('en camino') && await a.isHidden('#planSubmit'));
+    await a.click('#planClose');
     await a.click('#acctBtn'); await a.click('#authMode [data-v="register"]');
     await a.fill('#user', 'ab'); await a.fill('#pass', 'secreto1'); await a.click('#authSubmit');
     await a.waitForFunction(() => document.querySelector('#authErr').textContent);
@@ -158,7 +163,7 @@ function typeText(page) {
 
     // Interview training: abstract figures, same design as the lessons
     await a.click('#cogCta');
-    check('The header CTA opens the interview training', await a.isVisible('#cog') && await a.isHidden('#home') && a.url().endsWith('#entrevistas'));
+    check('The header CTA opens Ninja mental', await a.isVisible('#cog') && await a.isHidden('#home') && a.url().endsWith('#ninja'));
     const cogLevels = await a.$$eval('#cogPath .evo-card b', els => els.map(e => e.textContent));
     check('Each training level has its own typist', cogLevels.join() === 'Nivel chimpancé,Nivel bebé,Nivel niño,Nivel indigente,Nivel intelectual,Nivel premio Nobel');
     check('There are 15 sessions and the mock test', await a.locator('#cogPath .lc').count() === 16);
@@ -186,8 +191,30 @@ function typeText(page) {
     check('The mock test says who you solve like', (await a.textContent('#qResult .house-copy h4')).length > 0 && await a.isVisible('#qResult .typist-art'));
     await a.click('#qrHome');
     check('The best mock test is shown', (await a.textContent('#cBest')).endsWith('%'));
+    // 3-minute run: series one after another, harder with every 3 right answers, then score and IQ
+    // Remember each generated series to answer it right (the page has no way to show the answer before choosing)
+    await a.evaluate(() => { const make = Figures.make.serie; Figures.make.serie = d => (window.lastQ = make(d)); });
+    await a.click('#maxBtn');
+    check('The 3-minute run starts with a series', (await a.textContent('#qTime')).startsWith('3:') || (await a.textContent('#qTime')).startsWith('2:5'));
+    for (let i = 0; i < 5; i++) { await a.keyboard.press(String(1 + await a.evaluate(i => i === 4 ? (lastQ.answer + 1) % lastQ.options.length : lastQ.answer, i))); await a.waitForTimeout(700); }
+    check('The run counts answers and points as it goes', (await a.textContent('#qNum')) === '5' && (await a.textContent('#qOk')) !== '0' && (await a.textContent('#qNumLbl')) === 'respondidas');
+    check('Every 3 right answers the difficulty goes up', (await a.textContent('#qGroup')).includes('dificultad 2 de 5'));
+    await a.evaluate(() => { const now = performance.now.bind(performance); performance.now = () => now() + 181000; });
+    await a.waitForSelector('#qResult:not([hidden]) .iq');
+    check('The run ends with a score and a playful IQ', /^IQ \d+$/.test(await a.textContent('#qResult .iq')) && (await a.textContent('#qResult .nums')).includes('efectividad') && (await a.textContent('#qResult')).includes('no un test de IQ real'));
+    await a.waitForFunction(() => document.querySelector('#ninjaRankLine')?.textContent.includes('#1'));
+    check('The run gives the place in the ninja ranking', true);
+    await a.evaluate(() => { delete performance.now; });
+    await a.click('#qrChallenge');
+    const nwa = decodeURIComponent(await a.getAttribute('#chWhatsapp', 'href'));
+    check('A run can be sent as a challenge', nwa.includes('Ninja mental') && /ninja=\d+/.test(nwa) && nwa.includes('#ninja'));
+    await a.click('#chClose'); await a.click('#qrHome');
+    check('The ninja ranking in the section lists the user', (await a.textContent('#ninjaRank li.me')).includes('ana') && (await a.textContent('#maxBest')).includes('IQ'));
     await a.click('.main-nav a[href="#learning"]');
-    check('Lessons are one click away', await a.isVisible('#home') && !a.url().includes('#entrevistas'));
+    check('Lessons are one click away', await a.isVisible('#home') && !a.url().includes('#ninja'));
+    await a.click('#rankView [data-v="ninja"]');
+    check('The main ranking has a Ninja tab', (await a.textContent('#rankList li.me')).includes('IQ'));
+    await a.click('#rankView [data-v="progress"]');
 
     // Challenge a friend: the link carries the score
     await a.click('#inviteBtn');
@@ -218,10 +245,19 @@ function typeText(page) {
     check('Wrong passwords are rejected', (await b.textContent('#authErr')).includes('incorrectos'));
     await b.waitForFunction(() => document.querySelectorAll('#rankList li').length === 1);
     check('Guests see the ranking of everyone', (await b.textContent('#rankList')).includes('ana') && (await b.textContent('#rankNote')).includes('Entrá'));
+    // A friend opens a Ninja mental challenge
+    const nf = await (await browser.newContext()).newPage(); nf.on('pageerror', e => errors.push(e.message));
+    await nf.goto(SITE + '/?de=ana&ninja=12#ninja');
+    check('A ninja challenge opens Ninja mental with the banner', await nf.isVisible('#cog') && (await nf.textContent('#challengeTitle')).includes('ana te desafía en Ninja mental'));
+    await nf.click('#challengeAccept');
+    check('Accepting starts the 3-minute run', (await nf.textContent('#qName')) === 'Desafío de 3 minutos');
+    await nf.evaluate(() => { const now = performance.now.bind(performance); performance.now = () => now() + 181000; });
+    await nf.waitForSelector('#qResult:not([hidden]) .challenge-result');
+    check('The friend learns who won the ninja challenge', (await nf.textContent('.challenge-result')).includes('ana'));
     await b.fill('#pass', 'secreto1'); await b.click('#authSubmit');
     await b.waitForFunction(() => document.querySelector('#hStars').textContent !== '0/78');
     check('Progress follows the account to another browser', (await b.textContent('.lc')).includes('Mejor:'));
-    await b.goto(SITE + '/#entrevistas'); await b.waitForSelector('#acctBtn .nm');
+    await b.goto(SITE + '/#ninja'); await b.waitForSelector('#acctBtn .nm');
     await b.waitForFunction(() => document.querySelector('#cogPath .lc')?.textContent.includes('Mejor:'));
     check('The interview training follows the account too', (await b.textContent('#cBest')).endsWith('%'));
     await b.click('#homeBtn');
