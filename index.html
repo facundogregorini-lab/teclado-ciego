@@ -250,11 +250,17 @@ dialog::backdrop{background:rgba(10,14,18,.45)}
   </div>
 
   <main id="home">
+    <section class="challenge-banner" id="challengeBanner" hidden aria-live="polite">
+      <span class="cb-flag" aria-hidden="true">🏁</span>
+      <div><b id="challengeTitle"></b><span id="challengeText"></span></div>
+      <button class="btn primary" id="challengeAccept">Aceptar el desafío</button>
+      <button class="linkbtn" id="challengeDismiss" aria-label="Descartar el desafío">Ahora no</button>
+    </section>
     <section class="hero" aria-labelledby="heroTitle">
       <div class="hero-slides" aria-hidden="true">
-        <div class="slide" data-scene="beach"><div class="frame"><span class="hero-cabin" data-cabin="beach"></span></div></div>
-        <div class="slide" data-scene="mountains"><div class="frame"><span class="hero-cabin" data-cabin="mountains"></span></div></div>
-        <div class="slide" data-scene="forest"><div class="frame"><span class="hero-cabin" data-cabin="forest"></span></div></div>
+        <div class="slide" data-scene="beach"><div class="frame"></div></div>
+        <div class="slide" data-scene="mountains"><div class="frame"></div></div>
+        <div class="slide" data-scene="forest"><div class="frame"></div></div>
       </div>
       <div class="hero-copy">
         <span class="eyebrow"><span class="sun-mark" aria-hidden="true">✳</span> UN MOMENTO PARA VOS</span>
@@ -265,6 +271,7 @@ dialog::backdrop{background:rgba(10,14,18,.45)}
           <button class="btn" id="testBtn">Medir mi velocidad <span aria-hidden="true">↗</span></button>
         </div>
         <span class="hero-note">26 lecciones cortas · Cada una suma una pieza a tu cabañita</span>
+        <span class="plan-note" id="planNote" hidden></span>
       </div>
       <div class="landscape-note"><span id="sceneCaption">Una cabañita frente al mar</span><span class="hero-dots" aria-hidden="true"><i></i><i></i><i></i></span></div>
     </section>
@@ -303,6 +310,7 @@ dialog::backdrop{background:rgba(10,14,18,.45)}
         <p>Un minuto para descubrir cómo venís. Elegí tu forma de escribir y compará tu evolución con el tiempo. Durante la prueba, el teclado en pantalla descansa.</p>
       </div>
       <div class="methods" id="methods"></div>
+      <div class="invite"><span>¿Quién escribe más rápido? Mandale un desafío a un amigo por WhatsApp o email.</span><button class="btn" id="inviteBtn">Desafiar a un amigo</button></div>
       <p class="insight" id="insight" hidden></p>
       <div class="chart-top">
         <div class="legend2" id="legend2"></div>
@@ -374,7 +382,7 @@ dialog::backdrop{background:rgba(10,14,18,.45)}
       <div class="kbwrap"><div class="kb" id="kb"></div></div>
     </div>
     <div class="hidden-kb" id="hiddenKb" hidden>Teclado oculto. Mirá la pantalla y confiá en tus dedos.</div>
-    <div class="live-house" id="liveHouse" hidden aria-live="off"><div id="liveArt"></div><div><small id="liveLead">Arrancá a escribir: tu casa depende de tus dedos.</small><strong id="liveTier"></strong><div id="liveScale"></div></div></div>
+    <div class="live-house" id="liveHouse" hidden aria-live="off"><div id="liveArt"></div><div><small id="liveLead">Arrancá a escribir: ¿chimpancé o alien?</small><strong id="liveTier"></strong><div id="liveScale"></div></div></div>
   </main>
 
   <p class="foot" id="foot">Tu progreso se guarda en este navegador. Entrá con tu cuenta para guardarlo en cualquier computadora.</p>
@@ -407,11 +415,45 @@ dialog::backdrop{background:rgba(10,14,18,.45)}
       <div class="stat"><b id="aBest">—</b><span>mejor prueba (ppm)</span></div>
       <div class="stat"><b id="aCount">0</b><span>sesiones guardadas</span></div>
     </div>
+    <p class="plan-status" id="planStatus"></p>
+    <button class="btn" id="upgrade" hidden>✦ Pasarme a Ilimitado</button>
     <div class="hist" id="hist"></div>
     <div class="actions">
       <button class="btn primary" id="acctClose">Seguir practicando</button>
       <button class="btn" id="logout">Cerrar sesión</button>
     </div>
+  </div>
+</dialog>
+
+<dialog id="planDlg" aria-labelledby="planTitle">
+  <form class="dlg" id="planForm" novalidate>
+    <span class="eyebrow">TECLADO CIEGO ILIMITADO</span>
+    <h2 id="planTitle">Practicá todo lo que quieras</h2>
+    <p id="planReason"></p>
+    <ul class="plan-list"><li>Lecciones y mediciones sin límite, todos los días.</li><li>Tu progreso, tu cabaña y tu lugar en el ranking, siempre al día.</li><li>Cancelás cuando quieras desde Mercado Pago.</li></ul>
+    <p class="price" id="planPrice"></p>
+    <label class="field" for="planEmail" id="planEmailLabel">Email de tu cuenta de Mercado Pago<input id="planEmail" type="email" autocomplete="email" maxlength="120"></label>
+    <p class="err" id="planErr" role="alert"></p>
+    <div class="actions">
+      <button type="submit" class="btn primary" id="planSubmit">Suscribirme con Mercado Pago</button>
+      <button type="button" class="linkbtn" id="planClose">Ahora no</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="challengeDlg" aria-labelledby="chTitle">
+  <div class="dlg">
+    <h2 id="chTitle">Desafiá a un amigo</h2>
+    <p id="chLead"></p>
+    <label class="field" for="chName" id="chNameLabel">Tu nombre<input id="chName" maxlength="24" autocomplete="nickname"></label>
+    <label class="field" for="chEmail">Email de tu amigo (opcional)<input id="chEmail" type="email" maxlength="120" autocomplete="off"></label>
+    <p class="ch-preview" id="chPreview"></p>
+    <div class="actions share">
+      <a class="btn primary" id="chWhatsapp" target="_blank" rel="noopener">WhatsApp</a>
+      <a class="btn" id="chMail">Email</a>
+      <button type="button" class="btn" id="chCopy">Copiar enlace</button>
+    </div>
+    <button type="button" class="linkbtn" id="chClose">Cerrar</button>
   </div>
 </dialog>
 
@@ -551,7 +593,6 @@ function genLesson(l) {
 }
 
 /* ---------- Cabins: each group builds one, piece by piece (drawings in cabins.js) ---------- */
-document.querySelectorAll('.hero-cabin').forEach(el => { el.innerHTML = Cabins.hero[el.dataset.cabin]; });
 const cap1 = str => str[0].toUpperCase() + str.slice(1);
 function cabinState(gi) {
   const ls = LESSONS.filter(l => l.g === gi), done = ls.filter(l => S.lessons[l.id]?.stars >= 1).length;
@@ -568,40 +609,39 @@ function cabinCard(gi) {
   return `<figure class="cabin-card" data-parts="${st.parts}">${Cabins.build(gi, st.parts, st)}<figcaption><b>${Cabins.THEMES[gi].name}</b><span>${cabinText(st)}</span><span class="meter"><i style="width:${Math.round(100 * st.parts / Cabins.PARTS.length)}%"></i></span></figcaption></figure>`;
 }
 
-/* ---------- Speed tiers: the home each speed deserves, compared with the median ---------- */
+/* ---------- Speed tiers: who types like you, from a chimpanzee to an alien, compared with the median ---------- */
 const MEDIAN = 40; // words per minute of a typical adult typist (5 characters per word)
 const TIERS = [
-  { min: 0, name: 'una caja de cartón', jokes: [
+  { min: 0, name: 'un chimpancé', jokes: [
     'Promedio de velocidad: estás en la media de un chimpancé. Y el chimpancé estaba pelando una banana con la otra mano.',
     'A este ritmo, un mensaje de WhatsApp te lleva una temporada entera de tu serie favorita.',
-    'Manuelita llegó a París antes de que terminaras este párrafo.',
     'Tus dedos todavía están buscando el teclado. Dales tiempo, son nuevos.'] },
-  { min: 10, name: 'una choza improvisada', jokes: [
-    'Nivel chimpancé con café: al chimpancé sin café ya le ganás. Al que toma café, todavía no.',
-    'Escribís como tu tío mandando un mail: con un dedo y leyendo cada tecla en voz alta.',
-    'Techo de lona: si se larga a llover, escribí más rápido.',
-    'Un perezoso te saludó al pasar. Bueno, en realidad te pasó.'] },
-  { min: 20, name: 'una cabañita', jokes: [
-    'Oficialmente más rápido que un chimpancé. Tu familia está orgullosa; el chimpancé, no tanto.',
-    'Cabañita humilde, pero tuya. Con ventana y todo.',
+  { min: 10, name: 'un bebé', jokes: [
+    'Nivel bebé: golpeás el teclado con mucho entusiasmo y de vez en cuando sale una palabra.',
+    'Ya le ganaste al chimpancé. El próximo paso es soltar el chupete.',
+    'Gugu tata. Traducción: “seguí practicando”.'] },
+  { min: 20, name: 'un niño', jokes: [
+    'Escribís como en primer grado: con ganas y sacando la lengua.',
+    'Nivel niño: rapidísimo para los emojis, lento para todo lo demás.',
     'Ya podés chatear sin que te dejen en visto por aburrimiento.'] },
-  { min: 35, name: 'una cabaña con chimenea', jokes: [
-    'Justo por la mediana: ni fu ni fa, pero con chimenea.',
-    'Escribís como una persona normal. Felicitaciones por la normalidad.',
-    'Calentito y a buen ritmo. El chimpancé ya te pide autógrafos.'] },
-  { min: 50, name: 'un chalet de montaña', jokes: [
+  { min: 35, name: 'un indigente', jokes: [
+    'Justo en la mediana: tipeás bien, pero todavía a monedas.',
+    'Máquina de escribir, caja de cartón y cero apuro. Estilo propio, eso sí.',
+    'Escribís como una persona normal. Felicitaciones por la normalidad.'] },
+  { min: 50, name: 'un intelectual', jokes: [
     'Más rápido que la mayoría. Ya podés tomar apuntes y después entender lo que anotaste.',
-    'Chalet con vista: tus dedos esquían sobre el teclado.',
-    'En la oficina te miran raro cuando escribís. Es envidia.'] },
-  { min: 70, name: 'una mansión', jokes: [
-    'Mansión con pileta. Tus dedos cobran por hora.',
+    'Anteojos redondos, café y buen ritmo. Solo te falta la boina.',
+    'Escribís más rápido de lo que la gente lee tus mails largos.'] },
+  { min: 70, name: 'un premio Nobel', jokes: [
+    'Nivel premio Nobel: tus dedos merecen un discurso de agradecimiento.',
     'Escribís tan rápido que el corrector ortográfico pidió vacaciones.',
     'Tu teclado pidió un aumento de sueldo.'] },
-  { min: 90, name: 'un castillo', jokes: [
-    'Castillo con torres. Los chimpancés hacen fila para pedirte clases.',
-    '¿Sos una persona o un teclado mecánico disfrazado?',
-    'Un poco más rápido y las letras llegan antes de que las pienses.'] },
+  { min: 90, name: 'un alien', jokes: [
+    'Nivel alien: los chimpancés hacen fila para pedirte clases.',
+    '¿Sos una persona o una inteligencia extraterrestre disfrazada?',
+    'Cuatro brazos y cero errores. Alguien llame a la NASA.'] },
 ];
+const tierShort = i => TIERS[i].name.replace(/^un /, '');
 const tierFor = ppm => { let i = 0; while (i < TIERS.length - 1 && ppm >= TIERS[i + 1].min) i++; return i; };
 // Share of people who type slower, assuming speeds spread normally around the median (standard deviation 16).
 function percentile(ppm) {
@@ -621,8 +661,8 @@ function medianText(ppm) {
 let liveTier = -1;
 function updateLive(ppm, started) {
   const ti = tierFor(ppm);
-  if (ti !== liveTier) { liveTier = ti; $('liveArt').innerHTML = Cabins.home(ti); if (started) $('liveArt').firstChild.classList.add('pop'); }
-  $('liveLead').textContent = started ? `Con ${ppm} palabras por minuto te alcanza para` : idx ? 'Midiendo tu ritmo…' : 'Arrancá a escribir: tu casa depende de tus dedos.';
+  if (ti !== liveTier) { liveTier = ti; $('liveArt').innerHTML = Cabins.typist(ti); if (started) $('liveArt').firstChild.classList.add('pop'); }
+  $('liveLead').textContent = started ? `Con ${ppm} palabras por minuto escribís como` : idx ? 'Midiendo tu ritmo…' : 'Arrancá a escribir: ¿chimpancé o alien?';
   $('liveTier').textContent = cap1(TIERS[ti].name);
   $('liveScale').innerHTML = speedScale(ppm);
 }
@@ -803,7 +843,8 @@ function show(view) {
 }
 let testMethod = 'ciegas';
 function start(l, method) {
-  cur = l; mode = 'typing';
+  if (!mayStart()) return;
+  cur = l; mode = 'typing'; counted = false;
   if (l === 'test' && method) testMethod = method;
   const tm = METHODS.find(m => m.id === testMethod);
   text = l === 'test' ? shuffle([...TEXTS, ...REFRANES]).join(' ') : genLesson(l);
@@ -892,7 +933,7 @@ function miss(target) {
 // One typed character, from any keyboard (physical or on screen).
 function typeChar(ch) {
   if (mode !== 'typing') return;
-  if (!running) { running = true; t0 = performance.now(); $('startHint').hidden = true; }
+  if (!running) { running = true; t0 = performance.now(); $('startHint').hidden = true; if (!counted) countPractice(); }
   const target = text[idx];
   deadPending = false;
   const code = MAP[ch.normalize('NFD')[0]]?.code;
@@ -967,11 +1008,11 @@ function finish() {
   let extra = '';
   if (isTest) {
     const ti = tierFor(ppm);
-    extra = `<div class="house-result">${Cabins.home(ti)}<div class="house-copy">
-      <span class="eyebrow">Con ${ppm} palabras por minuto te merecés</span><h4>${cap1(TIERS[ti].name)}</h4>
+    extra = `<div class="house-result">${Cabins.typist(ti)}<div class="house-copy">
+      <span class="eyebrow">Con ${ppm} palabras por minuto escribís como</span><h4>${cap1(TIERS[ti].name)}</h4>
       <p class="joke">${rnd(TIERS[ti].jokes)}</p>
-      <p>${medianText(ppm)}${acc < 90 ? ' Y ojo: con tantos errores, a tu casa le faltan ladrillos.' : ''}</p>
-      ${speedScale(ppm)}<p id="rankLine">${auth.name ? '' : 'Entrá con tu cuenta para aparecer en el ranking de velocidad.'}</p></div></div>`;
+      <p>${medianText(ppm)}${acc < 90 ? ' Y ojo: con tantos errores, parecés un chimpancé con guantes.' : ''}</p>
+      ${speedScale(ppm)}${challengeResult(ppm)}<p id="rankLine">${auth.name ? '' : 'Entrá con tu cuenta para aparecer en el ranking de velocidad.'}</p></div></div>`;
   } else {
     const after = cabinState(cur.g), t = Cabins.THEMES[cur.g], P = Cabins.PARTS, home = t.name.toLowerCase();
     const fresh = []; for (let i = cabinBefore.parts; i < after.parts; i++) fresh.push(i);
@@ -997,11 +1038,13 @@ function finish() {
     <div class="actions">
       ${!isTest && next ? `<button class="btn primary" id="rNext">Siguiente: ${next.name} <small>Enter</small></button>` : ''}
       <button class="btn${isTest || !next ? ' primary' : ''}" id="rAgain">${isTest ? 'Medir de nuevo' : 'Repetir'}${isTest || !next ? ' <small>Enter</small>' : ''}</button>
+      ${isTest ? '<button class="btn" id="rChallenge">Desafiar a un amigo</button>' : ''}
       <button class="btn" id="rHome">${isTest ? 'Ver mi evolución' : 'Lecciones'}</button>
     </div>`;
   $('typing').hidden = true; r.hidden = false; $('liveHouse').hidden = true;
   $('rNext') && ($('rNext').onclick = () => start(next));
   $('rAgain').onclick = () => start(cur, testMethod);
+  $('rChallenge') && ($('rChallenge').onclick = () => openChallenge({ ppm, method: testMethod }));
   $('rHome').onclick = isTest ? () => { goHome(); $('evo').scrollIntoView(); } : goHome;
   highlight(); $('bar').style.width = '100%';
   (($('rNext') || $('rAgain'))).focus({ preventScroll: true });
@@ -1108,12 +1151,20 @@ async function signedIn(token, name) {
   try { localStorage.setItem(TOKEN, token); } catch {}
   renderAccountBtn();
   try { await loadAccount(); } catch (err) { toast(err.message); }
+  const returning = new URLSearchParams(location.search).get('suscripcion') === 'ok';
+  await loadBilling(returning);
+  if (returning) {
+    window.history.replaceState(null, '', location.pathname + location.hash);
+    toast(billing.premium ? '¡Gracias! Tu plan Ilimitado ya está activo ✦' : 'Estamos esperando la confirmación de Mercado Pago. Puede tardar unos minutos.');
+  }
+  if (planAfterLogin) { planAfterLogin = false; if (limited()) showPlan('upgrade'); }
 }
 function signedOut(msg) {
   auth = { token: null, name: null }; history = [];
   try { localStorage.removeItem(TOKEN); } catch {}
   S.lessons = {}; S.test = null; S.tests = []; save();
-  renderAccountBtn(); renderHome(); loadRanking();
+  Object.assign(billing, { premium: false, plays: 0, gift: false, subscription: null });
+  renderAccountBtn(); renderHome(); renderPlanNote(); loadRanking();
   if (msg) toast(msg);
 }
 let authMode = 'login';
@@ -1136,6 +1187,7 @@ function renderHistory() {
   $('aDone').textContent = `${LESSONS.filter(l => S.lessons[l.id]?.stars >= 1).length}/${LESSONS.length}`;
   $('aBest').textContent = S.test ? S.test.ppm : '—';
   $('aCount').textContent = history.length;
+  renderPlan();
   const box = $('hist');
   if (!history.length) { box.innerHTML = '<p class="empty">Todavía no hay sesiones guardadas. Terminá una lección y aparece acá.</p>'; return; }
   const date = d => new Date(d).toLocaleString('es-AR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
@@ -1156,6 +1208,7 @@ $('acctBtn').onclick = () => {
   if (!auth.name) { openAuth(); return; }
   renderHistory(); $('acctDlg').showModal();
   api('data').then(d => { history = d.history; renderHistory(); }).catch(() => {});
+  loadBilling().then(renderPlan);
 };
 document.querySelectorAll('#authMode button').forEach(b => b.onclick = () => setAuthMode(b.dataset.v));
 $('authCancel').onclick = () => $('authDlg').close();
@@ -1195,7 +1248,7 @@ function rankRow(r, rank) {
     val = pct + '%'; sub = `${done}/${LESSONS.length} lecciones · ${stars} ★`;
   } else {
     pct = Math.min(100, Math.round(r.score / 120 * 100));
-    val = r.score + ' ppm'; sub = cap1(TIERS[tierFor(r.score)].name);
+    val = r.score + ' ppm'; sub = 'Nivel ' + tierShort(tierFor(r.score));
   }
   li.innerHTML = `<span class="pos${rank <= 3 ? ' p' + rank : ''}"></span><span class="who"></span><span class="val"><b></b><small></small></span><span class="bar"><i style="width:${pct}%"></i></span>`;
   li.querySelector('.pos').textContent = '#' + rank;
@@ -1230,6 +1283,137 @@ function rankLine(ppm) {
 }
 document.querySelectorAll('#rankView button').forEach(b => b.onclick = () => { rankView = b.dataset.v; renderRanking(); });
 
+/* ---------- Freemium: a few free practices per day, unlimited with a Mercado Pago subscription ---------- */
+// With payments not configured (or no server) nothing is limited. Guests count in this browser; accounts on the server.
+let billing = { enabled: false, premium: false, plays: 0, price: '', freePerDay: 3 }, counted = false, planAfterLogin = false;
+const PLAYS_KEY = 'teclado-ciego-plays', arDay = () => new Date(Date.now() - 3 * 36e5).toISOString().slice(0, 10);
+const limited = () => billing.enabled && !billing.premium;
+function guestPlays() { try { const p = JSON.parse(localStorage.getItem(PLAYS_KEY)); return p?.day === arDay() ? p.n : 0; } catch { return 0; } }
+const usedToday = () => auth.name ? billing.plays : guestPlays();
+async function loadBilling(sync) {
+  try { Object.assign(billing, await api('billing', sync ? { action: 'sync' } : undefined)); } catch {}
+  renderPlanNote();
+}
+function mayStart() {
+  if (!limited() || usedToday() < billing.freePerDay) return true;
+  showPlan('limit'); return false;
+}
+// A practice counts from its first key, so opening a lesson and leaving does not use one.
+function countPractice() {
+  counted = true;
+  if (!limited()) return;
+  if (auth.name) {
+    billing.plays++;
+    api('billing', { action: 'play' }).catch(err => { if (err.status === 402) { goHome(); showPlan('limit'); } });
+  } else try { localStorage.setItem(PLAYS_KEY, JSON.stringify({ day: arDay(), n: guestPlays() + 1 })); } catch {}
+  renderPlanNote();
+}
+function renderPlanNote() {
+  const note = $('planNote');
+  note.hidden = !limited();
+  if (note.hidden) return;
+  const left = Math.max(0, billing.freePerDay - usedToday());
+  note.innerHTML = `Plan gratis: ${left ? `te ${left === 1 ? 'queda 1 práctica' : `quedan ${left} prácticas`} de ${billing.freePerDay} hoy` : 'ya usaste tus prácticas de hoy'} · <button type="button">Pasate a Ilimitado</button>`;
+  note.querySelector('button').onclick = () => showPlan('upgrade');
+}
+function showPlan(reason) {
+  if (!billing.enabled) return;
+  $('planReason').textContent = reason === 'limit'
+    ? `Ya usaste tus ${billing.freePerDay} prácticas gratis de hoy. Volvé mañana o suscribite para seguir ahora.`
+    : `Con el plan gratis tenés ${billing.freePerDay} prácticas por día.`;
+  $('planPrice').textContent = billing.price;
+  $('planEmailLabel').hidden = !auth.name;
+  $('planSubmit').textContent = auth.name ? 'Suscribirme con Mercado Pago' : 'Crear cuenta o entrar para suscribirme';
+  $('planErr').textContent = ''; $('planSubmit').disabled = false;
+  if (!$('planDlg').open) $('planDlg').showModal();
+}
+function renderPlan() {
+  const st = $('planStatus'), sub = billing.subscription;
+  $('upgrade').hidden = !limited();
+  st.textContent = !billing.enabled ? ''
+    : billing.gift ? '✦ Plan Ilimitado (cortesía)'
+    : billing.premium ? (sub?.status === 'authorized' ? '✦ Plan Ilimitado activo. Se renueva solo cada mes; lo gestionás desde Mercado Pago.' : `✦ Plan Ilimitado vigente hasta el ${new Date(sub.paidUntil).toLocaleDateString('es-AR')}.`)
+    : `Plan gratis: ${billing.freePerDay} prácticas por día.`;
+}
+$('upgrade').onclick = () => { $('acctDlg').close(); showPlan('upgrade'); };
+$('planClose').onclick = () => $('planDlg').close();
+$('planForm').onsubmit = async e => {
+  e.preventDefault();
+  if (!auth.name) { planAfterLogin = true; $('planDlg').close(); openAuth(); setAuthMode('register'); return; }
+  $('planSubmit').disabled = true; $('planErr').textContent = '';
+  try { location.href = (await api('billing', { action: 'subscribe', email: $('planEmail').value })).url; }
+  catch (err) { $('planErr').textContent = err.message; $('planSubmit').disabled = false; }
+};
+
+/* ---------- Challenges: invite friends by WhatsApp or email with a link ---------- */
+// ?de=ana&ppm=42&metodo=ciegas → "ana te desafía". The link carries the score; nothing is stored on the server.
+let challenge = null, shareScore = null;
+const NAME_KEY = 'teclado-ciego-nombre';
+(() => {
+  const q = new URLSearchParams(location.search);
+  if (!q.has('de')) return;
+  const from = (q.get('de') || '').replace(/[^\p{L}\p{N} _.-]/gu, '').trim().slice(0, 24);
+  const method = METHODS.find(m => m.id === q.get('metodo')), ppm = Math.round(Number(q.get('ppm')));
+  if (from) challenge = { from, ppm: method && ppm > 0 && ppm <= 250 ? ppm : 0, method: method?.id || 'ciegas' };
+  for (const k of ['de', 'ppm', 'metodo']) q.delete(k);
+  window.history.replaceState(null, '', location.pathname + (q.toString() ? '?' + q : '') + location.hash);
+})();
+function renderChallenge() {
+  $('challengeBanner').hidden = !challenge;
+  if (!challenge) return;
+  const m = METHODS.find(x => x.id === challenge.method);
+  $('challengeTitle').textContent = challenge.ppm ? `${challenge.from} te desafía: ${challenge.ppm} palabras por minuto ${m.as}` : `${challenge.from} te invita a escribir sin mirar`;
+  $('challengeText').textContent = challenge.ppm ? `Nivel ${tierShort(tierFor(challenge.ppm))}. Tenés un minuto para ganarle.` : 'Medí tu velocidad en un minuto y mandale tu resultado.';
+}
+function challengeResult(ppm) {
+  if (!challenge?.ppm || testMethod !== challenge.method) return '';
+  const d = ppm - challenge.ppm, who = challenge.from.replace(/[<>&"]/g, '');
+  return `<p class="challenge-result">${d > 0 ? `🏆 ¡Le ganaste a ${who} por ${d} palabras por minuto! Mandale la revancha.` : d < 0 ? `Te faltaron ${-d} palabras por minuto para ganarle a ${who}. ¿Otra vez?` : `¡Empate con ${who}! Desempaten con otra medición.`}</p>`;
+}
+function shareLink() {
+  const u = new URL(location.pathname, location.href);
+  u.searchParams.set('de', auth.name || $('chName').value.trim().slice(0, 24) || 'Un amigo');
+  if (shareScore) { u.searchParams.set('ppm', shareScore.ppm); u.searchParams.set('metodo', shareScore.method); }
+  return u.href;
+}
+function shareMessage() {
+  const m = shareScore && METHODS.find(x => x.id === shareScore.method);
+  return (shareScore
+    ? `¡Te desafío en Teclado Ciego! Escribí ${shareScore.ppm} palabras por minuto ${m.as} (nivel ${tierShort(tierFor(shareScore.ppm))}). ¿Me ganás?`
+    : 'Estoy aprendiendo a escribir sin mirar el teclado en Teclado Ciego. ¿Medimos quién escribe más rápido?') + ' ' + shareLink();
+}
+function updateShare() {
+  const msg = shareMessage(), email = $('chEmail').value.trim();
+  $('chPreview').textContent = msg;
+  $('chWhatsapp').href = 'https://wa.me/?text=' + encodeURIComponent(msg);
+  $('chMail').href = `mailto:${/^[^\s@?&]+@[^\s@?&]+\.[^\s@?&]+$/.test(email) ? email : ''}?subject=${encodeURIComponent('Te desafío en Teclado Ciego')}&body=${encodeURIComponent(msg)}`;
+}
+function openChallenge(score) {
+  shareScore = score;
+  let saved = ''; try { saved = localStorage.getItem(NAME_KEY) || ''; } catch {}
+  $('chName').value = saved; $('chNameLabel').hidden = !!auth.name;
+  const m = score && METHODS.find(x => x.id === score.method);
+  $('chLead').textContent = score
+    ? `Mandale tu marca: ${score.ppm} palabras por minuto ${m.as}. Con el enlace puede aceptar el desafío y ver si te gana.`
+    : 'Mandale una invitación para medir su velocidad y comparar.';
+  updateShare(); $('challengeDlg').showModal();
+}
+function bestScore() {
+  const best = S.tests.reduce((b, t) => !b || t.ppm > b.ppm ? t : b, null);
+  return best && { ppm: best.ppm, method: best.method };
+}
+$('chName').oninput = () => { try { localStorage.setItem(NAME_KEY, $('chName').value.trim()); } catch {} updateShare(); };
+$('chEmail').oninput = updateShare;
+$('chCopy').onclick = async () => {
+  try { await navigator.clipboard.writeText(shareMessage()); toast('Copiado. Pegalo donde quieras.'); }
+  catch { toast('No se pudo copiar: seleccioná el texto de arriba.'); }
+};
+$('chClose').onclick = () => $('challengeDlg').close();
+$('inviteBtn').onclick = () => openChallenge(bestScore());
+$('challengeAccept').onclick = () => start('test', challenge.method);
+$('challengeDismiss').onclick = () => { challenge = null; renderChallenge(); };
+renderChallenge();
+
 /* ---------- Settings ---------- */
 function applyKbMode() {
   document.querySelectorAll('#kbMode button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === S.kb)));
@@ -1253,7 +1437,7 @@ renderRanking();
 api('auth').then(r => signedIn(auth.token, r.user.name)).catch(err => {
   if (err.status === 401) { if (auth.token) signedOut(); return; }
   if (err.status === 0 || err.status === 404) { $('acctBtn').hidden = true; $('foot').textContent = 'Tu progreso se guarda en este navegador.'; }
-}).finally(loadRanking);
+}).finally(() => { loadRanking(); if (!auth.name) loadBilling(); });
 })();
 </script>
 </body>

@@ -37,7 +37,7 @@ function typeText(page) {
       const asset = await a.request.get(SITE + '/assets/' + scene + '.jpg');
       check('Landscape asset loads: ' + scene, asset.ok() && asset.headers()['content-type'] === 'image/jpeg');
     }
-    check('Each hero landscape has its dream cabin', await a.locator('.hero-slides .slide .hero-cabin svg').count() === 3);
+    check('The hero has the three landscapes and no drawings on them', await a.locator('.hero-slides .slide').count() === 3 && await a.locator('.hero-slides svg').count() === 0);
     const firstScene = await a.getAttribute('html', 'data-hero-scene');
     await a.waitForFunction(s => document.documentElement.dataset.heroScene !== s, firstScene, { timeout: 10000 });
     check('The hero changes landscape by itself', await a.locator('.hero-slides .slide.on').count() === 1);
@@ -89,7 +89,8 @@ function typeText(page) {
     check('Measurements hide the on-screen keyboard', await a.isHidden('#guide') && (await a.textContent('#lName')) === 'A ciegas');
     await typeText(a); await a.waitForSelector('#result:not([hidden])');
     check('The result names the method', (await a.textContent('#result h3')).includes('a ciegas'));
-    check('The result shows the home the speed deserves', await a.isVisible('.house-result svg') && (await a.textContent('.house-copy')).includes('mediana'));
+    check('The result shows who types like you', await a.isVisible('.house-result .typist-art') && (await a.textContent('.house-copy')).includes('mediana'));
+    check('Measurements are not limited without payments configured', await a.isHidden('#planNote'));
     await a.waitForFunction(() => document.querySelector('#rankLine')?.textContent);
     check('Impossible speeds stay out of the ranking', (await a.textContent('#rankLine')).includes('no entra al ranking'));
     await a.waitForTimeout(300); await a.click('#rHome');
@@ -102,7 +103,7 @@ function typeText(page) {
     check('Nobody is in the speed ranking with impossible speeds', (await a.locator('#rankList li').count()) === 0);
     // A real speed: a slow measurement that ends by time
     await a.click('.mc:nth-child(2) .btn');
-    await a.evaluate(() => { for (const key of 'El viento') document.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true })); });
+    await a.evaluate(() => { const t = [...document.querySelectorAll('#inner .c')].map(s => s.textContent).join('').slice(0, 40); for (const key of t) document.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true })); });
     await a.evaluate(() => { const now = performance.now.bind(performance); performance.now = () => now() + 61000; });
     await a.waitForFunction(() => document.querySelector('#rankLine')?.textContent.includes('#1'));
     check('The result gives the place in the speed ranking', (await a.textContent('.house-copy h4')).length > 0);
@@ -114,6 +115,27 @@ function typeText(page) {
     await a.waitForFunction(() => document.querySelectorAll('#hist tbody tr').length === 4);
     check('Lessons and measurements appear in the history', (await a.textContent('#hist tbody')).includes('Lección 1') && (await a.textContent('#hist tbody')).includes('Medición a ciegas'));
     await a.click('#acctClose');
+
+    // Challenge a friend: the link carries the score
+    await a.click('#inviteBtn');
+    const wa = await a.getAttribute('#chWhatsapp', 'href');
+    check('The WhatsApp invitation carries a challenge link', wa.startsWith('https://wa.me/?text=') && decodeURIComponent(wa).includes('de=ana') && decodeURIComponent(wa).includes('ppm='));
+    check('The email invitation is ready too', (await a.getAttribute('#chMail', 'href')).startsWith('mailto:?subject='));
+    await a.fill('#chEmail', 'amigo@example.com');
+    check('The friend email goes into the email', (await a.getAttribute('#chMail', 'href')).startsWith('mailto:amigo@example.com?'));
+    const link = decodeURIComponent(wa).match(/http:\/\/127\S+/)[0];
+    await a.click('#chClose');
+    const f = await (await browser.newContext()).newPage(); f.on('pageerror', e => errors.push(e.message));
+    await f.goto(link.replace(/ppm=\d+/, 'ppm=3'));
+    check('A friend opening the link sees the challenge', (await f.textContent('#challengeTitle')).includes('ana te desafía: 3 palabras'));
+    check('The challenge link is cleaned from the address bar', !f.url().includes('de='));
+    await f.click('#challengeAccept');
+    await f.evaluate(() => { const t = [...document.querySelectorAll('#inner .c')].map(s => s.textContent).join('').slice(0, 40); for (const key of t) document.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true })); });
+    await f.evaluate(() => { const now = performance.now.bind(performance); performance.now = () => now() + 61000; });
+    await f.waitForSelector('.challenge-result');
+    check('The friend learns who won', (await f.textContent('.challenge-result')).includes('ganaste a ana'));
+    await f.click('#rChallenge');
+    check('The friend can send the rematch', decodeURIComponent(await f.getAttribute('#chWhatsapp', 'href')).includes('¿Me ganás?'));
 
     // Second computer: log in and find the progress
     const b = await (await browser.newContext()).newPage(); b.on('pageerror', e => errors.push(e.message));
