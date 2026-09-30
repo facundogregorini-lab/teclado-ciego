@@ -221,13 +221,14 @@ dialog::backdrop{background:rgba(10,14,18,.45)}
 
 <link rel="stylesheet" href="scenery.css">
 <link rel="stylesheet" href="typists.css">
+<link rel="stylesheet" href="cognitive.css">
 <script src="scenery.js" defer></script>
 </head>
 <body>
 <div class="wrap">
   <header class="top">
     <button class="brand" id="homeBtn" aria-label="Volver a las lecciones"><kbd>F</kbd>Teclado Ciego</button>
-    <nav class="main-nav" aria-label="Navegación principal"><a href="#learning">Lecciones</a><a href="#evo">Mi progreso</a><a href="#ranking">Ranking</a></nav>
+    <nav class="main-nav" aria-label="Navegación principal"><a href="#learning">Lecciones</a><a href="#evo">Mi progreso</a><a href="#ranking">Ranking</a><a href="#entrevistas" class="nav-cta" id="cogCta">🧩 <span class="cta-long">Test de entrevistas</span><span class="cta-short">Entrevistas</span></a></nav>
     <button class="acct out" id="acctBtn">Entrar</button>
   </header>
   <div class="preferences">
@@ -341,6 +342,59 @@ dialog::backdrop{background:rgba(10,14,18,.45)}
       <ol class="rank-list" id="rankList" aria-live="polite"></ol>
       <p class="rank-note" id="rankNote"></p>
     </section>
+  </main>
+
+  <main id="cog" hidden>
+    <section class="cog-hero" aria-labelledby="cogTitle">
+      <div>
+        <span class="eyebrow">ENTRENAMIENTO PARA ENTREVISTAS</span>
+        <h1 id="cogTitle">Pensá rápido.<br><em>Con figuras.</em></h1>
+        <p>Los tests de razonamiento abstracto que piden muchas empresas en sus procesos de selección: series, matrices y la figura distinta. Practicá con tiempo, entendé cada regla y evolucioná.</p>
+        <div class="actions">
+          <button class="btn primary" id="cogContinue"></button>
+          <button class="btn" id="simBtn">Simulacro de entrevista <small>11 preguntas · 11 min</small></button>
+        </div>
+      </div>
+      <div class="cog-sample" id="cogSample" aria-hidden="true"></div>
+    </section>
+    <section class="progress-summary" aria-label="Tu entrenamiento">
+      <div class="summary-intro"><span class="eyebrow">TU ENTRENAMIENTO</span><p>Cada regla, más fácil.</p></div>
+      <div class="stats">
+        <div class="stat"><b id="cStars">0</b><span>estrellas ganadas</span></div>
+        <div class="stat"><b id="cDone">0</b><span>sesiones aprobadas</span></div>
+        <div class="stat"><b id="cBest">—</b><span>mejor simulacro</span></div>
+      </div>
+    </section>
+    <section class="cog-kinds" aria-label="Tipos de ejercicio" id="cogKinds"></section>
+    <section class="learning" aria-labelledby="cogPathTitle">
+      <div class="section-heading"><div><span class="eyebrow">TU CAMINO</span><h2 id="cogPathTitle">De chimpancé a premio Nobel.</h2></div><span>15 sesiones de 6 preguntas · 1 simulacro</span></div>
+      <div class="path" id="cogPath"></div>
+    </section>
+  </main>
+
+  <main id="quiz" class="lesson" hidden>
+    <div class="lbar">
+      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+        <button class="back" id="qBack">← Entrenamiento</button>
+        <div class="ltitle"><small id="qGroup"></small><h2 id="qName"></h2></div>
+      </div>
+      <div class="live" aria-live="off">
+        <div><b id="qNum">1/6</b><span>pregunta</span></div>
+        <div><b id="qOk">0</b><span>correctas</span></div>
+        <div><b id="qTime">0:00</b><span>restante</span></div>
+      </div>
+    </div>
+    <div class="progress"><i id="qBar"></i></div>
+    <div class="stage" id="qStage">
+      <div id="qPlay">
+        <p class="q-prompt" id="qPrompt"></p>
+        <div class="q-fig" id="qFig"></div>
+        <div class="q-opts" id="qOpts" role="group" aria-label="Opciones"></div>
+        <div class="q-feedback" id="qFeedback" hidden aria-live="polite"><p id="qExplain"></p><button class="btn primary" id="qNext">Siguiente <small>Enter</small></button></div>
+        <p class="hint q-hint">Elegí con el mouse o con las teclas 1 a 5 (o A a E) · Esc para salir</p>
+      </div>
+      <div class="result" id="qResult" hidden aria-live="polite"></div>
+    </div>
   </main>
 
   <main id="lesson" class="lesson" hidden>
@@ -464,6 +518,7 @@ dialog::backdrop{background:rgba(10,14,18,.45)}
 <div class="toast" id="toast" role="status" hidden></div>
 
 <script src="typists.js"></script>
+<script src="figures.js"></script>
 <script>
 (() => {
 const $ = id => document.getElementById(id);
@@ -542,9 +597,11 @@ const LESSONS = [
 
 /* ---------- Storage ---------- */
 const STORE = 'teclado-ciego-v1';
-const S = { lessons: {}, test: null, tests: [], layout: 'la', kb: 'always', tildes: 'strict' };
+const S = { lessons: {}, test: null, tests: [], layout: 'la', kb: 'always', tildes: 'strict', cog: {}, sims: [] };
 try { Object.assign(S, JSON.parse(localStorage.getItem(STORE)) || {}); } catch {}
 if (!Array.isArray(S.tests)) S.tests = [];
+if (!S.cog || typeof S.cog !== 'object') S.cog = {};
+if (!Array.isArray(S.sims)) S.sims = [];
 const save = () => { try { localStorage.setItem(STORE, JSON.stringify(S)); } catch {} };
 
 /* ---------- Helpers ---------- */
@@ -853,7 +910,7 @@ const fmt = ms => { const s = Math.max(0, Math.round(ms / 1000)); return Math.fl
 
 function show(view) {
   document.body.dataset.view = view;
-  $('home').hidden = view !== 'home'; $('lesson').hidden = view !== 'lesson';
+  for (const v of ['home', 'lesson', 'cog', 'quiz']) $(v).hidden = view !== v;
   scrollTo({ top: 0 });
 }
 let testMethod = 'ciegas';
@@ -1109,7 +1166,7 @@ function finish() {
   highlight(); $('bar').style.width = '100%';
   (($('rNext') || $('rAgain'))).focus({ preventScroll: true });
 }
-function goHome() { mode = 'home'; running = false; clearInterval(timer); show('home'); renderHome(); }
+function goHome() { mode = 'home'; running = false; clearInterval(timer); if (location.hash === '#entrevistas') window.history.replaceState(null, '', location.pathname + location.search); show('home'); renderHome(); }
 
 /* ---------- Input ---------- */
 document.addEventListener('keydown', e => {
@@ -1122,7 +1179,16 @@ document.addEventListener('keydown', e => {
     if (e.target.closest?.('button, select, a, summary, input:not(#cap)')) return;
     if (e.target !== $('cap') && e.key === 'Dead') { e.preventDefault(); pendingMark = deadMark(e); focusCap(); return; }
     if (e.target !== $('cap') && e.key.length === 1) { e.preventDefault(); focusCap(); typeChar(e.key); }
-  } else if (mode === 'done' && e.key === 'Enter' && performance.now() - doneAt > 500) {
+  } else if (mode === 'quiz') {
+    if (e.metaKey || e.ctrlKey || e.altKey || e.target.closest?.('input, select')) return;
+    if (e.key === 'Escape') { e.preventDefault(); goCog(); return; }
+    const k = '12345'.indexOf(e.key) >= 0 ? '12345'.indexOf(e.key) : 'abcde'.indexOf(e.key.toLowerCase());
+    if (e.key.length === 1 && k >= 0 && $('qFeedback').hidden) { e.preventDefault(); answerQ(k); }
+    else if (e.key === 'Enter' && !$('qFeedback').hidden && !e.target.closest?.('button')) { e.preventDefault(); nextQ(); }
+  } else if (mode === 'qdone' && e.key === 'Enter' && performance.now() - doneAt > 500 && !e.target.closest?.('button')) {
+    e.preventDefault(); (($('qrNext') || $('qrAgain'))).click();
+  } else if (mode === 'qdone' && e.key === 'Escape') goCog();
+  else if (mode === 'done' && e.key === 'Enter' && performance.now() - doneAt > 500) {
     e.preventDefault(); (($('rNext') || $('rAgain'))).click();
   } else if (mode === 'done' && e.key === 'Escape') goHome();
 });
@@ -1130,7 +1196,7 @@ function checkFocus() { $('veil').hidden = mode !== 'typing' || (document.hasFoc
 addEventListener('blur', () => { if (running) { accMs = elapsed(); running = false; } checkFocus(); });
 addEventListener('focus', checkFocus);
 document.addEventListener('visibilitychange', () => { if (document.hidden && running) { accMs = elapsed(); running = false; } });
-document.querySelectorAll('.main-nav a').forEach(a => a.addEventListener('click', () => { goHome(); }));
+document.querySelectorAll('.main-nav a:not(.nav-cta)').forEach(a => a.addEventListener('click', () => { goHome(); }));
 $('veil').onclick = focusCap;
 $('stage').addEventListener('click', focusCap);
 $('cap').addEventListener('input', e => takeInput(e.isComposing));
@@ -1163,7 +1229,7 @@ async function api(path, payload) {
   }
   return data;
 }
-const progress = () => ({ lessons: S.lessons, test: S.test, tests: S.tests, layout: S.layout, kb: S.kb, tildes: S.tildes });
+const progress = () => ({ lessons: S.lessons, test: S.test, tests: S.tests, layout: S.layout, kb: S.kb, tildes: S.tildes, cog: S.cog, sims: S.sims });
 function better(a, b) { if (!a) return b; if (!b) return a; return b.stars > a.stars || (b.stars === a.stars && b.ppm > a.ppm) ? b : a; }
 function merge(remote) {
   if (!remote) return;
@@ -1178,6 +1244,12 @@ function merge(remote) {
   if (remote.layout) S.layout = remote.layout;
   if (remote.kb) S.kb = remote.kb;
   if (remote.tildes) S.tildes = remote.tildes;
+  for (const [id, r] of Object.entries(remote.cog || {})) { const a = S.cog[id]; if (!a || r.stars > a.stars || (r.stars === a.stars && r.pct > a.pct)) S.cog[id] = r; }
+  if (Array.isArray(remote.sims)) {
+    const seen = new Set(S.sims.map(t => t.date));
+    for (const t of remote.sims) if (!seen.has(t.date)) S.sims.push(t);
+    S.sims.sort((a, b) => a.date - b.date); S.sims = S.sims.slice(-100);
+  }
 }
 async function loadAccount() {
   const data = await api('data');
@@ -1185,7 +1257,7 @@ async function loadAccount() {
   merge(data.progress); save();
   history = data.history;
   if (JSON.stringify(progress()) !== before) await api('data', { type: 'progress', progress: progress() });
-  $('layout').value = S.layout; applyLayout(); applyKbMode(); applyAccentMode(); renderHome();
+  $('layout').value = S.layout; applyLayout(); applyKbMode(); applyAccentMode(); renderHome(); if (mode === 'cog') renderCog();
 }
 let pushTimer = 0;
 function pushProgress() {
@@ -1224,9 +1296,9 @@ async function signedIn(token, name) {
 function signedOut(msg) {
   auth = { token: null, name: null }; history = [];
   try { localStorage.removeItem(TOKEN); } catch {}
-  S.lessons = {}; S.test = null; S.tests = []; save();
+  S.lessons = {}; S.test = null; S.tests = []; S.cog = {}; S.sims = []; save();
   Object.assign(billing, { premium: false, plays: 0, gift: false, subscription: null });
-  renderAccountBtn(); renderHome(); renderPlanNote(); loadRanking();
+  renderAccountBtn(); renderHome(); renderPlanNote(); loadRanking(); if (mode === 'cog') renderCog();
   if (msg) toast(msg);
 }
 let authMode = 'login';
@@ -1292,6 +1364,196 @@ $('logout').onclick = async () => {
   try { await api('auth', { action: 'logout' }); } catch {}
   signedOut('Cerraste sesión. Tu progreso quedó guardado en tu cuenta.');
 };
+
+/* ---------- Interview training: abstract-figure puzzles (generated in figures.js) ---------- */
+// Same design as the lessons: five levels of difficulty, each with its typist (chimpancé … intelectual), three sessions
+// per level (series, matrices, odd one out) and La cima: premio Nobel with every session passed, alien with 3 stars in all.
+const COG_KINDS = [
+  { id: 'serie', name: 'Series', ask: '¿Qué figura sigue?', desc: 'Una secuencia cambia paso a paso: descubrí la regla y elegí la figura que sigue.' },
+  { id: 'matriz', name: 'Matrices', ask: '¿Qué completa la grilla?', desc: 'Filas y columnas siguen reglas: encontralas para completar el casillero vacío.' },
+  { id: 'distinta', name: 'La distinta', ask: '¿Cuál no sigue la regla?', desc: 'Cuatro figuras comparten una regla y una no: encontrá a la intrusa.' },
+];
+const COG_LEVELS = [
+  { name: 'Una regla a la vista', perQ: 75 }, { name: 'Reglas con más pasos', perQ: 65 }, { name: 'Dos reglas a la vez', perQ: 60 },
+  { name: 'Tres reglas', perQ: 55 }, { name: 'Todo junto y rápido', perQ: 50 },
+];
+const Q_PER_SESSION = 6, SIM_Q = 11, SIM_MS = 11 * 60000;
+const COG_SESSIONS = COG_LEVELS.flatMap((lv, gi) => COG_KINDS.map((k, ki) => ({ id: k.id + (gi + 1), kind: k.id, d: gi + 1, g: gi, n: gi * 3 + ki + 1, name: k.name })));
+const COG_JOKES = [
+  'Resolviste como un chimpancé: con entusiasmo y eligiendo las figuras por el color.',
+  'Nivel bebé: las figuras te parecen lindas, pero todavía no te dicen nada.',
+  'Nivel niño: ya encontrás patrones, sobre todo en las nubes.',
+  'Justo en el medio: a tu razonamiento abstracto le faltan unas monedas de práctica.',
+  'Nivel intelectual: ya te sale decir "es obvio, la flecha gira 45°".',
+  'Nivel premio Nobel: el inventor de las matrices estaría orgulloso.',
+  'Nivel alien: resolvés matrices mientras pensás en otra galaxia.',
+];
+const kindName = id => COG_KINDS.find(k => k.id === id).name;
+const cogStarsFor = (ok, n) => ok === n ? 3 : ok / n >= .8 ? 2 : ok / n >= .66 ? 1 : 0;
+const tierForPct = pct => [0, 20, 35, 50, 65, 80, 95].filter(v => pct >= v).length - 1;
+function cogState(gi) {
+  const ss = gi === FINAL ? COG_SESSIONS : COG_SESSIONS.filter(x => x.g === gi), done = ss.filter(x => S.cog[x.id]?.stars >= 1).length;
+  const gold = ss.every(x => S.cog[x.id]?.stars === 3);
+  return { done, total: ss.length, complete: done === ss.length, gold, tier: gi === FINAL ? (gold ? ALIEN : NOBEL) : gi };
+}
+function cogText(gi, st) {
+  if (gi === FINAL) return st.gold ? '¡Alien! Las 15 sesiones con 3 estrellas.'
+    : st.complete ? '¡Premio Nobel! Aprobaste las 15 sesiones. Con 3 estrellas en todas, alien.'
+    : `Aprobá las 15 sesiones para ser premio Nobel (llevás ${st.done}). Con 3 estrellas en todas, alien.`;
+  if (st.complete) return st.gold ? '¡Nivel superado con 3 estrellas en todas!' : `¡Nivel superado! Sigue: nivel ${tierShort(gi + 1 === FINAL ? NOBEL : gi + 1)}.`;
+  return st.done ? `${st.done} de ${st.total} sesiones para superarlo.` : `Aprobá las ${st.total} sesiones para superarlo.`;
+}
+function cogCard(gi) {
+  const st = cogState(gi);
+  const steps = gi === FINAL ? '' : `<span class="evo-steps">${Array.from({ length: st.total }, (_, i) => `<i class="${i < st.done ? 'on' : ''}"></i>`).join('')}</span>`;
+  return `<figure class="evo-card" data-tier="${st.tier}" data-done="${st.done}">${evoArt(gi, st)}<figcaption><b>Nivel ${tierShort(st.tier)}</b><span>${cogText(gi, st)}</span>${steps}</figcaption></figure>`;
+}
+const nextSession = () => COG_SESSIONS.find(x => !(S.cog[x.id]?.stars >= 1)) || COG_SESSIONS[COG_SESSIONS.length - 1];
+function qFigure(q, cls = 'fig') {
+  const blank = '<div class="q-blank">?</div>';
+  if (q.kind === 'serie') return `<div class="q-row">${q.seq.map(t => Figures.draw(t, cls)).join('<span class="q-arrow" aria-hidden="true">→</span>')}<span class="q-arrow" aria-hidden="true">→</span>${blank}</div>`;
+  if (q.kind === 'matriz') return `<div class="q-grid">${q.grid.map(t => Figures.draw(t, cls)).join('')}${blank}</div>`;
+  return '';
+}
+function renderCog() {
+  const nx = nextSession(), anyDone = COG_SESSIONS.some(x => S.cog[x.id]);
+  $('cogContinue').innerHTML = `${anyDone ? 'Seguir' : 'Empezar'}: sesión ${nx.n} <small>${nx.name} · nivel ${tierShort(nx.g)}</small>`;
+  $('cStars').textContent = `${COG_SESSIONS.reduce((a, x) => a + (S.cog[x.id]?.stars || 0), 0)}/${COG_SESSIONS.length * 3}`;
+  $('cDone').textContent = `${COG_SESSIONS.filter(x => S.cog[x.id]?.stars >= 1).length}/${COG_SESSIONS.length}`;
+  const best = S.sims.reduce((b, t) => Math.max(b, t.pct), -1);
+  $('cBest').textContent = best < 0 ? '—' : best + '%';
+  const sample = Figures.make.serie(1);
+  $('cogSample').innerHTML = `<p>${sample.prompt}</p>${qFigure(sample, 'fig')}<div class="q-opts sample">${sample.options.map((t, i) => `<span class="opt${i === sample.answer ? ' right' : ''}"><b>${'ABCDE'[i]}</b>${Figures.draw(t)}</span>`).join('')}</div>`;
+  $('cogKinds').innerHTML = COG_KINDS.map(k => { const q = Figures.make[k.id](2); return `<article class="kind"><h3>${k.name}</h3><p>${k.desc}</p><div class="kind-fig">${(q.seq || q.grid?.slice(0, 3) || q.options).slice(0, 4).map(t => Figures.draw(t)).join('')}</div></article>`; }).join('');
+  $('cogPath').replaceChildren(...COG_LEVELS.map((lv, gi) => {
+    const sec = document.createElement('section'); sec.className = 'group';
+    sec.innerHTML = `<div class="group-head"><div><h2>${lv.name}</h2><p>Dificultad ${gi + 1} de 5 · ${lv.perQ} segundos por pregunta. Aprobás con 4 de ${Q_PER_SESSION}; 3 estrellas con ${Q_PER_SESSION} de ${Q_PER_SESSION}.</p></div>${cogCard(gi)}</div>`;
+    const cards = document.createElement('div'); cards.className = 'cards';
+    for (const x of COG_SESSIONS.filter(x => x.g === gi)) {
+      const rec = S.cog[x.id], b = document.createElement('button');
+      b.className = 'lc' + (x === nx ? ' next' : '');
+      b.innerHTML = `<span class="meta"><span>Sesión ${x.n}</span>${x === nx ? '<span class="pill">Sigue</span>' : stars(rec?.stars || 0)}</span><span class="caps"><span class="name">${x.name}</span></span><span class="best">${rec ? `Mejor: ${Math.round(rec.pct * Q_PER_SESSION / 100)}/${Q_PER_SESSION} · ${fmt(rec.ms)}` : COG_KINDS.find(k => k.id === x.kind).ask}</span>`;
+      b.onclick = () => startQuiz(x);
+      cards.append(b);
+    }
+    sec.append(cards);
+    return sec;
+  }), Object.assign(document.createElement('section'), { className: 'group final', innerHTML: `<div class="group-head"><div><h2>La cima</h2><p>El simulacro de entrevista: ${SIM_Q} preguntas mezcladas en ${SIM_MS / 60000} minutos, sin ayuda hasta el final. Te dice a quién te parecés.</p></div>${cogCard(FINAL)}</div><div class="cards"><button class="lc" id="simCard"><span class="meta"><span>Simulacro</span></span><span class="caps"><span class="name">Simulacro de entrevista</span></span><span class="best">${best < 0 ? 'Sin intentos' : `Mejor: ${best}% · ${S.sims.length} ${S.sims.length === 1 ? 'intento' : 'intentos'}`}</span></button></div>` }));
+  $('simCard').onclick = () => startQuiz('sim');
+}
+function goCog() {
+  mode = 'cog'; running = false; clearInterval(timer);
+  if (location.hash !== '#entrevistas') window.history.replaceState(null, '', location.pathname + location.search + '#entrevistas');
+  show('cog'); renderCog();
+}
+
+let quiz = null;
+function startQuiz(sess) {
+  if (!mayStart()) return;
+  const sim = sess === 'sim';
+  const qs = sim
+    ? shuffle(Array.from({ length: SIM_Q }, (_, i) => Figures.make[COG_KINDS[i % 3].id](3 + (i % 3 + Math.floor(i / 3)) % 3)))
+    : Array.from({ length: Q_PER_SESSION }, () => Figures.make[sess.kind](sess.d));
+  quiz = { sess, sim, qs, i: 0, ok: 0, picks: [], limit: sim ? SIM_MS : Q_PER_SESSION * COG_LEVELS[sess.d - 1].perQ * 1000, t0: performance.now() };
+  mode = 'quiz'; counted = false;
+  $('qGroup').textContent = sim ? `Simulacro · ${SIM_Q} preguntas en ${SIM_MS / 60000} minutos` : `Sesión ${sess.n} · nivel ${tierShort(sess.g)} · dificultad ${sess.d}`;
+  $('qName').textContent = sim ? 'Simulacro de entrevista' : sess.name;
+  $('qPlay').hidden = false; $('qResult').hidden = true;
+  show('quiz'); renderQ();
+  clearInterval(timer); timer = setInterval(qTick, 250); qTick();
+}
+function qTick() {
+  if (mode !== 'quiz') return;
+  const left = quiz.limit - (performance.now() - quiz.t0);
+  $('qTime').textContent = fmt(left);
+  $('qTime').parentElement.classList.toggle('low', left < 30000);
+  if (left <= 0) finishQuiz();
+}
+function renderQ() {
+  const q = quiz.qs[quiz.i];
+  $('qNum').textContent = `${quiz.i + 1}/${quiz.qs.length}`; $('qOk').textContent = quiz.sim ? '—' : quiz.ok;
+  $('qBar').style.width = (100 * quiz.i / quiz.qs.length) + '%';
+  $('qPrompt').textContent = q.prompt;
+  $('qFig').innerHTML = qFigure(q); $('qFig').hidden = q.kind === 'distinta';
+  $('qOpts').className = 'q-opts' + (q.kind === 'distinta' ? ' big' : '');
+  $('qOpts').replaceChildren(...q.options.map((t, i) => {
+    const b = document.createElement('button'); b.className = 'opt'; b.type = 'button';
+    b.innerHTML = `<b>${'ABCDE'[i]}</b>${Figures.draw(t)}`; b.setAttribute('aria-label', 'Opción ' + 'ABCDE'[i]);
+    b.onclick = () => answerQ(i);
+    return b;
+  }));
+  $('qFeedback').hidden = true;
+}
+function answerQ(k) {
+  const q = quiz.qs[quiz.i];
+  if (mode !== 'quiz' || k >= q.options.length || !$('qFeedback').hidden) return;
+  if (!counted) countPractice();
+  const right = k === q.answer;
+  quiz.picks[quiz.i] = k; if (right) quiz.ok++;
+  if (quiz.sim) { nextQ(); return; }
+  const btns = $('qOpts').children;
+  btns[q.answer].classList.add('right'); if (!right) btns[k].classList.add('wrong');
+  $('qOk').textContent = quiz.ok;
+  $('qExplain').innerHTML = `<b>${right ? '✓ ¡Correcto!' : `✗ Era la ${'ABCDE'[q.answer]}.`}</b> `; $('qExplain').append(q.explain);
+  $('qFeedback').hidden = false; $('qNext').focus({ preventScroll: true });
+}
+function nextQ() {
+  if (mode !== 'quiz') return;
+  quiz.i++;
+  if (quiz.i >= quiz.qs.length) finishQuiz(); else renderQ();
+}
+function finishQuiz() {
+  if (mode !== 'quiz') return;
+  clearInterval(timer); mode = 'qdone'; doneAt = performance.now();
+  const ms = Math.min(quiz.limit, performance.now() - quiz.t0), n = quiz.qs.length, ok = quiz.ok, pct = Math.round(100 * ok / n);
+  const timedOut = quiz.i < n, sess = quiz.sess;
+  $('qBar').style.width = '100%'; $('qTime').textContent = fmt(quiz.limit - ms);
+  let html;
+  if (quiz.sim) {
+    const ti = tierForPct(pct);
+    S.sims.push({ pct, ms: Math.round(ms), date: Date.now() }); S.sims = S.sims.slice(-100);
+    const wrong = quiz.qs.map((q, i) => ({ q, i, pick: quiz.picks[i] })).filter(x => x.pick !== x.q.answer);
+    html = `<h3>Simulacro de entrevista</h3>
+      <div class="house-result">${Typists.typist(ti)}<div class="house-copy"><span class="eyebrow">Con ${ok} de ${n} correctas resolviste como</span><h4>${cap1(TIERS[ti].name)}</h4>
+        <p class="joke">${COG_JOKES[ti]}</p><p>${timedOut ? 'Se terminó el tiempo: las preguntas sin responder cuentan como incorrectas. ' : ''}Como referencia, apuntá a 8 de 11 o más.</p></div></div>
+      <div class="nums"><div><b>${ok}/${n}</b><span>correctas</span></div><div><b>${pct}%</b><span>aciertos</span></div><div><b>${fmt(ms)}</b><span>tiempo</span></div></div>
+      ${wrong.length ? `<div class="review"><h4>Para repasar</h4>${wrong.map(x => `<div class="rv"><span class="rv-n">${x.i + 1}</span><div><p><b>${kindName(x.q.kind)}.</b> ${x.pick == null ? 'Sin responder' : `Elegiste la ${'ABCDE'[x.pick]}`}; era la ${'ABCDE'[x.q.answer]}.</p><p class="rv-x"></p></div>${Figures.draw(x.q.options[x.q.answer], 'fig small')}</div>`).join('')}</div>` : '<p>¡Sin errores!</p>'}`;
+    setTimeout(() => document.querySelectorAll('#qResult .rv-x').forEach((el, i) => { el.textContent = wrong[i].q.explain; }));
+  } else {
+    const st = cogStarsFor(ok, n), before = cogState(sess.g), finBefore = cogState(FINAL), prev = S.cog[sess.id];
+    if (!prev || st > prev.stars || (st === prev.stars && pct > prev.pct)) S.cog[sess.id] = { stars: st, pct, ms: Math.round(ms) };
+    const after = cogState(sess.g), fin = cogState(FINAL), P = tierShort(sess.g);
+    let gi = sess.g, st2 = after, fresh = false, title = `Nivel ${P}`, txt = cogText(sess.g, after);
+    if (fin.tier > finBefore.tier || (fin.complete && !finBefore.complete)) { gi = FINAL; st2 = fin; fresh = true; title = fin.gold ? '¡Evolucionaste a alien!' : '¡Evolucionaste a premio Nobel!'; txt = cogText(FINAL, fin); }
+    else if (after.complete && !before.complete) {
+      gi = sess.g + 1; st2 = { ...cogState(gi), done: 1 }; fresh = true; title = `¡Nivel ${P} superado!`;
+      txt = gi === FINAL ? 'Aprobá todas las sesiones para llegar a premio Nobel, y probá el simulacro.' : `Evolucionaste: ahora vas por el nivel ${tierShort(gi)}.`;
+    } else if (after.gold && !before.gold) { title = `¡Nivel ${P} con 3 estrellas!`; fresh = true; }
+    else if (!st && !(prev?.stars >= 1)) txt = `Acertá 4 de ${n} para aprobarla y avanzar en el nivel ${P}.`;
+    const msg = timedOut ? 'Se terminó el tiempo: las preguntas sin responder cuentan como incorrectas.'
+      : st === 3 ? '¡Perfecto! Todas bien.' : st ? `Aprobada. Con ${st === 1 ? '5' : '6'} de ${n} ganás otra estrella.` : 'Todavía no: leé las explicaciones y probá de nuevo.';
+    html = `<h3>${st ? 'Sesión aprobada' : 'Casi: repetila'}</h3>${stars(st, 'bigstars')}
+      <div class="nums"><div><b>${ok}/${n}</b><span>correctas</span></div><div><b>${pct}%</b><span>aciertos</span></div><div><b>${fmt(ms)}</b><span>tiempo</span></div></div>
+      <p>${msg}</p><div class="result-evo">${evoArt(gi, st2, fresh)}<div><b>${title}</b><p>${txt}</p></div></div>`;
+  }
+  save();
+  recordSession({ lesson: 'cog', name: quiz.sim ? 'Simulacro de entrevista' : `Entrevista · ${sess.name} (sesión ${sess.n})`, stars: quiz.sim ? 0 : S.cog[sess.id]?.stars || 0, ppm: 0, acc: pct, ms: Math.round(ms) });
+  const nx = !quiz.sim && COG_SESSIONS[COG_SESSIONS.indexOf(sess) + 1];
+  $('qResult').innerHTML = html + `<div class="actions">
+      ${nx ? `<button class="btn primary" id="qrNext">Siguiente: sesión ${nx.n} <small>Enter</small></button>` : ''}
+      <button class="btn${nx ? '' : ' primary'}" id="qrAgain">${quiz.sim ? 'Otro simulacro' : 'Repetir'}${nx ? '' : ' <small>Enter</small>'}</button>
+      <button class="btn" id="qrHome">Entrenamiento</button></div>`;
+  $('qPlay').hidden = true; $('qResult').hidden = false;
+  $('qrNext') && ($('qrNext').onclick = () => startQuiz(nx));
+  $('qrAgain').onclick = () => startQuiz(sess);
+  $('qrHome').onclick = goCog;
+  (($('qrNext') || $('qrAgain'))).focus({ preventScroll: true });
+}
+$('qNext').onclick = nextQ;
+$('qBack').onclick = goCog;
+$('cogContinue').onclick = () => startQuiz(nextSession());
+$('simBtn').onclick = () => startQuiz('sim');
+$('cogCta').onclick = e => { e.preventDefault(); goCog(); };
 
 /* ---------- Ranking of every account: lesson progress and best speed ---------- */
 let RANK = null, rankView = 'progress';
@@ -1498,6 +1760,8 @@ if (matchMedia('(hover: none) and (pointer: coarse)').matches) $('touchNote').hi
 
 applyLayout(); applyKbMode(); renderHome(); renderAccountBtn();
 // Accounts need the server (Vercel functions). Without it (a local file or a static copy), hide the button.
+if (location.hash === '#entrevistas') goCog();
+addEventListener('hashchange', () => { if (location.hash === '#entrevistas' && mode !== 'cog' && mode !== 'quiz') goCog(); });
 renderRanking();
 api('auth').then(r => signedIn(auth.token, r.user.name)).catch(err => {
   if (err.status === 401) { if (auth.token) signedOut(); return; }

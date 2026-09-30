@@ -1,6 +1,6 @@
 # Teclado Ciego
 
-Aplicación para aprender a escribir sin mirar el teclado, en español. El frontend no requiere compilación: `index.html` contiene las lecciones y la práctica; `scenery.css` y `scenery.js` agregan el diseño y los paisajes de `assets/`; `typists.js` y `typists.css` dibujan (en SVG) los personajes que escriben.
+Aplicación para aprender a escribir sin mirar el teclado, en español. El frontend no requiere compilación: `index.html` contiene las lecciones y la práctica; `scenery.css` y `scenery.js` agregan el diseño y los paisajes de `assets/`; `typists.js` y `typists.css` dibujan (en SVG) los personajes que escriben; `figures.js` y `cognitive.css`, el test de entrevistas.
 
 ## Qué tiene
 
@@ -20,6 +20,18 @@ Aplicación para aprender a escribir sin mirar el teclado, en español. El front
 - **Distribución** latinoamericana o de España. La computadora tiene que tener el teclado configurado en español.
 
 Sin cuenta, el progreso se guarda en el navegador (`localStorage`).
+
+## Test de entrevistas (razonamiento abstracto)
+
+Desde **🧩 Test de entrevistas** en el header (o `/#entrevistas`) se entrena para los tests de razonamiento abstracto que usan muchas empresas en sus procesos de selección, tomando como referencia los de [AssessmentDay](https://www.assessmentday.com/). Por ahora, solo con figuras abstractas:
+
+- **Series:** ¿qué figura sigue? Las figuras cambian paso a paso (giran, se mueve un punto, se suman figuras, cambia el relleno o la forma).
+- **Matrices:** ¿qué completa la grilla de 3×3? Las reglas van por fila, por columna o con cada valor una vez en cada fila y columna.
+- **La distinta:** cuatro figuras comparten una regla y una no (forma, relleno, cantidad par o impar, cantidad igual a los lados o flechas que apuntan al punto).
+
+El diseño es el mismo que el de las lecciones: 5 niveles de dificultad, cada uno con su personaje (chimpancé, bebé, niño, indigente, intelectual) y 3 sesiones de 6 preguntas con tiempo. Se aprueba con 4 de 6, y 6 de 6 da 3 estrellas. Después de cada respuesta se muestra la correcta y la explicación de la regla. *La cima* es el **simulacro de entrevista**: 11 preguntas mezcladas en 11 minutos (como el test gratis de AssessmentDay), sin ayuda hasta el final, que te dice a quién te parecés y repasa los errores. Premio Nobel al aprobar las 15 sesiones y alien con 3 estrellas en todas.
+
+Las preguntas se generan al azar en `figures.js`, dibujadas en SVG, y cada una tiene una sola respuesta correcta. El avance se guarda en el navegador y en la cuenta (`cog` y `sims` en `api/data.js`). Cada sesión cuenta como una práctica del plan gratis.
 
 ## Plan Ilimitado (freemium)
 
@@ -62,7 +74,7 @@ Si falta la base, la práctica funciona igual sin cuenta y el formulario avisa q
 ## Desarrollo
 
 - `npm run dev` levanta el sitio y la API en http://127.0.0.1:3000 con una base en memoria.
-- `npm test` prueba en Chromium: la portada que cambia sola, crear cuenta, practicar y evolucionar de nivel, las tildes en Mac y Safari, medir la velocidad y ver a quién te parecés, el ranking, los desafíos por WhatsApp y email, entrar desde otro navegador y cerrar sesión. Después corre `tests/billing.cjs` (también suelto con `npm run test:billing`): el límite de 3 prácticas y la suscripción contra un Mercado Pago simulado.
+- `npm test` prueba en Chromium: la portada que cambia sola, crear cuenta, practicar y evolucionar de nivel, las tildes en Mac y Safari, medir la velocidad y ver a quién te parecés, el ranking, los desafíos por WhatsApp y email, el test de entrevistas (series, matrices, la distinta y el simulacro), entrar desde otro navegador y cerrar sesión. Después corre `tests/billing.cjs` (también suelto con `npm run test:billing`): el límite de 3 prácticas y la suscripción contra un Mercado Pago simulado.
 
 ## Publicar en Vercel
 
