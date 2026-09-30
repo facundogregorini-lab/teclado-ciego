@@ -5,7 +5,8 @@
   "description": "Práctica para escribir sin mirar el teclado, con cuentas de usuario",
   "scripts": {
     "dev": "node tests/server.cjs",
-    "test": "node tests/smoke.cjs"
+    "test": "node tests/smoke.cjs && node tests/billing.cjs",
+    "test:billing": "node tests/billing.cjs"
   },
   "dependencies": {
     "redis": "^4.7.1"
