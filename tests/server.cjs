@@ -9,10 +9,10 @@ function createServer() {
     const url = new URL(req.url, 'http://localhost');
     const match = /^\/api\/([a-z]+)$/.exec(url.pathname);
     if (!match) {
-      const publicFiles = new Set(['/scenery.css', '/scenery.js', '/typists.css', '/typists.js', '/cognitive.css', '/figures.js', ...['beach', 'mountains', 'forest'].flatMap(name => ['/assets/' + name + '.jpg', '/assets/' + name + '-thumb.jpg'])]);
+      const publicFiles = new Set(['/scenery.css', '/scenery.js', '/typists.css', '/typists.js', '/cognitive.css', '/figures.js', '/legal.css', '/precios.html', '/terminos.html', '/privacidad.html', '/reembolsos.html', '/demo/teclado-ciego-demo.mp4', ...['beach', 'mountains', 'forest'].flatMap(name => ['/assets/' + name + '.jpg', '/assets/' + name + '-thumb.jpg'])]);
       const pathname = url.pathname === '/' ? '/index.html' : url.pathname;
       if (pathname !== '/index.html' && !publicFiles.has(pathname)) { res.statusCode = 404; return res.end('Not found'); }
-      const types = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.jpg': 'image/jpeg' };
+      const types = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.jpg': 'image/jpeg', '.mp4': 'video/mp4' };
       res.setHeader('Content-Type', types[path.extname(pathname)]);
       return res.end(fs.readFileSync(path.join(root, pathname)));
     }

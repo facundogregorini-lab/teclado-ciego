@@ -76,6 +76,11 @@ El servidor son funciones de Vercel en `api/` (`auth.js`, `data.js`, `ranking.js
 
 Si falta la base, la práctica funciona igual sin cuenta y el formulario avisa qué falta.
 
+## Precios, legales y demo
+
+- `precios.html`, `terminos.html`, `privacidad.html` y `reembolsos.html` (con `legal.css`) son las páginas de precios y legales, enlazadas desde el pie de la app y desde el diálogo del plan. Cada una tiene un resumen en inglés. El email de contacto es info@tecladociego.com.
+- `demo/teclado-ciego-demo.mp4` es un video de 2 minutos con un recorrido por la app (grabado con Playwright sobre el servidor local, con cuentas de ejemplo en el ranking).
+
 ## Desarrollo
 
 - `npm run dev` levanta el sitio y la API en http://127.0.0.1:3000 con una base en memoria.
