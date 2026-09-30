@@ -1,8 +1,10 @@
 # Teclado Ciego
 
-Aplicación para aprender a escribir sin mirar el teclado, en español. Es un solo archivo (`index.html`), sin compilación ni dependencias.
+Aplicación para aprender a escribir sin mirar el teclado, en español. El frontend no requiere compilación: `index.html` contiene las lecciones y la práctica; `scenery.css` y `scenery.js` agregan el diseño y los paisajes de `assets/`.
 
 ## Qué tiene
+
+- **Un lugar tranquilo para practicar:** diseño claro en tonos arena y verde, con paisajes de playa, montaña y bosque. El selector también funciona durante la práctica y recuerda la elección en este navegador. Las fotos se sirven desde la app y el texto tiene superficies claras para mantener la legibilidad.
 
 - **26 lecciones en orden:** fila guía, fila superior, fila inferior (con coma y punto), mayúsculas, tildes y textos reales. Cada grupo termina con un repaso.
 - **Ejercicios nuevos en cada intento:** repetición de las teclas nuevas, combinaciones y palabras en español que solo usan las letras ya aprendidas.

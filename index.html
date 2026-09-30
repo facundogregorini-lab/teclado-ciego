@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="es">
+<html lang="es" data-theme="light" data-scene="beach">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -219,11 +219,17 @@ dialog::backdrop{background:rgba(10,14,18,.45)}
 @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
 </style>
 
+<link rel="stylesheet" href="scenery.css">
+<script src="scenery.js" defer></script>
 </head>
 <body>
 <div class="wrap">
   <header class="top">
     <button class="brand" id="homeBtn" aria-label="Volver a las lecciones"><kbd>F</kbd>Teclado Ciego</button>
+    <nav class="main-nav" aria-label="Navegación principal"><a href="#learning">Lecciones</a><a href="#evo">Mi progreso</a></nav>
+    <button class="acct out" id="acctBtn">Entrar</button>
+  </header>
+  <div class="preferences">
     <div class="settings">
       <label for="layout">Distribución
         <select id="layout"><option value="la">Latinoamericano</option><option value="es">España</option></select>
@@ -233,25 +239,40 @@ dialog::backdrop{background:rgba(10,14,18,.45)}
         <button data-v="error" aria-pressed="false">Solo si me equivoco</button>
         <button data-v="hidden" aria-pressed="false">Oculto</button>
       </div>
-      <button class="acct out" id="acctBtn">Entrar</button>
     </div>
-  </header>
+    <div class="scene-picker" role="group" aria-label="Paisaje de fondo">
+      <span class="scene-label">Tu paisaje</span>
+      <button data-scene="beach" aria-pressed="true"><img src="assets/beach-thumb.jpg" alt="" width="28" height="28">Playa</button>
+      <button data-scene="mountains" aria-pressed="false"><img src="assets/mountains-thumb.jpg" alt="" width="28" height="28">Montaña</button>
+      <button data-scene="forest" aria-pressed="false"><img src="assets/forest-thumb.jpg" alt="" width="28" height="28">Bosque</button>
+    </div>
+  </div>
 
   <main id="home">
-    <section class="hero">
-      <div>
-        <h1>Escribí sin mirar el teclado.</h1>
-        <p>Lecciones cortas, fila por fila, con el dedo correcto para cada tecla. Apoyá los índices en la F y la J: tienen un relieve para encontrarlas a ciegas.</p>
+    <section class="hero" aria-labelledby="heroTitle">
+      <div class="hero-copy">
+        <span class="eyebrow"><span class="sun-mark" aria-hidden="true">✳</span> UN MOMENTO PARA VOS</span>
+        <h1 id="heroTitle">Escribí sin mirar.<br><em>A tu ritmo.</em></h1>
+        <p>Soltá la vista del teclado. Encontrá tu ritmo.<br> Unas pocas teclas por día, un poco más de libertad.</p>
         <div class="actions">
           <button class="btn primary" id="continue"></button>
-          <button class="btn" id="testBtn">Medir mi velocidad</button>
+          <button class="btn" id="testBtn">Medir mi velocidad <span aria-hidden="true">↗</span></button>
         </div>
-        <div class="stats">
-          <div class="stat"><b id="hStars">0</b><span>estrellas</span></div>
-          <div class="stat"><b id="hDone">0</b><span>lecciones aprobadas</span></div>
-          <div class="stat"><b id="hBest">—</b><span>mejor prueba (ppm)</span></div>
-        </div>
+        <span class="hero-note">26 lecciones cortas · De cero a escribir con confianza</span>
       </div>
+      <div class="landscape-note"><span aria-hidden="true">◌</span><span id="sceneCaption">Un respiro junto al mar</span></div>
+    </section>
+    <section class="progress-summary" aria-label="Tu progreso">
+      <div class="summary-intro"><span class="eyebrow">PASO A PASO</span><p>Cada tecla cuenta.</p></div>
+      <div class="stats">
+        <div class="stat"><b id="hStars">0</b><span>estrellas ganadas</span></div>
+        <div class="stat"><b id="hDone">0</b><span>lecciones aprobadas</span></div>
+        <div class="stat"><b id="hBest">—</b><span>mejor prueba (ppm)</span></div>
+      </div>
+      <span class="summary-flower" aria-hidden="true">✳</span>
+    </section>
+    <section class="keyboard-intro" aria-label="Guía de dedos">
+      <div class="keyboard-copy"><span class="eyebrow">EMPEZÁ POR ACÁ</span><h2>Tus manos saben<br> el camino.</h2><p>Apoyá los índices en la <kbd>F</kbd> y la <kbd>J</kbd>. Sentí el relieve de las teclas y dejá que cada dedo encuentre su lugar.</p><span class="micro-note">Un color, un dedo. Así de simple.</span></div>
       <div class="mapcard">
         <h2>Qué dedo usa cada tecla</h2>
         <div class="kb" id="mapKb"></div>
@@ -264,11 +285,16 @@ dialog::backdrop{background:rgba(10,14,18,.45)}
         </div>
       </div>
     </section>
+    <section class="learning" id="learning" aria-labelledby="learningTitle">
+      <div class="section-heading"><div><span class="eyebrow">TU CAMINO</span><h2 id="learningTitle">Un poquito mejor, cada día.</h2></div><span>26 lecciones · Sin apuro</span></div>
+      <div class="path" id="path"></div>
+    </section>
     <p class="notice" id="touchNote" hidden>En el celular podés practicar con el teclado de la pantalla, pero el método de los dedos se aprende con un teclado físico: usá una computadora o conectá un teclado a la tablet.</p>
     <section class="evo" id="evo" aria-labelledby="evoTitle">
       <div class="evo-head">
-        <h2 id="evoTitle">Tu velocidad según cómo escribís</h2>
-        <p>Medí un minuto de texto real eligiendo cómo vas a escribir. Repetilo cada tanto: al principio vas a ir más rápido mirando el teclado, y con el entrenamiento la línea "A ciegas" la alcanza y la supera. Durante la medición no hay ayuda en pantalla.</p>
+        <span class="eyebrow">MIRÁ CUÁNTO AVANZASTE</span>
+        <h2 id="evoTitle">Tu ritmo, cada vez más tuyo.</h2>
+        <p>Un minuto para descubrir cómo venís. Elegí tu forma de escribir y compará tu evolución con el tiempo. Durante la prueba, el teclado en pantalla descansa.</p>
       </div>
       <div class="methods" id="methods"></div>
       <p class="insight" id="insight" hidden></p>
@@ -282,7 +308,6 @@ dialog::backdrop{background:rgba(10,14,18,.45)}
       <div class="chart" id="chart"><svg id="chartSvg" role="img" aria-label="Palabras por minuto en cada medición, por método"></svg><div class="tt" id="tt" hidden></div></div>
       <div class="hist" id="evoTable" hidden></div>
     </section>
-    <div class="path" id="path"></div>
   </main>
 
   <main id="lesson" class="lesson" hidden>
@@ -672,6 +697,7 @@ const elapsed = () => accMs + (running ? performance.now() - t0 : 0);
 const fmt = ms => { const s = Math.max(0, Math.round(ms / 1000)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
 
 function show(view) {
+  document.body.dataset.view = view;
   $('home').hidden = view !== 'home'; $('lesson').hidden = view !== 'lesson';
   scrollTo({ top: 0 });
 }
@@ -866,6 +892,7 @@ document.addEventListener('keydown', e => {
     if (e.metaKey || (e.ctrlKey && !e.altKey)) return;
     if (e.key === 'Escape') { e.preventDefault(); goHome(); return; }
     if (e.key === 'Dead' && 'áéíóú'.includes(text[idx]) && !deadPending) { deadPending = true; highlight(); }
+    if (e.target.closest?.('button, select, a, summary, input:not(#cap)')) return;
     if (e.target !== $('cap') && e.key.length === 1) { e.preventDefault(); focusCap(); typeChar(e.key); }
   } else if (mode === 'done' && e.key === 'Enter' && performance.now() - doneAt > 500) {
     e.preventDefault(); (($('rNext') || $('rAgain'))).click();
@@ -875,6 +902,7 @@ function checkFocus() { $('veil').hidden = mode !== 'typing' || (document.hasFoc
 addEventListener('blur', () => { if (running) { accMs = elapsed(); running = false; } checkFocus(); });
 addEventListener('focus', checkFocus);
 document.addEventListener('visibilitychange', () => { if (document.hidden && running) { accMs = elapsed(); running = false; } });
+document.querySelectorAll('.main-nav a').forEach(a => a.addEventListener('click', () => { goHome(); }));
 $('veil').onclick = focusCap;
 $('stage').addEventListener('click', focusCap);
 $('cap').addEventListener('input', e => takeInput(e.isComposing));
