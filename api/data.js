@@ -25,6 +25,7 @@ function cleanProgress(p) {
       .map(t => ({ method: t.method, ppm: num(t.ppm, 400), acc: num(t.acc, 100), date: Math.round(Number(t.date)) })),
     layout: p.layout === 'es' ? 'es' : 'la',
     kb: ['always', 'error', 'hidden'].includes(p.kb) ? p.kb : 'always',
+    tildes: p.tildes === 'loose' ? 'loose' : 'strict',
   };
 }
 

@@ -1,11 +1,11 @@
 # Teclado Ciego
 
-Aplicación para aprender a escribir sin mirar el teclado, en español. El frontend no requiere compilación: `index.html` contiene las lecciones y la práctica; `scenery.css` y `scenery.js` agregan el diseño y los paisajes de `assets/`; `cabins.js` y `cabins.css` dibujan (en SVG) las cabañas y los personajes que escriben.
+Aplicación para aprender a escribir sin mirar el teclado, en español. El frontend no requiere compilación: `index.html` contiene las lecciones y la práctica; `scenery.css` y `scenery.js` agregan el diseño y los paisajes de `assets/`; `typists.js` y `typists.css` dibujan (en SVG) los personajes que escriben.
 
 ## Qué tiene
 
 - **Un lugar tranquilo para practicar:** diseño claro en tonos arena y verde, con paisajes de playa, montaña y bosque. La portada pasa sola de un paisaje a otro (cada 7 segundos, salvo con *movimiento reducido*). El selector elige el fondo de toda la página, también durante la práctica, y lo recuerda en este navegador.
-- **Una cabaña por grupo:** cada grupo de lecciones construye su propia cabaña (de playa, del bosque, de montaña, del lago y la soñada) en 6 piezas: cimientos, paredes, techo, puerta y ventanas, chimenea, y jardín con luces. Las piezas se suman al aprobar lecciones y lo que falta se ve como un plano punteado. Con 3 estrellas en todo el grupo, luces de fiesta.
+- **De chimpancé a alien en cada grupo:** cada grupo de lecciones tiene su personaje escribiendo, que evoluciona con cada lección aprobada: chimpancé, bebé, niño, indigente, intelectual, premio Nobel y alien (la misma escala que la medición de velocidad). Al aprobar una lección, el resultado muestra "¡Evolucionaste! De niño a indigente". Con 3 estrellas en todo el grupo, el alien gana un aura dorada.
 
 - **26 lecciones en orden:** fila guía, fila superior, fila inferior (con coma y punto), mayúsculas, tildes y textos reales. Cada grupo termina con un repaso.
 - **Ejercicios nuevos en cada intento:** repetición de las teclas nuevas, combinaciones y palabras en español que solo usan las letras ya aprendidas.
@@ -16,6 +16,7 @@ Aplicación para aprender a escribir sin mirar el teclado, en español. El front
 - **¿Cómo quién escribís?** En la medición de velocidad, un personaje escribe en vivo a tu ritmo y al final te dice a quién te parecés, en una escala de evolución: chimpancé, bebé, niño, indigente, intelectual, premio Nobel y alien. Te compara con la mediana (40 palabras por minuto, con un porcentaje aproximado de gente más lenta) y hace chistes, sobre todo si vas despacio ("estás en la media de un chimpancé").
 - **Desafiá a tus amigos:** después de medir (o desde *Mi progreso*) mandás un enlace por WhatsApp o email, o lo copiás. Quien lo abre ve "ana te desafía: 42 palabras por minuto a ciegas", acepta y al terminar sabe si ganó y puede mandar la revancha. La marca viaja en el enlace (`?de=ana&ppm=42&metodo=ciegas`); no se guarda nada en el servidor.
 - **Ranking:** todas las cuentas, por avance (lecciones aprobadas y estrellas) y por velocidad (mejor medición). Se ve sin cuenta; para aparecer hay que entrar. Muestra el top 50 y tu lugar. Las mediciones de más de 250 palabras por minuto no cuentan.
+- **Tildes en cualquier teclado:** la tilde con tecla muerta (´ y después la vocal) funciona también en Safari en Mac, cuando el foco no está en el texto y cuando el teclado manda la marca y la vocal por separado. En Mac con teclado en inglés se usa Option + E y la vocal, y el menú de mantener apretada la vocal no cuenta como error. Si la tilde no sale, aparece una ayuda con el botón *Aceptar vocales sin tilde*; la opción *Tildes opcionales* también está en las preferencias.
 - **Distribución** latinoamericana o de España. La computadora tiene que tener el teclado configurado en español.
 
 Sin cuenta, el progreso se guarda en el navegador (`localStorage`).
@@ -61,7 +62,7 @@ Si falta la base, la práctica funciona igual sin cuenta y el formulario avisa q
 ## Desarrollo
 
 - `npm run dev` levanta el sitio y la API en http://127.0.0.1:3000 con una base en memoria.
-- `npm test` prueba en Chromium: la portada que cambia sola, crear cuenta, practicar y sumar piezas a la cabaña, medir la velocidad y ver a quién te parecés, el ranking, los desafíos por WhatsApp y email, entrar desde otro navegador y cerrar sesión. Después corre `tests/billing.cjs` (también suelto con `npm run test:billing`): el límite de 3 prácticas y la suscripción contra un Mercado Pago simulado.
+- `npm test` prueba en Chromium: la portada que cambia sola, crear cuenta, practicar y evolucionar de nivel, las tildes en Mac y Safari, medir la velocidad y ver a quién te parecés, el ranking, los desafíos por WhatsApp y email, entrar desde otro navegador y cerrar sesión. Después corre `tests/billing.cjs` (también suelto con `npm run test:billing`): el límite de 3 prácticas y la suscripción contra un Mercado Pago simulado.
 
 ## Publicar en Vercel
 

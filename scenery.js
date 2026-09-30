@@ -1,5 +1,5 @@
 (() => {
-  const scenes = { beach: 'Una cabañita frente al mar', mountains: 'Un refugio entre montañas', forest: 'Una cabaña escondida en el bosque' };
+  const scenes = { beach: 'Un respiro junto al mar', mountains: 'Un momento entre montañas', forest: 'La calma de estar en el bosque' };
   const order = Object.keys(scenes);
   const buttons = document.querySelectorAll('.scene-picker button');
   const slides = document.querySelectorAll('.hero-slides .slide');
