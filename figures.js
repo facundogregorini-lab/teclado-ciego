@@ -169,6 +169,7 @@ window.Figures = (() => {
     return distinta(Math.max(1, d - 1));
   }
 
-  const make = { serie, matriz, distinta };
+  // Every puzzle remembers its difficulty (the 3-minute run scores right answers by it).
+  const make = Object.fromEntries(Object.entries({ serie, matriz, distinta }).map(([k, fn]) => [k, d => ({ ...fn(d), d })]));
   return { make, draw, KINDS: Object.keys(make) };
 })();

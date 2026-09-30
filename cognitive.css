@@ -1,9 +1,12 @@
-/* Interview training: abstract-figure puzzles with the same look as the lessons. */
-.main-nav .nav-cta {color:var(--accent);font-weight:700;border:1px solid #a3baa6;border-radius:99px;padding:6px 14px;background:var(--card)}
+/* Ninja mental: interview-style abstract-figure puzzles with the same look as the lessons. */
+/* Header: Ninja mental right after the brand, "Mejorar suscripción" before the account */
 .main-nav a {white-space:nowrap}
-.cta-short {display:none}
-.main-nav .nav-cta:hover {text-decoration:none;background:#edf4e9}
-body[data-view="cog"] .main-nav .nav-cta,body[data-view="quiz"] .main-nav .nav-cta {background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.ninja-cta,.upgrade-cta {display:inline-flex;align-items:center;gap:6px;white-space:nowrap;border-radius:99px;font-size:.85rem;font-weight:700;text-decoration:none;padding:8px 16px;transition:transform .15s,box-shadow .15s}
+.ninja-cta {margin-left:-8px;background:#1f2a2e;color:#fff;border:1px solid #1f2a2e}
+.ninja-cta:hover,.upgrade-cta:hover {transform:translateY(-1px);box-shadow:0 5px 14px #1f2a2e26}
+body[data-view="cog"] .ninja-cta,body[data-view="quiz"] .ninja-cta {background:var(--accent);border-color:var(--accent)}
+.upgrade-cta {background:linear-gradient(135deg,#ffe29a,#f0b340);color:#3b2a06;border:1px solid #e0a52e;margin-right:-8px}
+body[data-view="lesson"] .challenge-banner,body[data-view="quiz"] .challenge-banner {display:none}
 body[data-view="cog"] .settings,body[data-view="quiz"] .settings {display:none}
 body[data-view="quiz"]::before {background:linear-gradient(#f7f8f3b5,#f7f8f3a6),var(--scene-image) var(--scene-position)/cover}
 #cog {display:grid;gap:30px;min-width:0}
@@ -26,6 +29,22 @@ body[data-view="quiz"]::before {background:linear-gradient(#f7f8f3b5,#f7f8f3a6),
 .kind p {margin:0;font-size:.82rem;color:var(--muted);line-height:1.55}
 .kind-fig {display:flex;gap:6px}
 .kind-fig .fig {width:52px;flex:none}
+
+/* 3-minute run */
+.ninja-max {display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:28px;align-items:start;border-radius:24px;padding:30px;background:linear-gradient(135deg,#1f2a2e,#2e3f47);color:#f3f5ef}
+.ninja-max .eyebrow {color:#9fe3c9}
+.ninja-max h2 {font-family:var(--display);font-weight:600;font-size:2rem;letter-spacing:-.04em;margin:0 0 10px}
+.ninja-max p {color:#c9d4d0;line-height:1.65;margin:0 0 18px;max-width:52ch}
+.ninja-max .btn:not(.primary) {background:transparent;color:#f3f5ef;border-color:#ffffff55}
+.nm-best {font-weight:700;color:#fff!important;margin:14px 0 0!important}
+.nm-rank {background:#ffffff10;border:1px solid #ffffff26;border-radius:18px;padding:16px;display:grid;gap:10px}
+.nm-rank h3 {margin:0;font-family:var(--display);font-weight:600;font-size:1.1rem}
+.nm-rank .rank-list li {background:#ffffff14;border-color:#ffffff22;color:#f3f5ef}
+.nm-rank .rank-list li.me {background:#ffffff26;border-color:#9fe3c9}
+.nm-rank .rank-list .val small,.nm-rank .rank-list .who small,.nm-rank .rank-note {color:#c9d4d0}
+.nm-rank .rank-list .bar {background:#ffffff22}
+.nm-rank .rank-list .bar i {background:#9fe3c9}
+.house-copy h4.iq {font-size:clamp(2.2rem,5vw,3.2rem)}
 
 /* Question */
 .q-prompt {font-family:var(--display);font-weight:600;font-size:1.3rem;letter-spacing:-.02em;margin:0 0 16px}
@@ -57,7 +76,7 @@ body[data-view="quiz"]::before {background:linear-gradient(#f7f8f3b5,#f7f8f3a6),
 .rv .rv-x {color:var(--muted)}
 .rv-n {font:700 1rem var(--display);color:var(--muted)}
 
-@media(max-width:1050px) {.cog-hero {grid-template-columns:1fr;padding:34px 28px}}
+@media(max-width:1050px) {.cog-hero,.ninja-max {grid-template-columns:1fr;padding:34px 28px}}
 @media(max-width:700px) {
   .cog-hero {padding:26px 20px;border-radius:22px}
   .cog-kinds {grid-template-columns:1fr}
@@ -65,7 +84,12 @@ body[data-view="quiz"]::before {background:linear-gradient(#f7f8f3b5,#f7f8f3a6),
   .q-row .fig,.q-row .q-blank {width:calc((100% - 60px) / 6)}
   .q-arrow {display:none}
   .q-grid {grid-template-columns:repeat(3,minmax(0,90px))}
-  .main-nav {gap:16px!important}
-  .main-nav .nav-cta {padding:3px 10px;margin-left:auto}
-  .cta-long {display:none}.cta-short {display:inline}
+  .main-nav {gap:18px!important}
+  .cta-long {display:none}
+  .ninja-cta,.upgrade-cta {padding:6px 11px;font-size:.78rem}
+  .ninja-cta {margin-left:0}
+  .top .acct {margin-left:auto}
+  .main-nav {width:auto!important;flex:1}
+  .upgrade-cta {order:4;margin:0}
+  .ninja-max {padding:22px 16px;border-radius:20px}
 }
