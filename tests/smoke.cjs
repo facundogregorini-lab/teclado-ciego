@@ -41,7 +41,10 @@ function typeText(page) {
     const firstScene = await a.getAttribute('html', 'data-hero-scene');
     await a.waitForFunction(s => document.documentElement.dataset.heroScene !== s, firstScene, { timeout: 10000 });
     check('The hero changes landscape by itself', await a.locator('.hero-slides .slide.on').count() === 1);
-    check('Every group starts with a chimpanzee', await a.getAttribute('.evo-card >> nth=0', 'data-stage') === '0' && (await a.textContent('.evo-card >> nth=0')).includes('Nivel chimpancé'));
+    const levels = await a.$$eval('.evo-card b', els => els.map(e => e.textContent));
+    check('Each group is its own level, with the final one at the end', levels.join() === 'Nivel chimpancé,Nivel bebé,Nivel niño,Nivel indigente,Nivel intelectual,Nivel premio Nobel');
+    check('Each level shows its own typist', new Set(await a.$$eval('.evo-card svg', els => els.map(e => e.innerHTML))).size === 6);
+    check('Levels not started look locked', await a.locator('.evo-art.locked').count() === 6);
     await a.click('#continue');
     await a.locator('.scene-picker [data-scene="forest"]').press('Space');
     check('Changing the landscape by keyboard does not type into the exercise',
@@ -58,10 +61,10 @@ function typeText(page) {
     check('Registering signs in', (await a.textContent('#acctBtn .nm')) === 'ana');
     await a.click('#continue'); await typeLesson(a);
     await a.waitForSelector('#result:not([hidden])');
-    check('Passing a lesson makes the typist evolve', (await a.textContent('.result-evo b')).includes('De chimpancé a bebé'));
+    check('The lesson result shows the level progress', (await a.textContent('.result-evo')).includes('1 de 6 lecciones'));
     await a.waitForTimeout(300);
     await a.click('#rHome');
-    check('The group shows the new level', await a.getAttribute('.evo-card >> nth=0', 'data-stage') === '1' && await a.locator('.evo-card >> nth=0 >> .typist-art').count() === 1);
+    check('The started level is no longer locked', await a.getAttribute('.evo-card >> nth=0', 'data-done') === '1' && await a.locator('.evo-art.locked').count() === 5);
 
     // On-screen keyboards (Android reports keys as "Unidentified"): text arrives only as input
     await a.click('.lc >> nth=19');

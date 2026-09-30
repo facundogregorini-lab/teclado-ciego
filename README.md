@@ -5,7 +5,7 @@ Aplicación para aprender a escribir sin mirar el teclado, en español. El front
 ## Qué tiene
 
 - **Un lugar tranquilo para practicar:** diseño claro en tonos arena y verde, con paisajes de playa, montaña y bosque. La portada pasa sola de un paisaje a otro (cada 7 segundos, salvo con *movimiento reducido*). El selector elige el fondo de toda la página, también durante la práctica, y lo recuerda en este navegador.
-- **De chimpancé a alien en cada grupo:** cada grupo de lecciones tiene su personaje escribiendo, que evoluciona con cada lección aprobada: chimpancé, bebé, niño, indigente, intelectual, premio Nobel y alien (la misma escala que la medición de velocidad). Al aprobar una lección, el resultado muestra "¡Evolucionaste! De niño a indigente". Con 3 estrellas en todo el grupo, el alien gana un aura dorada.
+- **Cada grupo es un nivel, de chimpancé a alien:** fila guía = chimpancé, fila superior = bebé, fila inferior = niño, mayúsculas y tildes = indigente y textos = intelectual (la misma escala que la medición de velocidad). Cada nivel muestra a su personaje escribiendo: en gris hasta que empezás, con una barra de lecciones aprobadas y una marca al superarlo (dorada con 3 estrellas en todas). Al superar un nivel, el resultado muestra "¡Nivel chimpancé superado!" con el personaje siguiente. Al final, *La cima*: premio Nobel al aprobar las 26 lecciones y alien con 3 estrellas en todas.
 
 - **26 lecciones en orden:** fila guía, fila superior, fila inferior (con coma y punto), mayúsculas, tildes y textos reales. Cada grupo termina con un repaso.
 - **Ejercicios nuevos en cada intento:** repetición de las teclas nuevas, combinaciones y palabras en español que solo usan las letras ya aprendidas.
