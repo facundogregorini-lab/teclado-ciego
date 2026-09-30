@@ -103,3 +103,8 @@ body[data-view="quiz"]::before {background:linear-gradient(#f7f8f3b5,#f7f8f3a6),
   .upgrade-cta {order:4;margin:0}
   .ninja-max {padding:22px 16px;border-radius:20px}
 }
+
+/* Links to pricing and legal pages */
+.legal {display:flex;flex-wrap:wrap;justify-content:center;gap:6px 18px;font-size:.78rem;margin-top:-12px}
+.legal a {color:var(--muted)}
+.plan-legal {font-size:.78rem!important}
