@@ -1,62 +1,7 @@
-// Illustrations in plain SVG: the cabin each group of lessons builds piece by piece, and the typist
-// that matches each speed (from a chimpanzee to an alien). Loaded before the app script.
-window.Cabins = (() => {
-  let uidN = 0;
-  const uid = p => 'cb-' + p + (++uidN); // gradient ids must stay unique when a drawing appears twice
+// Illustrations in plain SVG: seven typists, from a chimpanzee to an alien. They show the speed level of a
+// measurement and how far each group of lessons has gone. Loaded before the app script.
+window.Typists = (() => {
   const svg = (vb, body, cls = '') => `<svg viewBox="${vb}" class="${cls}" aria-hidden="true" focusable="false">${body}</svg>`;
-  const vgrad = (id, stops) => `<linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1">${stops.map((c, i) => `<stop offset="${i / (stops.length - 1)}" stop-color="${c}"/>`).join('')}</linearGradient>`;
-  const smoke = (x, y, s = 1) => `<g class="smoke">${[0, 1, 2].map(i => `<circle class="puff p${i}" cx="${x}" cy="${y}" r="${2.4 * s}"/>`).join('')}</g>`;
-  const pine = (x, base, h, c1 = '#2c4d38', c2 = '#244231') =>
-    `<path d="M${x} ${base - h} L${x + h * .32} ${base - h * .38} L${x - h * .32} ${base - h * .38}Z" fill="${c1}"/><path d="M${x} ${base - h * .72} L${x + h * .4} ${base} L${x - h * .4} ${base}Z" fill="${c2}"/>`;
-
-  /* ---------- A cabin per group of lessons, built one piece at a time ---------- */
-  const PARTS = ['los cimientos', 'las paredes', 'el techo', 'la puerta y las ventanas', 'la chimenea', 'el jardín y las luces'];
-  const THEMES = [
-    { name: 'Cabaña de playa', sky: ['#fde6c8', '#c4e6e7'], ground: '#f0dbb0', wall: '#d9b48a', wallDark: '#b48a5e', roof: '#c9874f', roofDark: '#9d6334',
-      bg: `<circle cx="198" cy="52" r="15" fill="#ffd79a"/><rect x="0" y="104" width="240" height="18" fill="#7ecbd0"/><path d="M0 110q12-3 24 0t24 0 24 0 24 0" stroke="#c9f0ef" stroke-width="1.4" fill="none"/>
-           <path d="M26 128 q4-30 10-52" stroke="#8a6444" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M36 76 q-18 -6 -26 6 M36 76 q-10 -14 -24 -12 M36 76 q10 -14 24 -10 M36 76 q16 -2 22 12" stroke="#4f8a4c" stroke-width="5" fill="none" stroke-linecap="round"/>` },
-    { name: 'Refugio del bosque', sky: ['#e3efe1', '#bcd8c3'], ground: '#80a26e', wall: '#8a5d3b', wallDark: '#654128', roof: '#5b6e3f', roofDark: '#3f4f2b',
-      bg: `${pine(20, 128, 70)}${pine(44, 124, 48, '#3a6146', '#2f5139')}${pine(212, 128, 76)}${pine(190, 126, 44, '#3a6146', '#2f5139')}` },
-    { name: 'Chalet de montaña', sky: ['#d5e7f6', '#eef4f8'], ground: '#9dbf85', wall: '#7b5536', wallDark: '#5a3b24', roof: '#4a4450', roofDark: '#312c37', snow: true,
-      bg: `<path d="M-10 118 L50 44 L92 96 L128 58 L178 112 L208 70 L250 118Z" fill="#9fb2c6"/><path d="M50 44 L40 56 L48 54 L55 60 L62 52Z M128 58 L120 67 L128 65 L134 70 L138 66Z M208 70 L200 80 L208 78 L214 82Z" fill="#f4f7fb"/>${pine(222, 130, 34)}` },
-    { name: 'Casita del lago', sky: ['#f4e6f0', '#d3e5f3'], ground: '#a7c28d', wall: '#ece5d6', wallDark: '#c9bfa9', roof: '#3f6f8c', roofDark: '#2b5068',
-      bg: `<ellipse cx="206" cy="134" rx="54" ry="16" fill="#8fc1dc"/><path d="M168 132q8-2 16 0M200 140q8-2 16 0" stroke="#d5eef7" stroke-width="1.4" fill="none"/><path d="M22 130v-22M26 130v-26M30 130v-20" stroke="#6f8f4f" stroke-width="2" stroke-linecap="round"/><ellipse cx="26" cy="102" rx="2" ry="5" fill="#7a5a3a"/>` },
-    { name: 'Cabaña soñada', sky: ['#ffd8a8', '#f4b3a8', '#c7b6e4'], ground: '#a3c287', wall: '#c98f5e', wallDark: '#9e6a3e', roof: '#b5523b', roofDark: '#8a3a28', porch: true,
-      bg: `<circle cx="40" cy="30" r="1.4" fill="#fff"/><circle cx="70" cy="18" r="1" fill="#fff"/><circle cx="200" cy="24" r="1.3" fill="#fff"/><circle cx="222" cy="44" r="1" fill="#fff"/><path d="M-10 126 Q50 96 110 118 T250 112 V160 H-10Z" fill="#8fb277"/>` },
-  ];
-
-  // z-order differs from build order: the chimney sits behind the roof, the foundation over the ground line.
-  function build(gi, parts, { bonus = false, fresh = [] } = {}) {
-    const t = THEMES[gi], sky = uid('sky');
-    const st = i => (i < parts ? 'built' : 'plan') + (fresh.includes(i) ? ' fresh' : '');
-    const lit = parts >= 6;
-    const body = `
-      <defs>${vgrad(sky, t.sky)}</defs>
-      <rect width="240" height="160" rx="14" fill="url(#${sky})"/>
-      ${t.bg}
-      <path d="M0 128 H240 V146 a14 14 0 0 1 -14 14 H14 a14 14 0 0 1 -14 -14Z" fill="${t.ground}"/>
-      <g class="part ${st(4)}" data-part="4"><rect x="148" y="42" width="13" height="30" fill="#7c6e66"/><rect x="146" y="40" width="17" height="5" fill="#5f534c"/>${parts > 4 ? smoke(154.5, 36, 1.4) : ''}</g>
-      <g class="part ${st(1)}" data-part="1"><rect x="70" y="80" width="100" height="40" fill="${t.wall}"/>
-        <path d="M70 88h100M70 96h100M70 104h100M70 112h100" stroke="${t.wallDark}" stroke-width="1.4"/>
-        ${gi === 3 ? '' : `<g fill="${t.wallDark}"><circle cx="70" cy="84" r="3.4"/><circle cx="70" cy="92" r="3.4"/><circle cx="70" cy="100" r="3.4"/><circle cx="70" cy="108" r="3.4"/><circle cx="70" cy="116" r="3.4"/><circle cx="170" cy="84" r="3.4"/><circle cx="170" cy="92" r="3.4"/><circle cx="170" cy="100" r="3.4"/><circle cx="170" cy="108" r="3.4"/><circle cx="170" cy="116" r="3.4"/></g>`}</g>
-      <g class="part ${st(2)}" data-part="2"><path d="M56 84 L120 38 L184 84Z" fill="${t.roof}"/><path d="M56 84 L120 38 L184 84" fill="none" stroke="${t.roofDark}" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>
-        ${t.snow ? '<path d="M60 80 L120 36 L180 80" fill="none" stroke="#f6f8fc" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" transform="translate(0,-4)"/>' : ''}
-        ${gi === 0 ? `<path d="M72 76 L120 42 L168 76 M88 80 L120 56 L152 80" stroke="${t.roofDark}" stroke-width="1.2" fill="none"/>` : ''}
-        <circle cx="120" cy="64" r="6" fill="${t.roofDark}"/>${lit ? '<circle class="win" cx="120" cy="64" r="4"/>' : `<circle cx="120" cy="64" r="4" fill="${t.wallDark}"/>`}</g>
-      <g class="part ${st(0)}" data-part="0"><rect x="62" y="119" width="116" height="10" rx="2" fill="#a3a09a"/>
-        <g fill="#8a8781"><ellipse cx="74" cy="124" rx="5" ry="3"/><ellipse cx="96" cy="125" rx="6" ry="3"/><ellipse cx="122" cy="124" rx="5" ry="3"/><ellipse cx="146" cy="125" rx="6" ry="3"/><ellipse cx="168" cy="124" rx="5" ry="3"/></g></g>
-      <g class="part ${st(3)}" data-part="3"><rect x="111" y="94" width="18" height="26" rx="1.5" fill="#5b3a26"/><circle cx="125" cy="108" r="1.4" fill="#e9c46a"/>
-        ${[80, 142].map(x => `<rect class="${lit ? 'win' : 'pane'}" x="${x}" y="90" width="18" height="15" rx="1.5"/><path d="M${x + 9} 90v15M${x} 97.5h18" stroke="${t.wallDark}" stroke-width="1.4"/><rect x="${x - 2}" y="105" width="22" height="3" rx="1" fill="${t.wallDark}"/>`).join('')}
-        ${t.porch ? `<path d="M96 88 H144" stroke="${t.roofDark}" stroke-width="3"/><path d="M98 88 V120 M142 88 V120" stroke="${t.wallDark}" stroke-width="3"/>` : ''}</g>
-      <g class="part ${st(5)}" data-part="5"><path d="M114 129 L108 160 H132 L126 129Z" fill="#d9c7a3"/>
-        <path d="M20 140 H62 M178 140 H222 M24 134 V146 M36 134 V146 M48 134 V146 M60 134 V146 M180 134 V146 M192 134 V146 M204 134 V146 M216 134 V146" stroke="#f3ead8" stroke-width="2.4" stroke-linecap="round"/>
-        <g><circle cx="88" cy="136" r="3" fill="#e76f7e"/><circle cx="96" cy="140" r="3" fill="#f4b942"/><circle cx="150" cy="138" r="3" fill="#b07de0"/><circle cx="158" cy="135" r="3" fill="#e76f7e"/><circle cx="144" cy="142" r="2.6" fill="#f4b942"/></g>
-        <path d="M100 118 V104" stroke="#3a3a3a" stroke-width="1.4"/><circle class="win" cx="100" cy="102" r="3"/></g>
-      ${bonus ? `<g class="bonus"><path d="M60 88 L120 44 L180 88" fill="none" stroke="#3a3a3a" stroke-width=".8"/>
-        ${[.12, .34, .56, .78].flatMap(t => [[60 + 60 * t, 88 - 44 * t], [180 - 60 * t, 88 - 44 * t]]).map(([x, y], i) => `<circle class="bulb b${i % 3}" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="2.4"/>`).join('')}
-        <path d="M120 38 V20" stroke="#5b3a26" stroke-width="1.6"/><path d="M120 20 L134 25 L120 30Z" fill="#f0b340"/><path class="spark" d="M200 60 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2Z" fill="#fff6c9"/></g>` : ''}`;
-    return svg('0 0 240 160', body, 'cabin-art');
-  }
 
   /* ---------- Who types like you: seven typists, from a chimpanzee to an alien ---------- */
   // Side view: the typist sits at the left and reaches the keyboard on the right. Arms tap in turns (speed via --tap).
@@ -126,5 +71,5 @@ window.Cabins = (() => {
       back: '<ellipse cx="46" cy="36" rx="30" ry="9" fill="#9aa3ad"/><ellipse cx="46" cy="30" rx="13" ry="9" fill="#7df9ff" opacity=".7"/><path d="M34 44 L18 110 H74 L58 44Z" fill="#7df9ff" opacity=".15"/><circle cx="150" cy="24" r="1.4" fill="#adb5bd"/><circle cx="200" cy="40" r="1" fill="#adb5bd"/>' }),
   ];
   const typistArt = i => TYPISTS[i]();
-  return { PARTS, THEMES, build, typist: typistArt };
+  return { typist: typistArt };
 })();

@@ -1,4 +1,4 @@
-/* Rotating hero, the cabin each group builds, who types like you and the ranking. */
+/* Rotating hero, the typist of each group, who types like you and the ranking. */
 
 /* Hero slides: the landscapes take turns with a crossfade. */
 .hero::before {content:none}
@@ -11,39 +11,31 @@
 .slide[data-scene="beach"] {--py:.58}.slide[data-scene="mountains"] {--py:.48}.slide[data-scene="forest"] {--py:.55}
 .hero-slides .slide.on .frame {animation:heroDrift 9s ease-out both}
 @keyframes heroDrift {from{transform:scale(1.05)}to{transform:scale(1)}}
-.win {fill:#ffcf73;animation:flicker 5s ease-in-out infinite}
-.pane {fill:#cfe3ea}
-@keyframes flicker {0%,100%{opacity:1}46%{opacity:.82}52%{opacity:.95}}
-.smoke .puff {fill:#fff;opacity:0;transform-box:fill-box;transform-origin:center;animation:puff 4.5s ease-out infinite}
-.smoke .p1 {animation-delay:1.5s}.smoke .p2 {animation-delay:3s}
-@keyframes puff {0%{opacity:0;transform:translate(0,0) scale(.6)}15%{opacity:.7}100%{opacity:0;transform:translate(6px,-22px) scale(2.2)}}
 @keyframes twinkle {0%,100%{opacity:.1}50%{opacity:1}}
 .hero-dots {display:flex;gap:6px;margin-left:4px}
 .hero-dots i {width:6px;height:6px;border-radius:50%;background:#ffffff70;transition:background .3s,width .3s}
 .hero-dots i.on {background:#fff;width:16px;border-radius:4px}
 
-/* Cabin of each group */
+/* Typist of each group: evolves with every lesson passed */
 .group-head {display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:14px 28px;align-items:center;margin-bottom:14px}
 .group-head p {margin-bottom:0}
-.cabin-card {margin:0;display:grid;grid-template-columns:190px 1fr;gap:12px;align-items:center;background:#fffefa;border:1px solid var(--line);border-radius:16px;padding:8px 12px 8px 8px}
-.cabin-card figcaption {display:grid;gap:3px;font-size:.76rem;color:var(--muted);line-height:1.35}
-.cabin-card figcaption b {color:var(--ink);font-family:var(--display);font-size:1rem;font-weight:600;letter-spacing:-.02em}
-.cabin-card .meter {height:4px;border-radius:4px;background:var(--line);overflow:hidden;margin-top:4px}
-.cabin-card .meter i {display:block;height:100%;background:var(--accent)}
-.cabin-art {display:block;width:100%;border-radius:10px;overflow:hidden}
-.cabin-art .part.plan * {fill:none!important;stroke:#8b978f!important;stroke-width:1!important;stroke-dasharray:3 3;animation:none}
-.cabin-art .part.plan {opacity:.55}
-.cabin-art .part.plan .smoke {display:none}
-.cabin-art .part.fresh {transform-box:fill-box;transform-origin:50% 100%;animation:raise .9s cubic-bezier(.2,1.4,.4,1) .3s both}
-@keyframes raise {from{opacity:0;transform:translateY(-14px) scale(.9)}to{opacity:1;transform:none}}
-.bulb {animation:twinkle 1.6s ease-in-out infinite}
-.bulb.b0 {fill:#ff6b6b}.bulb.b1 {fill:#ffd166;animation-delay:.5s}.bulb.b2 {fill:#7bdff2;animation-delay:1s}
-.spark {animation:twinkle 2s ease-in-out infinite}
-
-/* Cabin in the lesson result */
-.result-cabin {display:grid;grid-template-columns:minmax(150px,260px) 1fr;gap:18px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:12px}
-.result-cabin b {font-family:var(--display);font-weight:600;font-size:1.1rem;letter-spacing:-.02em;display:block;margin-bottom:4px}
-.result-cabin p {font-size:.88rem;color:var(--muted)}
+.evo-card {margin:0;display:grid;grid-template-columns:190px 1fr;gap:12px;align-items:center;background:#fffefa;border:1px solid var(--line);border-radius:16px;padding:8px 12px 8px 8px}
+.evo-card figcaption {display:grid;gap:3px;font-size:.76rem;color:var(--muted);line-height:1.35}
+.evo-card figcaption b {color:var(--ink);font-family:var(--display);font-size:1rem;font-weight:600;letter-spacing:-.02em}
+.evo-card .meter {height:4px;border-radius:4px;background:var(--line);overflow:hidden;margin-top:4px}
+.evo-card .meter i {display:block;height:100%;background:var(--accent)}
+.evo-steps {display:flex;gap:3px;margin-top:2px}
+.evo-steps i {flex:1;height:4px;border-radius:4px;background:var(--line)}
+.evo-steps i.on {background:var(--accent)}
+.evo-art {border-radius:10px;overflow:hidden;position:relative}
+.evo-art .typist-art {display:block;width:100%}
+.evo-art.gold {box-shadow:0 0 0 2px #f0b340,0 0 18px #f0b34088}
+.evo-art.gold::after {content:"✦";position:absolute;top:4px;right:8px;color:#f0b340;font-size:1.1rem;animation:twinkle 2s ease-in-out infinite}
+.evo-art.fresh .typist-art {animation:pop .7s cubic-bezier(.2,1.4,.4,1) .2s both}
+/* Evolution in the lesson result */
+.result-evo {display:grid;grid-template-columns:minmax(150px,260px) 1fr;gap:18px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:12px}
+.result-evo b {font-family:var(--display);font-weight:600;font-size:1.1rem;letter-spacing:-.02em;display:block;margin-bottom:4px}
+.result-evo p {font-size:.88rem;color:var(--muted)}
 
 /* The home your speed deserves: live during the test and as the backdrop of the result */
 .live-house {display:grid;grid-template-columns:160px 1fr;gap:18px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:12px 18px;width:100%}
@@ -110,12 +102,12 @@
 .price {font-family:var(--display);font-weight:700;font-size:1.6rem!important;color:var(--ink)!important}
 .plan-status {color:var(--accent)!important;font-weight:700}
 #upgrade {justify-self:start}
-@media(max-width:1050px) {.group-head {grid-template-columns:minmax(0,1fr) 330px}.cabin-card {grid-template-columns:160px 1fr}}
+@media(max-width:1050px) {.group-head {grid-template-columns:minmax(0,1fr) 330px}.evo-card {grid-template-columns:160px 1fr}}
 @media(max-width:700px) {
   .slide[data-scene] {--px:.64}
   .group-head {grid-template-columns:1fr}
-  .cabin-card {grid-template-columns:150px 1fr}
-  .result-cabin {grid-template-columns:120px 1fr;gap:12px}
+  .evo-card {grid-template-columns:150px 1fr}
+  .result-evo {grid-template-columns:120px 1fr;gap:12px}
   .live-house {grid-template-columns:96px 1fr;gap:12px;padding:10px 12px}
   .live-house strong {font-size:1.05rem}
   .house-result {padding:18px;min-height:0}
@@ -125,4 +117,12 @@
   .challenge-banner {grid-template-columns:auto 1fr}.challenge-banner .btn,.challenge-banner .linkbtn {grid-column:1/-1;justify-self:start}
   .rank-list li {grid-template-columns:36px minmax(0,1fr) auto;gap:8px;padding:8px 10px}
 }
-@media(prefers-reduced-motion:reduce) {.hero-slides .slide {transition:none}.hero-slides .slide.on .frame,.win,.smoke .puff,
+@media(prefers-reduced-motion:reduce) {
+  .hero-slides .slide {transition:none}
+  .hero-slides .slide.on .frame,.live-house .typist-art.pop,.typist-art .tap,.typist-art .fly,.typist-art .steam,.evo-art.gold::after,.evo-art.fresh .typist-art {animation:none}
+  .typist-art .fly {opacity:.8}
+}
+/* Accents */
+.c.hold {background:#fff1c9;box-shadow:inset 0 -3px 0 #e0a800}
+.accent-help {flex-basis:100%;color:var(--ink);background:#fff6dc;border:1px solid #f0d48a;border-radius:10px;padding:8px 12px}
+.accent-help button {border:0;background:none;padding:0;color:var(--accent);text-decoration:underline;font-weight:700}

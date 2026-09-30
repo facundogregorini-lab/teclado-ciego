@@ -220,7 +220,7 @@ dialog::backdrop{background:rgba(10,14,18,.45)}
 </style>
 
 <link rel="stylesheet" href="scenery.css">
-<link rel="stylesheet" href="cabins.css">
+<link rel="stylesheet" href="typists.css">
 <script src="scenery.js" defer></script>
 </head>
 <body>
@@ -239,6 +239,10 @@ dialog::backdrop{background:rgba(10,14,18,.45)}
         <button data-v="always" aria-pressed="true">Teclado visible</button>
         <button data-v="error" aria-pressed="false">Solo si me equivoco</button>
         <button data-v="hidden" aria-pressed="false">Oculto</button>
+      </div>
+      <div class="seg" role="group" aria-label="Tildes" id="accMode">
+        <button data-v="strict" aria-pressed="true" title="Hay que escribir cada tilde">Con tildes</button>
+        <button data-v="loose" aria-pressed="false" title="Una vocal sin tilde también vale">Tildes opcionales</button>
       </div>
     </div>
     <div class="scene-picker" role="group" aria-label="Paisaje de fondo">
@@ -270,7 +274,7 @@ dialog::backdrop{background:rgba(10,14,18,.45)}
           <button class="btn primary" id="continue"></button>
           <button class="btn" id="testBtn">Medir mi velocidad <span aria-hidden="true">↗</span></button>
         </div>
-        <span class="hero-note">26 lecciones cortas · Cada una suma una pieza a tu cabañita</span>
+        <span class="hero-note">26 lecciones cortas · De chimpancé a alien, una lección a la vez</span>
         <span class="plan-note" id="planNote" hidden></span>
       </div>
       <div class="landscape-note"><span id="sceneCaption">Una cabañita frente al mar</span><span class="hero-dots" aria-hidden="true"><i></i><i></i><i></i></span></div>
@@ -356,7 +360,7 @@ dialog::backdrop{background:rgba(10,14,18,.45)}
       <div id="typing">
         <div class="text" id="text"><div class="inner" id="inner"></div></div>
         <input id="cap" class="cap" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="next" aria-label="Escribí el texto acá">
-        <div class="hint"><span id="tip"></span><span id="capsWarn" class="caps-warn" hidden>Bloq Mayús está activado</span><span id="startHint">El reloj arranca con la primera tecla · Esc para salir</span></div>
+        <div class="hint"><span id="tip"></span><span id="capsWarn" class="caps-warn" hidden>Bloq Mayús está activado</span><span id="accentHelp" class="accent-help" hidden><span id="accentHelpText"></span> <button type="button" id="accentLoose">Aceptar vocales sin tilde</button></span><span id="startHint">El reloj arranca con la primera tecla · Esc para salir</span></div>
       </div>
       <div class="result" id="result" hidden aria-live="polite"></div>
       <button class="veil" id="veil" hidden>Tocá acá para seguir escribiendo</button>
@@ -430,7 +434,7 @@ dialog::backdrop{background:rgba(10,14,18,.45)}
     <span class="eyebrow">TECLADO CIEGO ILIMITADO</span>
     <h2 id="planTitle">Practicá todo lo que quieras</h2>
     <p id="planReason"></p>
-    <ul class="plan-list"><li>Lecciones y mediciones sin límite, todos los días.</li><li>Tu progreso, tu cabaña y tu lugar en el ranking, siempre al día.</li><li>Cancelás cuando quieras desde Mercado Pago.</li></ul>
+    <ul class="plan-list"><li>Lecciones y mediciones sin límite, todos los días.</li><li>Tu progreso, tu evolución y tu lugar en el ranking, siempre al día.</li><li>Cancelás cuando quieras desde Mercado Pago.</li></ul>
     <p class="price" id="planPrice"></p>
     <label class="field" for="planEmail" id="planEmailLabel">Email de tu cuenta de Mercado Pago<input id="planEmail" type="email" autocomplete="email" maxlength="120"></label>
     <p class="err" id="planErr" role="alert"></p>
@@ -459,7 +463,7 @@ dialog::backdrop{background:rgba(10,14,18,.45)}
 
 <div class="toast" id="toast" role="status" hidden></div>
 
-<script src="cabins.js"></script>
+<script src="typists.js"></script>
 <script>
 (() => {
 const $ = id => document.getElementById(id);
@@ -538,7 +542,7 @@ const LESSONS = [
 
 /* ---------- Storage ---------- */
 const STORE = 'teclado-ciego-v1';
-const S = { lessons: {}, test: null, tests: [], layout: 'la', kb: 'always' };
+const S = { lessons: {}, test: null, tests: [], layout: 'la', kb: 'always', tildes: 'strict' };
 try { Object.assign(S, JSON.parse(localStorage.getItem(STORE)) || {}); } catch {}
 if (!Array.isArray(S.tests)) S.tests = [];
 const save = () => { try { localStorage.setItem(STORE, JSON.stringify(S)); } catch {} };
@@ -592,21 +596,26 @@ function genLesson(l) {
   return parts.join(' ');
 }
 
-/* ---------- Cabins: each group builds one, piece by piece (drawings in cabins.js) ---------- */
+/* ---------- Each group has a typist that evolves with every lesson passed (drawings in typists.js) ---------- */
+// Seven stages, the same as the speed levels: chimpanzee (nothing passed) … alien (the whole group passed).
 const cap1 = str => str[0].toUpperCase() + str.slice(1);
-function cabinState(gi) {
+const GROUP_SKY = ['linear-gradient(#fde6c8,#c4e6e7)', 'linear-gradient(#e3efe1,#bcd8c3)', 'linear-gradient(#d5e7f6,#eef4f8)', 'linear-gradient(#f4e6f0,#d3e5f3)', 'linear-gradient(#ffd8a8,#f4b3a8 55%,#c7b6e4)'];
+const stageFor = (done, total) => Math.round(done / total * 6);
+function evoState(gi) {
   const ls = LESSONS.filter(l => l.g === gi), done = ls.filter(l => S.lessons[l.id]?.stars >= 1).length;
-  return { done, total: ls.length, parts: Math.round(done / ls.length * Cabins.PARTS.length), bonus: ls.every(l => S.lessons[l.id]?.stars === 3) };
+  return { done, total: ls.length, stage: stageFor(done, ls.length), gold: ls.every(l => S.lessons[l.id]?.stars === 3) };
 }
-function cabinText(st) {
-  const P = Cabins.PARTS;
-  if (st.parts >= P.length) return st.bonus ? '¡Terminada y con luces de fiesta!' : 'Terminada. Con 3 estrellas en todas las lecciones le sumás luces de fiesta.';
-  if (!st.parts) return `Aprobá una lección para poner ${P[0]}.`;
-  return `${st.parts} de ${P.length} piezas · Próxima: ${P[st.parts]}.`;
+function evoText(st) {
+  if (st.stage >= 6) return st.gold ? '¡Alien con aura dorada! Todas las lecciones con 3 estrellas.' : 'Llegaste a alien. Con 3 estrellas en todas, aura dorada.';
+  const next = tierShort(stageFor(st.done + 1, st.total));
+  return st.done ? `${st.done} de ${st.total} lecciones · Próximo: ${next}.` : `Aprobá una lección para pasar a ${next}.`;
 }
-function cabinCard(gi) {
-  const st = cabinState(gi);
-  return `<figure class="cabin-card" data-parts="${st.parts}">${Cabins.build(gi, st.parts, st)}<figcaption><b>${Cabins.THEMES[gi].name}</b><span>${cabinText(st)}</span><span class="meter"><i style="width:${Math.round(100 * st.parts / Cabins.PARTS.length)}%"></i></span></figcaption></figure>`;
+function evoArt(gi, st, fresh = false) {
+  return `<div class="evo-art${st.gold ? ' gold' : ''}${fresh ? ' fresh' : ''}" style="background:${GROUP_SKY[gi]}">${Typists.typist(st.stage)}</div>`;
+}
+function evoCard(gi) {
+  const st = evoState(gi);
+  return `<figure class="evo-card" data-stage="${st.stage}">${evoArt(gi, st)}<figcaption><b>Nivel ${tierShort(st.stage)}</b><span>${evoText(st)}</span><span class="evo-steps">${TIERS.slice(1).map((_, i) => `<i class="${i < st.stage ? 'on' : ''}"></i>`).join('')}</span></figcaption></figure>`;
 }
 
 /* ---------- Speed tiers: who types like you, from a chimpanzee to an alien, compared with the median ---------- */
@@ -661,7 +670,7 @@ function medianText(ppm) {
 let liveTier = -1;
 function updateLive(ppm, started) {
   const ti = tierFor(ppm);
-  if (ti !== liveTier) { liveTier = ti; $('liveArt').innerHTML = Cabins.typist(ti); if (started) $('liveArt').firstChild.classList.add('pop'); }
+  if (ti !== liveTier) { liveTier = ti; $('liveArt').innerHTML = Typists.typist(ti); if (started) $('liveArt').firstChild.classList.add('pop'); }
   $('liveLead').textContent = started ? `Con ${ppm} palabras por minuto escribís como` : idx ? 'Midiendo tu ritmo…' : 'Arrancá a escribir: ¿chimpancé o alien?';
   $('liveTier').textContent = cap1(TIERS[ti].name);
   $('liveScale').innerHTML = speedScale(ppm);
@@ -713,7 +722,7 @@ function renderHome() {
   renderEvo();
   $('path').replaceChildren(...GROUPS.map((g, gi) => {
     const sec = document.createElement('section'); sec.className = 'group';
-    sec.innerHTML = `<div class="group-head"><div><h2>${g.name}</h2><p>${g.desc} Meta para 3 estrellas: ${g.goal} palabras por minuto con 95% de precisión.</p></div>${cabinCard(gi)}</div>`;
+    sec.innerHTML = `<div class="group-head"><div><h2>${g.name}</h2><p>${g.desc} Meta para 3 estrellas: ${g.goal} palabras por minuto con 95% de precisión.</p></div>${evoCard(gi)}</div>`;
     const cards = document.createElement('div'); cards.className = 'cards';
     for (const l of LESSONS.filter(l => l.g === gi)) {
       const rec = S.lessons[l.id], b = document.createElement('button');
@@ -848,7 +857,7 @@ function start(l, method) {
   if (l === 'test' && method) testMethod = method;
   const tm = METHODS.find(m => m.id === testMethod);
   text = l === 'test' ? shuffle([...TEXTS, ...REFRANES]).join(' ') : genLesson(l);
-  idx = 0; errors = 0; errBy = {}; missed = new Set(); deadPending = false; hintOn = false;
+  idx = 0; errors = 0; errBy = {}; missed = new Set(); deadPending = false; hintOn = false; holdIdx = -1; pendingMark = ''; $('accentHelp').hidden = true;
   running = false; accMs = 0; clearInterval(timer); timer = setInterval(tick, 200);
   const g = l === 'test' ? null : GROUPS[l.g];
   $('lGroup').textContent = l === 'test' ? 'Medición de velocidad · 1 minuto' : `Lección ${l.n} · ${g.name}`;
@@ -902,7 +911,7 @@ function highlight() {
   }
   const keyName = c => c === ' ' ? 'espacio' : c.toUpperCase();
   let label = '';
-  if (steps[0]?.accent) label = `${FNAME.rp}: tilde (´), después la vocal`;
+  if (steps[0]?.accent) label = `${FNAME.rp}: tilde (´), después la vocal` + (IS_MAC ? ' · Mac en inglés: Option + E' : '');
   else if (steps.length === 2) label = `${FNAME[steps[0].f]} en Shift + ${FNAME[steps[1].f].toLowerCase()} en ${keyName(ch.toLowerCase())}`;
   else if (steps.length) label = `${FNAME[steps[0].f]} · ${keyName(ch.normalize('NFD').replace(/[̀-ͯ]/g, ''))}`;
   $('flabel').textContent = label;
@@ -934,8 +943,17 @@ function miss(target) {
 function typeChar(ch) {
   if (mode !== 'typing') return;
   if (!running) { running = true; t0 = performance.now(); $('startHint').hidden = true; if (!counted) countPractice(); }
+  if (pendingMark) { ch = composeMark(pendingMark, ch) || ch; pendingMark = ''; }
   const target = text[idx];
   deadPending = false;
+  if (holdIdx === idx) {
+    // The plain vowel typed before is forgiven only if the accented one comes right after (Mac accent menu).
+    holdIdx = -1; spans[idx].classList.remove('hold');
+    if (ch !== target) miss(target);
+  } else if (ch !== target && ACCENTED.includes(target) && ch === target.normalize('NFD')[0]) {
+    if (S.tildes === 'loose') ch = target; // accents are optional: the plain vowel counts
+    else { holdIdx = idx; spans[idx].classList.add('hold'); showAccentHelp(); tick(); return; }
+  }
   const code = MAP[ch.normalize('NFD')[0]]?.code;
   if (ch === target) {
     const s = spans[idx];
@@ -948,21 +966,52 @@ function typeChar(ch) {
   } else { miss(target); flash(code, true); highlight(); }
   tick();
 }
-// The hidden field receives what the person types. Accents typed with a dead key (´ then a)
-// arrive as a composition, so standalone accent marks are ignored while it is in progress.
-const DEAD_MARKS = '´`¨^~';
-let captured = 0;
+// The hidden field receives what the person types. Accents typed with a dead key (´ then a) usually arrive as
+// one composed character, but browsers differ: Safari on a Mac may end the composition with the mark (´) alone
+// in the field and send the accented vowel after, and some keyboards send "´" and "a" as two characters.
+// So a mark at the end of the field waits there for its vowel, and a mark followed by a vowel is joined with it.
+const DEAD_MARKS = '´`¨^~', COMBINING = { '´': '́', '`': '̀', '¨': '̈', '^': '̂', '~': '̃' };
+const ACCENTED = 'áéíóúÁÉÍÓÚüÜ';
+function composeMark(mark, ch) {
+  const c = (ch + COMBINING[mark]).normalize('NFC');
+  return c.length === 1 && c !== ch ? c : null;
+}
+let captured = 0, holdIdx = -1, pendingMark = '';
 function takeInput(composing) {
-  const cap = $('cap'), v = cap.value;
-  if (v.length < captured) captured = v.length;
-  for (const ch of v.slice(captured)) {
-    if (composing && DEAD_MARKS.includes(ch)) break;
+  const cap = $('cap'), rest = [...cap.value.slice(Math.min(captured, cap.value.length))];
+  if (cap.value.length < captured) captured = cap.value.length;
+  let waiting = false;
+  for (let i = 0; i < rest.length; i++) {
+    const ch = rest[i];
+    if (DEAD_MARKS.includes(ch) && text[idx] !== ch) {
+      if (i === rest.length - 1) { waiting = true; break; }
+      const joined = composeMark(ch, rest[i + 1]);
+      captured += ch.length;
+      if (joined) { captured += rest[i + 1].length; i++; typeChar(joined); }
+      continue; // a mark on its own (dead key + space) is not a letter of the text
+    }
     captured += ch.length;
     if (ch === '\n' || ch === '\r') continue;
     typeChar(ch);
   }
-  if (!composing) { cap.value = ''; captured = 0; }
+  if (!composing && !waiting) { cap.value = ''; captured = 0; }
 }
+// A dead key pressed while the hidden field is not focused: the browser cannot compose it, so we do.
+// Spanish keyboards: ´ (Shift for ¨). Mac keyboards in English: Option+E ´, Option+U ¨, Option+N ~, Option+I ^, Option+` `.
+function deadMark(e) {
+  if (e.altKey) return { KeyE: '´', KeyU: '¨', KeyN: '~', KeyI: '^', Backquote: '`' }[e.code] || '´';
+  if (S.layout === 'es' && e.code === 'BracketLeft') return e.shiftKey ? '^' : '`';
+  return e.shiftKey ? '¨' : '´';
+}
+const IS_MAC = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
+function showAccentHelp() {
+  if (!$('accentHelp').hidden) return;
+  $('accentHelpText').textContent = IS_MAC
+    ? '¿No te sale la tilde? En la Mac apretá la tecla ´ (al lado de la Ñ) y después la vocal. Si tu teclado está en inglés: Option + E y después la vocal.'
+    : '¿No te sale la tilde? Apretá la tecla ´ (al lado de la Ñ o de la P) y después la vocal. Si no aparece, revisá que el teclado de la computadora esté en Español.';
+  $('accentHelp').hidden = false;
+}
+$('accentLoose').onclick = () => { S.tildes = 'loose'; save(); pushProgress(); applyAccentMode(); if (holdIdx === idx) typeChar(text[idx]); focusCap(); };
 function focusCap() { if (mode === 'typing') { $('cap').focus({ preventScroll: true }); checkFocus(); } }
 function finish() {
   if (mode !== 'typing') return;
@@ -975,7 +1024,7 @@ function finish() {
   let st = 0, better = false;
   const tm = METHODS.find(m => m.id === testMethod);
   let prevSame = null;
-  const cabinBefore = isTest ? null : cabinState(cur.g), prevStars = isTest ? 0 : S.lessons[cur.id]?.stars || 0;
+  const evoBefore = isTest ? null : evoState(cur.g), prevStars = isTest ? 0 : S.lessons[cur.id]?.stars || 0;
   if (isTest) {
     prevSame = [...S.tests].reverse().find(t => t.method === testMethod) || null;
     S.tests.push({ method: testMethod, ppm, acc, date: Date.now() });
@@ -1008,20 +1057,18 @@ function finish() {
   let extra = '';
   if (isTest) {
     const ti = tierFor(ppm);
-    extra = `<div class="house-result">${Cabins.typist(ti)}<div class="house-copy">
+    extra = `<div class="house-result">${Typists.typist(ti)}<div class="house-copy">
       <span class="eyebrow">Con ${ppm} palabras por minuto escribís como</span><h4>${cap1(TIERS[ti].name)}</h4>
       <p class="joke">${rnd(TIERS[ti].jokes)}</p>
       <p>${medianText(ppm)}${acc < 90 ? ' Y ojo: con tantos errores, parecés un chimpancé con guantes.' : ''}</p>
       ${speedScale(ppm)}${challengeResult(ppm)}<p id="rankLine">${auth.name ? '' : 'Entrá con tu cuenta para aparecer en el ranking de velocidad.'}</p></div></div>`;
   } else {
-    const after = cabinState(cur.g), t = Cabins.THEMES[cur.g], P = Cabins.PARTS, home = t.name.toLowerCase();
-    const fresh = []; for (let i = cabinBefore.parts; i < after.parts; i++) fresh.push(i);
-    const lit = after.bonus && !cabinBefore.bonus;
-    const title = fresh.length ? `¡Sumaste ${fresh.map(i => P[i]).join(', ').replace(/, ([^,]*)$/, ' y $1')}!` : lit ? '¡Luces de fiesta!' : t.name;
-    const txt = lit ? `Todas las lecciones de este grupo con 3 estrellas: tu ${home} se ilumina.`
-      : fresh.length ? `Tu ${home} ya tiene ${after.parts} de ${P.length} piezas.${after.parts >= P.length ? ' ¡Está terminada!' : ''}`
-      : !st && prevStars < 1 ? `Aprobala con 90% de precisión y sumás piezas a tu ${home}.` : cabinText(after);
-    extra = `<div class="result-cabin">${Cabins.build(cur.g, after.parts, { bonus: after.bonus, fresh })}<div><b>${title}</b><p>${txt}</p></div></div>`;
+    const after = evoState(cur.g), up = after.stage > evoBefore.stage, gold = after.gold && !evoBefore.gold;
+    const title = up ? `¡Evolucionaste! De ${tierShort(evoBefore.stage)} a ${tierShort(after.stage)}` : gold ? '¡Aura dorada!' : `Nivel ${tierShort(after.stage)}`;
+    const txt = gold ? 'Todas las lecciones de este grupo con 3 estrellas: tu alien brilla.'
+      : up && after.stage >= 6 ? 'Terminaste el grupo: ya escribís como un alien. Con 3 estrellas en todas, aura dorada.'
+      : !st && prevStars < 1 ? `Aprobala con 90% de precisión y evolucionás a ${tierShort(stageFor(after.done + 1, after.total))}.` : evoText(after);
+    extra = `<div class="result-evo">${evoArt(cur.g, after, up || gold)}<div><b>${title}</b><p>${txt}</p></div></div>`;
   }
   const r = $('result');
   r.innerHTML = `
@@ -1060,6 +1107,7 @@ document.addEventListener('keydown', e => {
     if (e.key === 'Escape') { e.preventDefault(); goHome(); return; }
     if (e.key === 'Dead' && 'áéíóú'.includes(text[idx]) && !deadPending) { deadPending = true; highlight(); }
     if (e.target.closest?.('button, select, a, summary, input:not(#cap)')) return;
+    if (e.target !== $('cap') && e.key === 'Dead') { e.preventDefault(); pendingMark = deadMark(e); focusCap(); return; }
     if (e.target !== $('cap') && e.key.length === 1) { e.preventDefault(); focusCap(); typeChar(e.key); }
   } else if (mode === 'done' && e.key === 'Enter' && performance.now() - doneAt > 500) {
     e.preventDefault(); (($('rNext') || $('rAgain'))).click();
@@ -1102,7 +1150,7 @@ async function api(path, payload) {
   }
   return data;
 }
-const progress = () => ({ lessons: S.lessons, test: S.test, tests: S.tests, layout: S.layout, kb: S.kb });
+const progress = () => ({ lessons: S.lessons, test: S.test, tests: S.tests, layout: S.layout, kb: S.kb, tildes: S.tildes });
 function better(a, b) { if (!a) return b; if (!b) return a; return b.stars > a.stars || (b.stars === a.stars && b.ppm > a.ppm) ? b : a; }
 function merge(remote) {
   if (!remote) return;
@@ -1116,6 +1164,7 @@ function merge(remote) {
   }
   if (remote.layout) S.layout = remote.layout;
   if (remote.kb) S.kb = remote.kb;
+  if (remote.tildes) S.tildes = remote.tildes;
 }
 async function loadAccount() {
   const data = await api('data');
@@ -1123,7 +1172,7 @@ async function loadAccount() {
   merge(data.progress); save();
   history = data.history;
   if (JSON.stringify(progress()) !== before) await api('data', { type: 'progress', progress: progress() });
-  $('layout').value = S.layout; applyLayout(); applyKbMode(); renderHome();
+  $('layout').value = S.layout; applyLayout(); applyKbMode(); applyAccentMode(); renderHome();
 }
 let pushTimer = 0;
 function pushProgress() {
@@ -1423,6 +1472,9 @@ function applyKbMode() {
   hintOn = false; highlight();
 }
 document.querySelectorAll('#kbMode button').forEach(b => b.onclick = () => { S.kb = b.dataset.v; save(); pushProgress(); applyKbMode(); focusCap(); });
+function applyAccentMode() { document.querySelectorAll('#accMode button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === (S.tildes === 'loose' ? 'loose' : 'strict')))); }
+document.querySelectorAll('#accMode button').forEach(b => b.onclick = () => { S.tildes = b.dataset.v; save(); pushProgress(); applyAccentMode(); focusCap(); });
+applyAccentMode();
 $('layout').value = S.layout in LAYOUTS ? S.layout : 'la';
 $('layout').onchange = () => { S.layout = $('layout').value; save(); pushProgress(); applyLayout(); renderHome(); };
 $('continue').onclick = () => start(nextLesson());

@@ -41,7 +41,7 @@ function typeText(page) {
     const firstScene = await a.getAttribute('html', 'data-hero-scene');
     await a.waitForFunction(s => document.documentElement.dataset.heroScene !== s, firstScene, { timeout: 10000 });
     check('The hero changes landscape by itself', await a.locator('.hero-slides .slide.on').count() === 1);
-    check('No cabin is built before any lesson', await a.getAttribute('.cabin-card >> nth=0', 'data-parts') === '0');
+    check('Every group starts with a chimpanzee', await a.getAttribute('.evo-card >> nth=0', 'data-stage') === '0' && (await a.textContent('.evo-card >> nth=0')).includes('Nivel chimpancé'));
     await a.click('#continue');
     await a.locator('.scene-picker [data-scene="forest"]').press('Space');
     check('Changing the landscape by keyboard does not type into the exercise',
@@ -58,10 +58,10 @@ function typeText(page) {
     check('Registering signs in', (await a.textContent('#acctBtn .nm')) === 'ana');
     await a.click('#continue'); await typeLesson(a);
     await a.waitForSelector('#result:not([hidden])');
-    check('Passing a lesson adds a piece to the cabin', (await a.textContent('.result-cabin b')).startsWith('¡Sumaste'));
+    check('Passing a lesson makes the typist evolve', (await a.textContent('.result-evo b')).includes('De chimpancé a bebé'));
     await a.waitForTimeout(300);
     await a.click('#rHome');
-    check('The group cabin shows the new piece', await a.getAttribute('.cabin-card >> nth=0', 'data-parts') === '1');
+    check('The group shows the new level', await a.getAttribute('.evo-card >> nth=0', 'data-stage') === '1' && await a.locator('.evo-card >> nth=0 >> .typist-art').count() === 1);
 
     // On-screen keyboards (Android reports keys as "Unidentified"): text arrives only as input
     await a.click('.lc >> nth=19');
@@ -78,7 +78,44 @@ function typeText(page) {
     await input('é', true);
     await a.evaluate(() => document.getElementById('cap').dispatchEvent(new CompositionEvent('compositionend', { data: 'é' })));
     check('The composed accent is accepted once', (await a.locator('#inner .c.ok').count()) === 3 && (await a.inputValue('#cap')) === '');
+    // Safari on a Mac: the composition ends with the mark alone, the accented vowel comes after
+    await input(' ', false);
+    await input('´', true);
+    await a.evaluate(() => document.getElementById('cap').dispatchEvent(new CompositionEvent('compositionend', { data: '´' })));
+    check('Safari: a lonely accent mark waits for its vowel', (await a.locator('#inner .c.bad').count()) === 0 && (await a.inputValue('#cap')) === '´');
+    await input('í', false);
+    check('Safari: the accented vowel arrives after and counts', (await a.locator('#inner .c.ok').count()) === 5 && (await a.inputValue('#cap')) === '');
+    // Mark and vowel as two separate characters
+    await input(' ´o', false);
+    check('A mark followed by its vowel becomes the accented vowel', (await a.locator('#inner .c.ok').count()) === 7 && (await a.locator('#inner .c.bad').count()) === 0);
+    // Dead key while the typing field is not focused (after clicking elsewhere)
     await a.evaluate(() => document.getElementById('cap').blur());
+    const key = (k, extra = {}) => a.evaluate(([k, x]) => document.body.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true, ...x })), [k, extra]);
+    await key(' '); await key('Dead', { code: 'BracketLeft' }); await key('u');
+    check('A dead key outside the field still puts the accent', (await a.locator('#inner .c.ok').count()) === 9 && (await a.locator('#inner .c.bad').count()) === 0);
+    // Mac press-and-hold menu: the plain vowel first, then the accented one replaces it
+    const typeToAccent = () => a.evaluate(() => {
+      const spans = [...document.querySelectorAll('#inner .c')];
+      for (let i = spans.findIndex(s => s.classList.contains('cur')); i < spans.length && !'áéíóú'.includes(spans[i].textContent); i++)
+        document.dispatchEvent(new KeyboardEvent('keydown', { key: spans[i].textContent, bubbles: true, cancelable: true }));
+      return document.querySelector('#inner .c.cur').textContent;
+    });
+    let target = await typeToAccent();
+    await key(target.normalize('NFD')[0]);
+    check('A plain vowel for an accented one waits instead of failing', (await a.locator('#inner .c.hold').count()) === 1 && (await a.locator('#inner .c.bad').count()) === 0 && await a.isVisible('#accentHelp'));
+    await key(target);
+    check('The accent right after is accepted without an error', (await a.locator('#inner .c.hold, #inner .c.bad, #inner .c.fix').count()) === 0 && (await a.textContent('#sAcc')) === '100%');
+    // Keyboards that cannot type accents: accents become optional
+    target = await typeToAccent();
+    await key(target.normalize('NFD')[0]);
+    await a.click('#accentLoose');
+    check('"Aceptar vocales sin tilde" accepts the waiting vowel', (await a.locator('#inner .c.hold, #inner .c.bad').count()) === 0 && await a.getAttribute('#accMode [data-v="loose"]', 'aria-pressed') === 'true');
+    target = await typeToAccent();
+    await key(target.normalize('NFD')[0]);
+    check('With optional accents a plain vowel counts', (await a.locator('#inner .c.hold, #inner .c.bad').count()) === 0);
+    await a.click('#accMode [data-v="strict"]');
+    await a.evaluate(() => document.getElementById('cap').blur());
+    await a.waitForSelector('#veil', { state: 'visible', timeout: 2000 }).catch(() => {});
     check('Losing focus shows how to continue', await a.isVisible('#veil'));
     await a.click('#veil');
     check('Tapping the text takes the keyboard back', await a.evaluate(() => document.activeElement.id === 'cap'));
