@@ -37,6 +37,11 @@ function typeText(page) {
       const asset = await a.request.get(SITE + '/assets/' + scene + '.jpg');
       check('Landscape asset loads: ' + scene, asset.ok() && asset.headers()['content-type'] === 'image/jpeg');
     }
+    check('Each hero landscape has its dream cabin', await a.locator('.hero-slides .slide .hero-cabin svg').count() === 3);
+    const firstScene = await a.getAttribute('html', 'data-hero-scene');
+    await a.waitForFunction(s => document.documentElement.dataset.heroScene !== s, firstScene, { timeout: 10000 });
+    check('The hero changes landscape by itself', await a.locator('.hero-slides .slide.on').count() === 1);
+    check('No cabin is built before any lesson', await a.getAttribute('.cabin-card >> nth=0', 'data-parts') === '0');
     await a.click('#continue');
     await a.locator('.scene-picker [data-scene="forest"]').press('Space');
     check('Changing the landscape by keyboard does not type into the exercise',
@@ -53,8 +58,10 @@ function typeText(page) {
     check('Registering signs in', (await a.textContent('#acctBtn .nm')) === 'ana');
     await a.click('#continue'); await typeLesson(a);
     await a.waitForSelector('#result:not([hidden])');
+    check('Passing a lesson adds a piece to the cabin', (await a.textContent('.result-cabin b')).startsWith('¡Sumaste'));
     await a.waitForTimeout(300);
     await a.click('#rHome');
+    check('The group cabin shows the new piece', await a.getAttribute('.cabin-card >> nth=0', 'data-parts') === '1');
 
     // On-screen keyboards (Android reports keys as "Unidentified"): text arrives only as input
     await a.click('.lc >> nth=19');
@@ -82,13 +89,29 @@ function typeText(page) {
     check('Measurements hide the on-screen keyboard', await a.isHidden('#guide') && (await a.textContent('#lName')) === 'A ciegas');
     await typeText(a); await a.waitForSelector('#result:not([hidden])');
     check('The result names the method', (await a.textContent('#result h3')).includes('a ciegas'));
+    check('The result shows the home the speed deserves', await a.isVisible('.house-result svg') && (await a.textContent('.house-copy')).includes('mediana'));
+    await a.waitForFunction(() => document.querySelector('#rankLine')?.textContent);
+    check('Impossible speeds stay out of the ranking', (await a.textContent('#rankLine')).includes('no entra al ranking'));
     await a.waitForTimeout(300); await a.click('#rHome');
     await a.click('.mc:nth-child(1) .btn'); await typeText(a); await a.waitForSelector('#result:not([hidden])');
     await a.waitForTimeout(300); await a.click('#rHome');
     check('The chart plots each measurement', (await a.locator('#chartSvg circle.dot').count()) === 2);
     check('Blind and looking speeds are compared', (await a.textContent('#insight')).includes('mirando el teclado'));
+    check('The progress ranking lists the user', (await a.textContent('#rankList li.me')).includes('ana'));
+    await a.click('#rankView [data-v="speed"]');
+    check('Nobody is in the speed ranking with impossible speeds', (await a.locator('#rankList li').count()) === 0);
+    // A real speed: a slow measurement that ends by time
+    await a.click('.mc:nth-child(2) .btn');
+    await a.evaluate(() => { for (const key of 'El viento') document.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true })); });
+    await a.evaluate(() => { const now = performance.now.bind(performance); performance.now = () => now() + 61000; });
+    await a.waitForFunction(() => document.querySelector('#rankLine')?.textContent.includes('#1'));
+    check('The result gives the place in the speed ranking', (await a.textContent('.house-copy h4')).length > 0);
+    await a.evaluate(() => { delete performance.now; });
+    await a.click('#rHome'); await a.click('#rankView [data-v="speed"]');
+    check('The speed ranking lists the user', (await a.textContent('#rankList li.me')).includes('ppm'));
+    await a.click('#rankView [data-v="progress"]');
     await a.click('#acctBtn');
-    await a.waitForFunction(() => document.querySelectorAll('#hist tbody tr').length === 3);
+    await a.waitForFunction(() => document.querySelectorAll('#hist tbody tr').length === 4);
     check('Lessons and measurements appear in the history', (await a.textContent('#hist tbody')).includes('Lección 1') && (await a.textContent('#hist tbody')).includes('Medición a ciegas'));
     await a.click('#acctClose');
 
@@ -98,11 +121,13 @@ function typeText(page) {
     await b.click('#acctBtn'); await b.fill('#user', 'ana'); await b.fill('#pass', 'otra-clave'); await b.click('#authSubmit');
     await b.waitForFunction(() => document.querySelector('#authErr').textContent);
     check('Wrong passwords are rejected', (await b.textContent('#authErr')).includes('incorrectos'));
+    await b.waitForFunction(() => document.querySelectorAll('#rankList li').length === 1);
+    check('Guests see the ranking of everyone', (await b.textContent('#rankList')).includes('ana') && (await b.textContent('#rankNote')).includes('Entrá'));
     await b.fill('#pass', 'secreto1'); await b.click('#authSubmit');
     await b.waitForFunction(() => document.querySelector('#hStars').textContent !== '0/78');
     check('Progress follows the account to another browser', (await b.textContent('.lc')).includes('Mejor:'));
     await b.click('#evoView [data-v="table"]');
-    check('Measurements follow the account too', (await b.locator('#evoTable tbody tr').count()) === 2);
+    check('Measurements follow the account too', (await b.locator('#evoTable tbody tr').count()) === 3);
     await b.reload(); await b.waitForSelector('#acctBtn .nm');
     check('The session survives a reload', (await b.textContent('#acctBtn .nm')) === 'ana');
     await b.click('#acctBtn'); await b.click('#logout');
