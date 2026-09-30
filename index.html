@@ -406,7 +406,18 @@ dialog::backdrop{background:rgba(10,14,18,.45)}
     </div>
     <div class="progress"><i id="qBar"></i></div>
     <div class="stage" id="qStage">
+      <div class="q-intro" id="qIntro" hidden>
+        <span class="eyebrow">DESAFÍO DE 3 MINUTOS</span>
+        <h3>Adiviná todas las secuencias que puedas</h3>
+        <button class="btn primary" id="qGo">Empezar: el reloj arranca ya <small>Enter</small></button>
+        <ol>
+          <li>Mirá la serie y elegí la figura que sigue (con el mouse o con las teclas 1 a 5).</li>
+          <li>Al contestar aparece enseguida la próxima serie. Cada 3 aciertos, la dificultad sube.</li>
+          <li>Cuando se termina el reloj (o si tocás <b>Terminar ahora</b>) ves tus puntos, tu IQ ninja y a quién te parecés.</li>
+        </ol>
+      </div>
       <div id="qPlay">
+        <div class="q-run" id="qRun" hidden><span class="q-flash" id="qFlash" aria-live="polite">Elegí la figura que sigue.</span><button class="btn" id="qEnd" type="button">Terminar ahora</button></div>
         <p class="q-prompt" id="qPrompt"></p>
         <div class="q-fig" id="qFig"></div>
         <div class="q-opts" id="qOpts" role="group" aria-label="Opciones"></div>
@@ -1203,11 +1214,13 @@ document.addEventListener('keydown', e => {
     if (e.target !== $('cap') && e.key.length === 1) { e.preventDefault(); focusCap(); typeChar(e.key); }
   } else if (mode === 'quiz') {
     if (e.metaKey || e.ctrlKey || e.altKey || e.target.closest?.('input, select')) return;
-    if (e.key === 'Escape') { e.preventDefault(); goCog(); return; }
+    if (e.key === 'Escape') { e.preventDefault(); leaveQuiz(); return; }
     const k = '12345'.indexOf(e.key) >= 0 ? '12345'.indexOf(e.key) : 'abcde'.indexOf(e.key.toLowerCase());
     if (e.key.length === 1 && k >= 0 && $('qFeedback').hidden) { e.preventDefault(); answerQ(k); }
     else if (e.key === 'Enter' && !$('qFeedback').hidden && !e.target.closest?.('button')) { e.preventDefault(); nextQ(); }
-  } else if (mode === 'qdone' && e.key === 'Enter' && performance.now() - doneAt > 500 && !e.target.closest?.('button')) {
+  } else if (mode === 'nready' && (e.key === 'Enter' || e.key === ' ') && !e.target.closest?.('button')) { e.preventDefault(); beginNinja(); }
+  else if (mode === 'nready' && e.key === 'Escape') goCog();
+  else if (mode === 'qdone' && e.key === 'Enter' && performance.now() - doneAt > 500 && !e.target.closest?.('button')) {
     e.preventDefault(); (($('qrNext') || $('qrAgain'))).click();
   } else if (mode === 'qdone' && e.key === 'Escape') goCog();
   else if (mode === 'done' && e.key === 'Enter' && performance.now() - doneAt > 500) {
@@ -1480,7 +1493,7 @@ let quiz = null;
 /* Desafío de 3 minutos: series one after another, one level harder every 3 right answers.
    Score = points of the right answers (their difficulty) × accuracy; the IQ is a playful estimate from the score. */
 const NINJA_MS = 3 * 60000;
-const iqFor = score => Math.max(70, Math.min(160, Math.round(85 + 22 * Math.log(1 + score / 4))));
+const iqFor = score => Math.max(70, Math.min(160, Math.round(85 + 22 * Math.log(1 + (Number(score) || 0) / 4))));
 const iqTier = iq => [0, 115, 125, 130, 135, 140, 150].filter(v => iq >= v).length - 1;
 const IQ_JOKES = [
   ['IQ similar al de un chimpancé. Que nunca se enteren en el trabajo.', 'Tranqui: tu secreto está a salvo con nosotros. Con tu jefe, no tanto.', 'El chimpancé también tardó en entender la flecha que gira. Él no tenía reunión a las 9, eso sí.'],
@@ -1499,7 +1512,7 @@ function startQuiz(sess) {
     ? shuffle(Array.from({ length: SIM_Q }, (_, i) => Figures.make[COG_KINDS[i % 3].id](3 + (i % 3 + Math.floor(i / 3)) % 3)))
     : Array.from({ length: Q_PER_SESSION }, () => Figures.make[sess.kind](sess.d));
   quiz = { sess, sim, qs, i: 0, ok: 0, picks: [], limit: sim ? SIM_MS : Q_PER_SESSION * COG_LEVELS[sess.d - 1].perQ * 1000, t0: performance.now() };
-  mode = 'quiz'; counted = false; setQuizLabels(false);
+  mode = 'quiz'; counted = false; setQuizLabels(false); $('qIntro').hidden = true;
   $('qGroup').textContent = sim ? `Simulacro · ${SIM_Q} preguntas en ${SIM_MS / 60000} minutos` : `Sesión ${sess.n} · nivel ${tierShort(sess.g)} · dificultad ${sess.d}`;
   $('qName').textContent = sim ? 'Simulacro de entrevista' : sess.name;
   $('qPlay').hidden = false; $('qResult').hidden = true;
@@ -1507,17 +1520,29 @@ function startQuiz(sess) {
   clearInterval(timer); timer = setInterval(qTick, 250); qTick();
 }
 function setQuizLabels(ninja) {
+  $('qRun').hidden = !ninja;
   $('qNumLbl').textContent = ninja ? 'respondidas' : 'pregunta'; $('qOkLbl').textContent = ninja ? 'puntos' : 'correctas';
   $('qHint').textContent = ninja ? 'Rápido: elegí con las teclas 1 a 5 (o A a E) · Esc para salir' : 'Elegí con el mouse o con las teclas 1 a 5 (o A a E) · Esc para salir';
 }
+// First a short explanation; the clock starts only with "Empezar".
 function startNinja() {
   if (!mayStart()) return;
-  quiz = { ninja: true, qs: [Figures.make.serie(1)], i: 0, ok: 0, picks: [], points: 0, level: 1, limit: NINJA_MS, t0: performance.now() };
-  mode = 'quiz'; counted = false; setQuizLabels(true);
-  $('qName').textContent = 'Desafío de 3 minutos';
-  $('qPlay').hidden = false; $('qResult').hidden = true;
-  show('quiz'); renderQ();
-  clearInterval(timer); timer = setInterval(qTick, 250); qTick();
+  clearInterval(timer);
+  quiz = { ninja: true, qs: [Figures.make.serie(1)], i: 0, ok: 0, picks: [], points: 0, level: 1, limit: NINJA_MS, t0: 0 };
+  mode = 'nready'; counted = false; setQuizLabels(true);
+  $('qName').textContent = 'Desafío de 3 minutos'; $('qGroup').textContent = 'Ninja mental · dificultad 1 de 5';
+  $('qNum').textContent = '0'; $('qOk').textContent = '0'; $('qTime').textContent = fmt(NINJA_MS); $('qBar').style.width = '0%';
+  $('qTime').parentElement.classList.remove('low');
+  $('qIntro').hidden = false; $('qPlay').hidden = true; $('qResult').hidden = true;
+  show('quiz'); $('qGo').focus({ preventScroll: true });
+}
+function beginNinja() {
+  if (mode !== 'nready') return;
+  mode = 'quiz'; quiz.t0 = performance.now();
+  $('qIntro').hidden = true; $('qPlay').hidden = false;
+  $('qFlash').textContent = 'Elegí la figura que sigue.'; $('qFlash').className = 'q-flash';
+  renderQ();
+  timer = setInterval(qTick, 250); qTick();
 }
 function qTick() {
   if (mode !== 'quiz') return;
@@ -1557,8 +1582,13 @@ function answerQ(k) {
     // A quick flash of the right answer, then the next series: one level harder every 3 right answers.
     const btns = $('qOpts').children;
     btns[q.answer].classList.add('right'); if (!right) btns[k].classList.add('wrong');
-    if (right) quiz.points += q.d;
+    const pts = q.d || quiz.level;
+    if (right) quiz.points += pts;
+    const before = quiz.level;
     quiz.level = Math.min(5, 1 + Math.floor(quiz.ok / 3));
+    $('qFlash').textContent = (right ? `✓ ¡Bien! +${pts} ${pts === 1 ? 'punto' : 'puntos'}` : `✗ Era la ${'ABCDE'[q.answer]}`) + (quiz.level > before ? ` · ¡Sube la dificultad a ${quiz.level}!` : ' · Va la siguiente serie');
+    $('qFlash').className = 'q-flash ' + (right ? 'ok' : 'bad');
+    $('qNum').textContent = quiz.i + 1; $('qOk').textContent = quiz.points;
     quiz.lock = true;
     setTimeout(() => {
       quiz.lock = false;
@@ -1621,7 +1651,7 @@ function finishQuiz() {
       ${nx ? `<button class="btn primary" id="qrNext">Siguiente: sesión ${nx.n} <small>Enter</small></button>` : ''}
       <button class="btn${nx ? '' : ' primary'}" id="qrAgain">${quiz.sim ? 'Otro simulacro' : 'Repetir'}${nx ? '' : ' <small>Enter</small>'}</button>
       <button class="btn" id="qrHome">Ninja mental</button></div>`;
-  $('qPlay').hidden = true; $('qResult').hidden = false;
+  $('qPlay').hidden = true; $('qResult').hidden = false; scrollTo({ top: 0 });
   $('qrNext') && ($('qrNext').onclick = () => startQuiz(nx));
   $('qrAgain').onclick = () => startQuiz(sess);
   $('qrHome').onclick = goCog;
@@ -1630,7 +1660,7 @@ function finishQuiz() {
 function finishNinja() {
   clearInterval(timer); mode = 'qdone'; doneAt = performance.now(); quiz.lock = false;
   const n = quiz.picks.filter(x => x != null).length, ok = quiz.ok, acc = n ? ok / n : 0;
-  const score = Math.round(quiz.points * acc), iq = iqFor(score), ti = iqTier(iq), maxLevel = Math.max(...quiz.qs.map(q => q.d));
+  const score = Math.round((quiz.points || 0) * acc), iq = iqFor(score), ti = iqTier(iq), maxLevel = Math.max(1, ...quiz.qs.map(q => q.d || 1));
   const run = { score, iq, ok, n, date: Date.now() };
   const record = !S.ninja.best || score > S.ninja.best.score;
   if (record) S.ninja.best = run;
@@ -1647,7 +1677,7 @@ function finishNinja() {
     <div class="nums"><div><b>${score}</b><span>puntos</span></div><div><b>${ok}/${n}</b><span>correctas</span></div><div><b>${Math.round(100 * acc)}%</b><span>efectividad</span></div><div><b>${maxLevel}</b><span>dificultad máxima</span></div></div>
     <p>Cada acierto suma su dificultad (de 1 a 5) y el total se multiplica por tu efectividad: ${quiz.points} × ${Math.round(100 * acc)}% = ${score} puntos.</p>
     <div class="actions"><button class="btn primary" id="qrAgain">Otra vez <small>Enter</small></button><button class="btn" id="qrChallenge">Desafiar a un amigo</button><button class="btn" id="qrHome">Ninja mental</button></div>`;
-  $('qPlay').hidden = true; $('qResult').hidden = false;
+  $('qPlay').hidden = true; $('qResult').hidden = false; scrollTo({ top: 0 });
   $('qrAgain').onclick = startNinja;
   $('qrChallenge').onclick = () => openChallenge({ kind: 'ninja', score });
   $('qrHome').onclick = goCog;
@@ -1666,7 +1696,11 @@ function renderNinjaMax() {
 $('maxBtn').onclick = startNinja;
 $('maxInvite').onclick = () => openChallenge({ kind: 'ninja', score: S.ninja.best?.score || 0 });
 $('qNext').onclick = nextQ;
-$('qBack').onclick = goCog;
+$('qBack').onclick = leaveQuiz;
+$('qEnd').onclick = () => { if (mode === 'quiz') finishQuiz(); };
+$('qGo').onclick = beginNinja;
+// Leaving the 3-minute run halfway shows its result (if something was answered) instead of losing it.
+function leaveQuiz() { if (mode === 'quiz' && quiz?.ninja && quiz.picks.some(x => x != null)) finishQuiz(); else goCog(); }
 $('cogContinue').onclick = () => startQuiz(nextSession());
 $('simBtn').onclick = () => startQuiz('sim');
 $('cogCta').onclick = e => { e.preventDefault(); goCog(); };

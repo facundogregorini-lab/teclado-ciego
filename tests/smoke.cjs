@@ -195,16 +195,30 @@ function typeText(page) {
     // Remember each generated series to answer it right (the page has no way to show the answer before choosing)
     await a.evaluate(() => { const make = Figures.make.serie; Figures.make.serie = d => (window.lastQ = make(d)); });
     await a.click('#maxBtn');
-    check('The 3-minute run starts with a series', (await a.textContent('#qTime')).startsWith('3:') || (await a.textContent('#qTime')).startsWith('2:5'));
+    check('The 3-minute run first explains how it works', await a.isVisible('#qIntro') && await a.isHidden('#qPlay') && (await a.textContent('#qTime')) === '3:00');
+    await a.waitForTimeout(1200);
+    check('The clock waits for "Empezar"', (await a.textContent('#qTime')) === '3:00');
+    await a.keyboard.press('Enter');
+    check('The 3-minute run starts with a series and a way to finish', await a.isVisible('#qFig .fig') && await a.isVisible('#qEnd'));
     for (let i = 0; i < 5; i++) { await a.keyboard.press(String(1 + await a.evaluate(i => i === 4 ? (lastQ.answer + 1) % lastQ.options.length : lastQ.answer, i))); await a.waitForTimeout(700); }
     check('The run counts answers and points as it goes', (await a.textContent('#qNum')) === '5' && (await a.textContent('#qOk')) !== '0' && (await a.textContent('#qNumLbl')) === 'respondidas');
     check('Every 3 right answers the difficulty goes up', (await a.textContent('#qGroup')).includes('dificultad 2 de 5'));
+    check('Each answer says what happened', (await a.textContent('#qFlash')).startsWith('✗ Era la'));
     await a.evaluate(() => { const now = performance.now.bind(performance); performance.now = () => now() + 181000; });
     await a.waitForSelector('#qResult:not([hidden]) .iq');
     check('The run ends with a score and a playful IQ', /^IQ \d+$/.test(await a.textContent('#qResult .iq')) && (await a.textContent('#qResult .nums')).includes('efectividad') && (await a.textContent('#qResult')).includes('no un test de IQ real'));
     await a.waitForFunction(() => document.querySelector('#ninjaRankLine')?.textContent.includes('#1'));
     check('The run gives the place in the ninja ranking', true);
     await a.evaluate(() => { delete performance.now; });
+    // Finishing early and leaving halfway also give the result
+    await a.click('#qrAgain'); await a.click('#qGo');
+    await a.keyboard.press(String(1 + await a.evaluate(() => lastQ.answer))); await a.waitForTimeout(400);
+    await a.click('#qEnd');
+    check('"Terminar ahora" shows the result right away', await a.isVisible('#qResult .iq') && (await a.textContent('#qResult .nums')).includes('1/1'));
+    await a.click('#qrAgain'); await a.click('#qGo');
+    await a.keyboard.press('1'); await a.waitForTimeout(800);
+    await a.click('#qBack');
+    check('Leaving the run halfway shows the result instead of losing it', await a.isVisible('#qResult .iq'));
     await a.click('#qrChallenge');
     const nwa = decodeURIComponent(await a.getAttribute('#chWhatsapp', 'href'));
     check('A run can be sent as a challenge', nwa.includes('Ninja mental') && /ninja=\d+/.test(nwa) && nwa.includes('#ninja'));
@@ -251,6 +265,7 @@ function typeText(page) {
     check('A ninja challenge opens Ninja mental with the banner', await nf.isVisible('#cog') && (await nf.textContent('#challengeTitle')).includes('ana te desafía en Ninja mental'));
     await nf.click('#challengeAccept');
     check('Accepting starts the 3-minute run', (await nf.textContent('#qName')) === 'Desafío de 3 minutos');
+    await nf.click('#qGo');
     await nf.evaluate(() => { const now = performance.now.bind(performance); performance.now = () => now() + 181000; });
     await nf.waitForSelector('#qResult:not([hidden]) .challenge-result');
     check('The friend learns who won the ninja challenge', (await nf.textContent('.challenge-result')).includes('ana'));
