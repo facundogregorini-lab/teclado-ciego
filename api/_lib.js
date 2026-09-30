@@ -55,6 +55,19 @@ function memoryCommand([cmd, key, ...args]) {
     case 'LPUSH': { const list = memory.get(key) || []; list.unshift(...args.reverse()); memory.set(key, list); return list.length; }
     case 'LTRIM': { const list = memory.get(key) || []; memory.set(key, list.slice(Number(args[0]), Number(args[1]) + 1)); return 'OK'; }
     case 'LRANGE': { const list = memory.get(key) || []; const end = Number(args[1]); return list.slice(Number(args[0]), end < 0 ? undefined : end + 1); }
+    // Sorted sets, for the rankings. Ties go in reverse alphabetical order, like Redis.
+    case 'ZADD': { const set = memory.get(key) || new Map(); const isNew = !set.has(args[1]); set.set(args[1], Number(args[0])); memory.set(key, set); return isNew ? 1 : 0; }
+    case 'ZREM': { const set = memory.get(key); return set?.delete(args[0]) ? 1 : 0; }
+    case 'ZCARD': return memory.get(key)?.size || 0;
+    case 'ZSCORE': { const set = memory.get(key); return set?.has(args[0]) ? String(set.get(args[0])) : null; }
+    case 'ZCOUNT': { // only the "(score +inf" form
+      const min = Number(args[0].replace('(', ''));
+      return [...(memory.get(key) || new Map()).values()].filter(v => v > min).length;
+    }
+    case 'ZREVRANGE': {
+      const sorted = [...(memory.get(key) || new Map())].sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? 1 : -1));
+      return sorted.slice(Number(args[0]), Number(args[1]) + 1).flatMap(([m, v]) => args[2] === 'WITHSCORES' ? [m, String(v)] : [m]);
+    }
     default: throw new Error('Unsupported command ' + cmd);
   }
 }

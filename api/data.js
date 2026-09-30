@@ -1,6 +1,8 @@
 // Progress and practice history for the logged-in user.
 // GET: { progress, history } · POST { type: 'progress', progress } · POST { type: 'finish', entry, progress }
+// Every save also updates the user's place in the rankings (api/_ranks.js).
 const { redis, HttpError, requireUser, body, handler } = require('./_lib');
+const { updateRanks } = require('./_ranks');
 
 const MAX_HISTORY = 100, MAX_TESTS = 300;
 const METHODS = ['mirando', 'hibrido', 'ciegas'];
@@ -46,19 +48,24 @@ module.exports = handler(async req => {
       redis('GET', 'progress:' + name),
       redis('LRANGE', 'history:' + name, 0, MAX_HISTORY - 1),
     ]);
-    return { progress: progress ? JSON.parse(progress) : null, history: (history || []).map(h => JSON.parse(h)) };
+    const saved = progress ? JSON.parse(progress) : null;
+    if (saved) await updateRanks(name, saved); // accounts from before the rankings join them here
+    return { progress: saved, history: (history || []).map(h => JSON.parse(h)) };
   }
   if (req.method !== 'POST') throw new HttpError(405, 'Método no permitido.');
   const data = body(req);
 
   if (data.type === 'progress') {
-    await redis('SET', 'progress:' + name, JSON.stringify(cleanProgress(data.progress)));
+    const progress = cleanProgress(data.progress);
+    await redis('SET', 'progress:' + name, JSON.stringify(progress));
+    await updateRanks(name, progress);
     return { ok: true };
   }
 
   if (data.type === 'finish') {
-    const entry = cleanEntry(data.entry);
-    await redis('SET', 'progress:' + name, JSON.stringify(cleanProgress(data.progress)));
+    const entry = cleanEntry(data.entry), progress = cleanProgress(data.progress);
+    await redis('SET', 'progress:' + name, JSON.stringify(progress));
+    await updateRanks(name, progress);
     await redis('LPUSH', 'history:' + name, JSON.stringify(entry));
     await redis('LTRIM', 'history:' + name, 0, MAX_HISTORY - 1);
     return { entry };

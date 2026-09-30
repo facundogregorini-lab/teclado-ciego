@@ -1,0 +1,119 @@
+/* Cabins: rotating hero with a dream cabin far away, the cabin each group builds, the home your speed deserves and the ranking. */
+
+/* Hero slides mimic background-size:cover so the cabin stays on the same spot of each photo. */
+.hero::before {content:none}
+.hero-slides {position:absolute;inset:0;z-index:-2;container-type:size;overflow:hidden;background:#d9e9df}
+.hero-slides .slide {position:absolute;inset:0;opacity:0;transition:opacity 1.6s ease}
+.hero-slides .slide.on {opacity:1}
+.hero-slides .frame {--fw:max(100cqw,150cqh);--fh:max(100cqh,66.67cqw);position:absolute;width:var(--fw);height:var(--fh);
+  left:calc((100cqw - var(--fw)) * var(--px,.5));top:calc((100cqh - var(--fh)) * var(--py,.5));background:center/cover no-repeat;transform-origin:var(--cx) var(--cy)}
+.hero-slides .slide.on .frame {animation:heroDrift 9s ease-out both}
+@keyframes heroDrift {from{transform:scale(1.05)}to{transform:scale(1)}}
+.slide[data-scene="beach"] {--px:.5;--py:.58;--cx:80%;--cy:47.5%;--cw:5.2%}
+.slide[data-scene="mountains"] {--px:.5;--py:.48;--cx:73%;--cy:61%;--cw:4.4%}
+.slide[data-scene="forest"] {--px:.5;--py:.55;--cx:66%;--cy:66%;--cw:6.8%}
+.hero-cabin {position:absolute;left:var(--cx);top:var(--cy);width:var(--cw);min-width:48px;transform:translate(-50%,-78%);filter:saturate(.9) drop-shadow(0 0 6px #ffd9a055)}
+.slide[data-scene="mountains"] .hero-cabin {filter:saturate(.85) brightness(.95) drop-shadow(0 2px 3px #0003)}
+.slide[data-scene="forest"] .hero-cabin {filter:brightness(.85) drop-shadow(0 0 10px #ffc86b66)}
+.hero-art {display:block;width:100%;overflow:visible}
+.hero-art .halo {fill:#ffd9a0;opacity:.35;filter:blur(6px)}
+.slide[data-scene="mountains"] .halo {opacity:.18}
+.slide[data-scene="forest"] .halo {fill:#ffc070;opacity:.28}
+.win {fill:#ffcf73;animation:flicker 5s ease-in-out infinite}
+.pane {fill:#cfe3ea}
+@keyframes flicker {0%,100%{opacity:1}46%{opacity:.82}52%{opacity:.95}}
+.reflect rect {fill:#ffd08a;opacity:.45}
+.smoke .puff {fill:#fff;opacity:0;transform-box:fill-box;transform-origin:center;animation:puff 4.5s ease-out infinite}
+.smoke .p1 {animation-delay:1.5s}.smoke .p2 {animation-delay:3s}
+@keyframes puff {0%{opacity:0;transform:translate(0,0) scale(.6)}15%{opacity:.7}100%{opacity:0;transform:translate(6px,-22px) scale(2.2)}}
+.flies circle {fill:#fff3a8;animation:twinkle 3s ease-in-out infinite}
+.flies circle:nth-child(2n) {animation-delay:1.2s}.flies circle:nth-child(3n) {animation-delay:2.1s}
+@keyframes twinkle {0%,100%{opacity:.1}50%{opacity:1}}
+.hero-dots {display:flex;gap:6px;margin-left:4px}
+.hero-dots i {width:6px;height:6px;border-radius:50%;background:#ffffff70;transition:background .3s,width .3s}
+.hero-dots i.on {background:#fff;width:16px;border-radius:4px}
+
+/* Cabin of each group */
+.group-head {display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:14px 28px;align-items:center;margin-bottom:14px}
+.group-head p {margin-bottom:0}
+.cabin-card {margin:0;display:grid;grid-template-columns:190px 1fr;gap:12px;align-items:center;background:#fffefa;border:1px solid var(--line);border-radius:16px;padding:8px 12px 8px 8px}
+.cabin-card figcaption {display:grid;gap:3px;font-size:.76rem;color:var(--muted);line-height:1.35}
+.cabin-card figcaption b {color:var(--ink);font-family:var(--display);font-size:1rem;font-weight:600;letter-spacing:-.02em}
+.cabin-card .meter {height:4px;border-radius:4px;background:var(--line);overflow:hidden;margin-top:4px}
+.cabin-card .meter i {display:block;height:100%;background:var(--accent)}
+.cabin-art {display:block;width:100%;border-radius:10px;overflow:hidden}
+.cabin-art .part.plan * {fill:none!important;stroke:#8b978f!important;stroke-width:1!important;stroke-dasharray:3 3;animation:none}
+.cabin-art .part.plan {opacity:.55}
+.cabin-art .part.plan .smoke {display:none}
+.cabin-art .part.fresh {transform-box:fill-box;transform-origin:50% 100%;animation:raise .9s cubic-bezier(.2,1.4,.4,1) .3s both}
+@keyframes raise {from{opacity:0;transform:translateY(-14px) scale(.9)}to{opacity:1;transform:none}}
+.bulb {animation:twinkle 1.6s ease-in-out infinite}
+.bulb.b0 {fill:#ff6b6b}.bulb.b1 {fill:#ffd166;animation-delay:.5s}.bulb.b2 {fill:#7bdff2;animation-delay:1s}
+.spark {animation:twinkle 2s ease-in-out infinite}
+
+/* Cabin in the lesson result */
+.result-cabin {display:grid;grid-template-columns:minmax(150px,260px) 1fr;gap:18px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:12px}
+.result-cabin b {font-family:var(--display);font-weight:600;font-size:1.1rem;letter-spacing:-.02em;display:block;margin-bottom:4px}
+.result-cabin p {font-size:.88rem;color:var(--muted)}
+
+/* The home your speed deserves: live during the test and as the backdrop of the result */
+.live-house {display:grid;grid-template-columns:160px 1fr;gap:18px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:12px 18px;width:100%}
+.live-house .home-art {display:block;width:100%}
+.live-house .home-art.pop {animation:pop .5s cubic-bezier(.2,1.4,.4,1)}
+@keyframes pop {from{transform:scale(.8);opacity:.2}to{transform:none;opacity:1}}
+.live-house small {display:block;color:var(--muted);font-size:.78rem}
+.live-house strong {display:block;font-family:var(--display);font-weight:600;font-size:1.3rem;letter-spacing:-.02em;line-height:1.2}
+.house-result {position:relative;overflow:hidden;border-radius:18px;min-height:300px;padding:24px;background:linear-gradient(#dcecf5,#f4efe3 70%);border:1px solid var(--line);display:grid;align-content:center}
+.house-result .home-art {position:absolute;right:-10px;bottom:-4px;width:min(58%,460px);display:block}
+.house-copy {position:relative;max-width:min(52%,440px);display:grid;gap:10px}
+.house-copy .eyebrow {margin:0;text-transform:uppercase}
+.house-copy h4 {margin:0;font-family:var(--display);font-weight:700;font-size:clamp(1.5rem,3.6vw,2.2rem);line-height:1.1;letter-spacing:-.03em}
+.house-copy .joke {font-family:Georgia,serif;font-style:italic;font-size:1.05rem;color:var(--ink);background:#fffefacc;border-radius:12px;padding:10px 14px;margin:0}
+.house-copy p {margin:0;font-size:.9rem}
+.speed-scale {position:relative;height:34px;margin-top:6px}
+.speed-scale .track {position:absolute;left:0;right:0;top:12px;height:8px;border-radius:8px;background:linear-gradient(90deg,#c99a5f 0 8.3%,#4a7fb5 8.3% 16.7%,#b07c4f 16.7% 29.2%,#5b6e3f 29.2% 41.7%,#7b5536 41.7% 58.3%,#c9bca6 58.3% 75%,#6a5acd 75%)}
+.speed-scale .mk {position:absolute;top:0;transform:translateX(-50%);font-size:.68rem;font-weight:700;white-space:nowrap;display:flex;flex-direction:column;align-items:center}
+.speed-scale .mk::after {content:"";width:2px;height:14px;background:currentColor;margin-top:-1px}
+.speed-scale .mk.med {color:var(--muted);top:auto;bottom:-14px;flex-direction:column-reverse}
+.speed-scale .mk.you {color:var(--ink);top:-12px}
+.speed-scale .mk.you::after {width:12px;height:12px;border-radius:50%;background:var(--accent);border:2px solid var(--card);margin-top:4px}
+.live-house .speed-scale {margin-top:14px}
+
+/* Ranking */
+.ranking {background:#fffefaeb;border:1px solid var(--line);border-radius:24px;padding:30px;display:grid;gap:18px;scroll-margin-top:24px}
+.rank-head {display:flex;flex-wrap:wrap;justify-content:space-between;align-items:end;gap:14px}
+.rank-head p {margin:8px 0 0;color:var(--muted);font-size:.85rem;max-width:62ch}
+.rank-list {list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.rank-list li {display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:12px;align-items:center;background:#f7f8f2;border:1px solid var(--line);border-radius:12px;padding:9px 14px}
+.rank-list li.me {border:2px solid var(--accent);padding:8px 13px;background:#edf4e9}
+.rank-list li.sep {background:none;border:0;padding:0;justify-content:center;color:var(--muted);display:flex}
+.rank-list .pos {font-family:var(--display);font-weight:700;font-size:1.1rem;font-variant-numeric:tabular-nums}
+.rank-list .pos.p1::before {content:"🥇 "}.rank-list .pos.p2::before {content:"🥈 "}.rank-list .pos.p3::before {content:"🥉 "}
+.rank-list .pos.p1,.rank-list .pos.p2,.rank-list .pos.p3 {font-size:0}
+.rank-list .pos.p1::before,.rank-list .pos.p2::before,.rank-list .pos.p3::before {font-size:1.25rem}
+.rank-list .who {font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rank-list .who small {font-weight:400;color:var(--muted);margin-left:6px}
+.rank-list .val {text-align:right;font-variant-numeric:tabular-nums;font-size:.9rem}
+.rank-list .val small {display:block;color:var(--muted);font-size:.72rem}
+.rank-list .bar {height:4px;border-radius:4px;background:var(--line);overflow:hidden;grid-column:2/4}
+.rank-list .bar i {display:block;height:100%;background:var(--accent)}
+.rank-note {color:var(--muted);font-size:.85rem;margin:0}
+
+@media(max-width:1050px) {.group-head {grid-template-columns:minmax(0,1fr) 330px}.cabin-card {grid-template-columns:160px 1fr}}
+@media(max-width:700px) {
+  .group-head {grid-template-columns:1fr}
+  .cabin-card {grid-template-columns:150px 1fr}
+  .result-cabin {grid-template-columns:120px 1fr;gap:12px}
+  .live-house {grid-template-columns:96px 1fr;gap:12px;padding:10px 12px}
+  .live-house strong {font-size:1.05rem}
+  .house-result {padding:18px;min-height:0}
+  .house-result .home-art {position:relative;right:auto;bottom:auto;width:100%;max-width:340px;margin:0 auto -6px}
+  .house-copy {max-width:none;order:2}
+  .ranking {padding:22px 16px;border-radius:20px}
+  .rank-list li {grid-template-columns:36px minmax(0,1fr) auto;gap:8px;padding:8px 10px}
+  .slide[data-scene] {--px:.64}
+  .slide[data-scene="beach"] {--cx:70%;--cy:91%;--cw:4.4%}
+  .slide[data-scene="mountains"] {--cx:64%;--cy:90%;--cw:4.4%}
+  .slide[data-scene="forest"] {--cx:62%;--cy:86%;--cw:6%}
+}
+@media(prefers-reduced-motion:reduce) {.hero-slides .slide {transition:none}.hero-slides .slide.on .frame,.win,.smoke .puff,.flies circle,.bulb,.spark,.cabin-art .part.fresh,.live-house .home-art.pop {animation:none}.smoke .puff {opacity:.5}}
