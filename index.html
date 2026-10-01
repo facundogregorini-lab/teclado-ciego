@@ -1374,6 +1374,7 @@ async function signedIn(token, name) {
   await loadBilling(back === 'ok');
   if (back) {
     window.history.replaceState(null, '', location.pathname + location.hash);
+    if (back === 'ok') trackPurchase();
     toast(back !== 'ok' ? 'El pago no se completó. Podés intentarlo de nuevo cuando quieras.'
       : billing.premium ? '¡Gracias por tu aporte! Los monjes ninja te lo agradecen 🙏 Ya tenés acceso ilimitado ✦'
       : 'Estamos esperando la confirmación de Mercado Pago. Puede tardar unos minutos.');
@@ -1441,6 +1442,7 @@ $('authForm').onsubmit = async e => {
     $('authDlg').close();
     await signedIn(r.token, r.user.name);
     loadRanking();
+    if (authMode === 'register') track('CompleteRegistration', { content_name: 'Cuenta Templo Ninja' });
     toast(authMode === 'register' ? `Cuenta creada. Tu progreso se guarda en ${r.user.name}.` : `Hola, ${r.user.name}. Seguimos donde dejaste.`);
   } catch (err) { $('authErr').textContent = err.message; }
   $('authSubmit').disabled = false;
@@ -1932,7 +1934,29 @@ function guestPlays() { try { const p = JSON.parse(localStorage.getItem(PLAYS_KE
 const usedToday = () => auth.name ? billing.plays : guestPlays();
 async function loadBilling(sync) {
   try { Object.assign(billing, await api('billing', sync ? { action: 'sync' } : undefined)); } catch {}
+  startPixel(billing.pixel);
   renderPlanNote();
+}
+
+/* ---------- Meta Pixel: only when META_PIXEL_ID is set on the server (see api/_meta.js) ---------- */
+// Events: PageView · CompleteRegistration (new account) · Practica (custom: a practice starts, with its section)
+// · InitiateCheckout (goes to pay) · Purchase (back from paying; the server also reports it, same event id).
+let pixelOn = false;
+function startPixel(id) {
+  if (pixelOn || !/^\d{6,20}$/.test(id || '')) return;
+  pixelOn = true;
+  !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+  fbq('init', id); fbq('track', 'PageView');
+}
+const track = (event, params, eventID) => { if (pixelOn) fbq('track', event, params || {}, eventID ? { eventID } : undefined); };
+const trackCustom = (event, params) => { if (pixelOn) fbq('trackCustom', event, params || {}); };
+const cookie = name => (document.cookie.match('(?:^|; )' + name + '=([^;]*)') || [])[1];
+// The Purchase of an approved payment, once per browser (the server sends the same event id).
+function trackPurchase() {
+  const p = billing.purchase, key = 'teclado-ciego-pixel-' + p?.id;
+  if (!p) return;
+  try { if (localStorage.getItem(key)) return; localStorage.setItem(key, '1'); } catch {}
+  track('Purchase', { value: p.value, currency: p.currency, content_name: 'Templo Ninja · acceso ilimitado' }, p.id);
 }
 function mayStart() {
   if (!limited() || usedToday() < billing.freePerDay) return true;
@@ -1941,6 +1965,7 @@ function mayStart() {
 // A practice counts from its first key, so opening a lesson and leaving does not use one.
 function countPractice() {
   counted = true;
+  trackCustom('Practica', { seccion: mode === 'quiz' ? 'ninja-mental' : 'teclado-ciego', desafio: Boolean(quiz?.ninja && mode === 'quiz') });
   if (!limited()) return;
   if (auth.name) {
     billing.plays++;
@@ -1986,7 +2011,8 @@ $('planForm').onsubmit = async e => {
   e.preventDefault();
   if (!auth.name) { planAfterLogin = true; $('planDlg').close(); openAuth(); setAuthMode('register'); return; }
   $('planSubmit').disabled = true; $('planErr').textContent = '';
-  try { location.href = (await api('billing', { action: 'buy' })).url; }
+  track('InitiateCheckout', { value: billing.amount, currency: billing.currency, content_name: 'Templo Ninja · acceso ilimitado' });
+  try { location.href = (await api('billing', { action: 'buy', track: { fbp: cookie('_fbp'), fbc: cookie('_fbc') } })).url; }
   catch (err) { $('planErr').textContent = err.message; $('planSubmit').disabled = false; }
 };
 
