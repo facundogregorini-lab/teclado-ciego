@@ -50,7 +50,7 @@ Mientras no estén configuradas las variables de Mercado Pago, la app no tiene l
 
 ### Píxel de Meta (anuncios)
 
-Si en Vercel está `META_PIXEL_ID`, la app carga el Píxel de Meta (el ID llega desde `/api/billing`; sin la variable no se carga nada) y manda estos eventos:
+La app carga el Píxel de Meta **Templo Ninja Web** (`2167285730522630`, el ID llega desde `/api/billing`) y manda estos eventos. Con la variable `META_PIXEL_ID` en Vercel se usa otro pixel, y con `META_PIXEL_ID=off` no se carga nada.
 
 | Evento | Cuándo |
 | --- | --- |

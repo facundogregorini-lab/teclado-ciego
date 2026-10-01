@@ -3,6 +3,7 @@
 const http = require('node:http'), fs = require('node:fs'), path = require('node:path');
 const root = path.resolve(__dirname, '..');
 process.env.TECLADO_MEMORY_DB ??= '1';
+process.env.META_PIXEL_ID ??= 'off'; // local copies don't send visits to the real Meta Pixel
 
 function createServer() {
   return http.createServer(async (req, res) => {

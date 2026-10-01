@@ -1,11 +1,13 @@
-// Meta Pixel settings and the Conversions API. Without META_PIXEL_ID nothing is loaded or sent.
+// Meta Pixel settings and the Conversions API. The pixel id is public (it goes in the page anyway), so the
+// "Templo Ninja Web" pixel is the default; META_PIXEL_ID changes it, and META_PIXEL_ID=off turns it off.
 // The purchase is also sent from the server (with the same event id as the browser, so Meta counts it once),
 // because ad blockers and Safari often stop the pixel right when it matters.
 const crypto = require('node:crypto');
 const env = name => (process.env[name] || '').trim();
+const DEFAULT_PIXEL = '2167285730522630';
 
 function metaSettings() {
-  const pixel = /^\d{6,20}$/.test(env('META_PIXEL_ID')) ? env('META_PIXEL_ID') : '';
+  const id = env('META_PIXEL_ID') || DEFAULT_PIXEL, pixel = /^\d{6,20}$/.test(id) ? id : '';
   return { pixel, token: pixel && env('META_CAPI_TOKEN'), graph: env('META_GRAPH_BASE') || 'https://graph.facebook.com/' + (env('META_GRAPH_VERSION') || 'v23.0') };
 }
 
