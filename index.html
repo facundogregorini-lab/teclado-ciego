@@ -448,6 +448,7 @@ dialog::backdrop{background:rgba(10,14,18,.45)}
           <li>Se alternan figuras, números e inglés. Elegí con el mouse o con las teclas 1 a 5.</li>
           <li>Al contestar aparece enseguida la próxima pregunta. Cada 3 aciertos, la dificultad sube y cada acierto vale más.</li>
           <li>Cuando se termina el reloj (o si tocás <b>Terminar ahora</b>) ves tus puntos, tu IQ ninja y a quién te parecés.</li>
+          <li>Jugá vos: las partidas se corrigen en el servidor y las que parecen hechas por un programa o una IA no cuentan para el ranking.</li>
         </ol>
       </div>
       <div id="qPlay">
@@ -673,6 +674,7 @@ if (!Array.isArray(S.tests)) S.tests = [];
 if (!S.cog || typeof S.cog !== 'object') S.cog = {};
 if (!Array.isArray(S.sims)) S.sims = [];
 if (!S.ninja || !Array.isArray(S.ninja.runs)) S.ninja = { best: null, runs: [] };
+if (S.ninja.best && !S.ninja.best.id) S.ninja.best = null; // marks from before the server graded the challenge
 const save = () => { try { localStorage.setItem(STORE, JSON.stringify(S)); } catch {} };
 
 /* ---------- Helpers ---------- */
@@ -1258,12 +1260,12 @@ document.addEventListener('keydown', e => {
     if (e.metaKey || e.ctrlKey || e.altKey || e.target.closest?.('input, select')) return;
     if (e.key === 'Escape') { e.preventDefault(); leaveQuiz(); return; }
     const k = '12345'.indexOf(e.key) >= 0 ? '12345'.indexOf(e.key) : 'abcde'.indexOf(e.key.toLowerCase());
-    if (e.key.length === 1 && k >= 0 && $('qFeedback').hidden) { e.preventDefault(); answerQ(k); }
+    if (e.key.length === 1 && k >= 0 && $('qFeedback').hidden) { e.preventDefault(); answerQ(k, e); }
     else if (e.key === 'Enter' && !$('qFeedback').hidden && !e.target.closest?.('button')) { e.preventDefault(); nextQ(); }
   } else if (mode === 'nready' && (e.key === 'Enter' || e.key === ' ') && !e.target.closest?.('button')) { e.preventDefault(); beginNinja(); }
   else if (mode === 'nready' && e.key === 'Escape') goCog();
   else if (mode === 'qdone' && e.key === 'Enter' && performance.now() - doneAt > 500 && !e.target.closest?.('button')) {
-    e.preventDefault(); (($('qrNext') || $('qrAgain'))).click();
+    e.preventDefault(); ($('qrNext') || $('qrAgain'))?.click();
   } else if (mode === 'qdone' && e.key === 'Escape') goCog();
   else if (mode === 'done' && e.key === 'Enter' && performance.now() - doneAt > 500) {
     e.preventDefault(); (($('rNext') || $('rAgain'))).click();
@@ -1327,8 +1329,8 @@ function merge(remote) {
     for (const t of remote.sims) if (!seen.has(t.date)) S.sims.push(t);
     S.sims.sort((a, b) => a.date - b.date); S.sims = S.sims.slice(-100);
   }
-  if (remote.ninja) {
-    if (remote.ninja.best && (!S.ninja.best || remote.ninja.best.score > S.ninja.best.score)) S.ninja.best = remote.ninja.best;
+  if (remote.ninja) { // graded by the server: its best is the one that counts
+    if (remote.ninja.best && (!S.ninja.best || remote.ninja.best.score >= S.ninja.best.score)) S.ninja.best = remote.ninja.best;
     const seen = new Set(S.ninja.runs.map(t => t.date));
     for (const t of remote.ninja.runs || []) if (!seen.has(t.date)) S.ninja.runs.push(t);
     S.ninja.runs.sort((a, b) => a.date - b.date); S.ninja.runs = S.ninja.runs.slice(-50);
@@ -1582,7 +1584,9 @@ function goCog() {
 
 let quiz = null;
 /* Desafío de 5 minutos: questions from the three tracks in turn (figures, numbers, English), one level harder every 3
-   right answers. Score = points of the right answers (their difficulty) × accuracy; the IQ is a playful estimate. */
+   right answers. Score = points of the right answers (their difficulty) × accuracy; the IQ is a playful estimate.
+   The server (api/ninja.js) generates the questions, keeps the answers and the clock and computes the score, so the
+   page can't be read or edited to cheat. Without a connection the run is played here, but it doesn't count. */
 const NINJA_MS = 5 * 60000;
 const NINJA_KINDS = ['serie', 'tabla', 'lectura', 'matriz', 'porcentaje', 'conectores', 'distinta', 'grafico', 'orden'];
 const genOf = kind => Object.values(TRACKS).find(t => t.kinds.some(k => k.id === kind)).gen;
@@ -1623,16 +1627,21 @@ function startNinja() {
   if (!mayStart()) return;
   clearInterval(timer);
   quiz = { ninja: true, qs: [], used: new Set(), i: 0, ok: 0, picks: [], points: 0, level: 1, limit: NINJA_MS, t0: 0 };
-  quiz.qs.push(ninjaQ());
-  mode = 'nready'; counted = false; setQuizLabels(true);
+  mode = 'nready'; $('qGo').disabled = false; counted = false; setQuizLabels(true);
   $('qName').textContent = 'Desafío de 5 minutos'; $('qGroup').textContent = 'Ninja mental · dificultad 1 de 5';
   $('qNum').textContent = '0'; $('qOk').textContent = '0'; $('qTime').textContent = fmt(NINJA_MS); $('qBar').style.width = '0%';
   $('qTime').parentElement.classList.remove('low');
   $('qIntro').hidden = false; $('qPlay').hidden = true; $('qResult').hidden = true;
   show('quiz'); $('qGo').focus({ preventScroll: true });
 }
-function beginNinja() {
+async function beginNinja() {
   if (mode !== 'nready') return;
+  mode = 'nstart'; $('qGo').disabled = true;
+  const run = quiz;
+  try { const r = await api('ninja', { type: 'start' }); run.id = r.id; run.qs.push(r.q); }
+  catch { run.local = true; run.qs.push(ninjaQ()); }
+  if (mode !== 'nstart' || quiz !== run) return; // left while it was starting
+  $('qGo').disabled = false;
   mode = 'quiz'; quiz.t0 = performance.now();
   $('qIntro').hidden = true; $('qPlay').hidden = false;
   $('qFlash').textContent = 'Figuras, números e inglés, mezclados. ¡Vamos!'; $('qFlash').className = 'q-flash';
@@ -1666,36 +1675,19 @@ function renderQ() {
   $('qOpts').replaceChildren(...q.options.map((t, i) => {
     const b = document.createElement('button'); b.className = 'opt'; b.type = 'button';
     b.innerHTML = `<b>${'ABCDE'[i]}</b>${optHtml(q, t)}`; b.setAttribute('aria-label', 'Opción ' + 'ABCDE'[i] + (q.text ? ': ' + t : ''));
-    b.onclick = () => answerQ(i);
+    b.onclick = e => answerQ(i, e);
     return b;
   }));
   $('qFeedback').hidden = true;
+  watchPointer();
 }
-function answerQ(k) {
+function answerQ(k, ev) {
   const q = quiz.qs[quiz.i];
   if (mode !== 'quiz' || k >= q.options.length || !$('qFeedback').hidden || quiz.lock) return;
   if (!counted) countPractice();
+  if (quiz.ninja) return answerNinja(k, ev);
   const right = k === q.answer;
   quiz.picks[quiz.i] = k; if (right) quiz.ok++;
-  if (quiz.ninja) {
-    // A quick flash of the right answer, then the next series: one level harder every 3 right answers.
-    const btns = $('qOpts').children;
-    btns[q.answer].classList.add('right'); if (!right) btns[k].classList.add('wrong');
-    const pts = q.d || quiz.level;
-    if (right) quiz.points += pts;
-    const before = quiz.level;
-    quiz.level = Math.min(5, 1 + Math.floor(quiz.ok / 3));
-    $('qFlash').textContent = (right ? `✓ ¡Bien! +${pts} ${pts === 1 ? 'punto' : 'puntos'}` : `✗ Era la ${'ABCDE'[q.answer]}`) + (quiz.level > before ? ` · ¡Sube la dificultad a ${quiz.level}!` : ' · Va la siguiente');
-    $('qFlash').className = 'q-flash ' + (right ? 'ok' : 'bad');
-    $('qNum').textContent = quiz.i + 1; $('qOk').textContent = quiz.points;
-    quiz.lock = true;
-    setTimeout(() => {
-      quiz.lock = false;
-      if (mode !== 'quiz') return;
-      quiz.qs.push(ninjaQ()); quiz.i++; renderQ();
-    }, right ? 300 : q.text ? 1100 : 700);
-    return;
-  }
   if (quiz.sim) { nextQ(); return; }
   const btns = $('qOpts').children;
   btns[q.answer].classList.add('right'); if (!right) btns[k].classList.add('wrong');
@@ -1704,6 +1696,46 @@ function answerQ(k) {
   const next = q.after && q.after !== q.tip ? q.after : !right ? q.tip : '';
   if (next) $('qExplain').insertAdjacentHTML('beforeend', `<span class="q-next">💡 <b>Para la próxima:</b> ${escHtml(next)}</span>`);
   $('qFeedback').hidden = false; $('qNext').focus({ preventScroll: true });
+}
+/* How each answer of the 5-minute run was given, for the server to tell people from programs: keyboard or pointer,
+   whether the browser saw a real event, how many times the pointer moved since the question appeared and how far
+   it jumped to click (an agent clicks straight on the answer; a hand moves the mouse there). */
+const ptr = { x: null, y: null, moves: 0, from: null };
+addEventListener('pointermove', e => { if (e.pointerType !== 'touch') { ptr.x = e.clientX; ptr.y = e.clientY; ptr.moves++; } }, { passive: true });
+const watchPointer = () => { ptr.moves = 0; ptr.from = ptr.x == null ? null : { x: ptr.x, y: ptr.y }; };
+function answerSignal(ev) {
+  const key = !ev || ev.type === 'keydown' || ev.detail === 0;
+  const input = key ? 'key' : ['mouse', 'pen', 'touch'].includes(ev.pointerType) ? ev.pointerType : 'mouse';
+  const jump = key || input === 'touch' ? 0 : ptr.from ? Math.hypot(ev.clientX - ptr.from.x, ev.clientY - ptr.from.y) : 9999;
+  return { input, trusted: !!ev?.isTrusted, focus: document.hasFocus(), moves: ptr.moves, jump: Math.round(jump) };
+}
+// A quick flash of the right answer, then the next question: one level harder every 3 right answers.
+async function answerNinja(k, ev) {
+  const run = quiz, q = run.qs[run.i];
+  run.lock = true; run.picks[run.i] = k;
+  let r;
+  if (run.local) {
+    const right = k === q.answer, pts = q.d || run.level;
+    run.ok += right ? 1 : 0; run.points += right ? pts : 0;
+    r = { right, answer: q.answer, pts, points: run.points, ok: run.ok, n: run.i + 1, level: Math.min(5, 1 + Math.floor(run.ok / 3)) };
+  } else {
+    run.pending = api('ninja', { type: 'answer', id: run.id, pick: k, sig: answerSignal(ev) });
+    try { r = await run.pending; } catch { r = null; }
+    run.pending = null;
+    if (quiz !== run || mode !== 'quiz') return; // the run ended while the answer was on its way
+    if (!r || r.over) { run.lock = false; if (!r) toast('Se cortó la conexión: tu desafío termina acá.'); return finishQuiz(); }
+  }
+  const btns = $('qOpts').children, before = run.level;
+  btns[r.answer].classList.add('right'); if (!r.right) btns[k].classList.add('wrong');
+  run.ok = r.ok; run.points = r.points; run.level = r.level;
+  $('qFlash').textContent = (r.right ? `✓ ¡Bien! +${r.pts} ${r.pts === 1 ? 'punto' : 'puntos'}` : `✗ Era la ${'ABCDE'[r.answer]}`) + (run.level > before ? ` · ¡Sube la dificultad a ${run.level}!` : ' · Va la siguiente');
+  $('qFlash').className = 'q-flash ' + (r.right ? 'ok' : 'bad');
+  $('qNum').textContent = run.i + 1; $('qOk').textContent = run.points;
+  setTimeout(() => {
+    run.lock = false;
+    if (mode !== 'quiz' || quiz !== run) return;
+    run.qs.push(run.local ? ninjaQ() : r.q); run.i++; renderQ();
+  }, r.right ? 300 : q.text ? 1100 : 700);
 }
 function nextQ() {
   if (mode !== 'quiz') return;
@@ -1758,29 +1790,43 @@ function finishQuiz() {
   $('qrHome').onclick = goCog;
   (($('qrNext') || $('qrAgain'))).focus({ preventScroll: true });
 }
-function finishNinja() {
-  clearInterval(timer); mode = 'qdone'; doneAt = performance.now(); quiz.lock = false;
-  const n = quiz.picks.filter(x => x != null).length, ok = quiz.ok, acc = n ? ok / n : 0;
-  const score = Math.round((quiz.points || 0) * acc), iq = iqFor(score), ti = iqTier(iq), maxLevel = Math.max(1, ...quiz.qs.map(q => q.d || 1));
-  const run = { score, iq, ok, n, date: Date.now() };
-  const record = !S.ninja.best || score > S.ninja.best.score;
-  if (record) S.ninja.best = run;
-  S.ninja.runs.push(run); S.ninja.runs = S.ninja.runs.slice(-50);
-  save();
-  recordSession({ lesson: 'cog', name: 'Ninja · desafío de 5 minutos', stars: 0, ppm: 0, acc: Math.round(100 * acc), ms: NINJA_MS })
-    .then(saved => saved && loadRanking()).then(() => ninjaRankLine(score));
+async function finishNinja() {
+  clearInterval(timer); mode = 'qdone'; doneAt = performance.now();
+  const run = quiz;
   $('qBar').style.width = '100%'; $('qTime').textContent = '0:00';
-  $('qResult').innerHTML = `<h3>Desafío de 5 minutos</h3>
+  $('qResult').innerHTML = '<h3>Desafío de 5 minutos</h3><p>Calculando tu resultado…</p>';
+  $('qPlay').hidden = true; $('qResult').hidden = false; scrollTo({ top: 0 });
+  await run.pending?.catch(() => {});
+  let r = null;
+  if (run.id) try { r = await api('ninja', { type: 'finish', id: run.id }); } catch {}
+  if (quiz !== run || mode !== 'qdone') return; // already somewhere else
+  run.lock = false; doneAt = performance.now();
+  if (!r) { // played here (no connection): the same calculation, but it can't be verified
+    const n = run.picks.filter(x => x != null).length, acc = n ? run.ok / n : 0, score = Math.round((run.points || 0) * acc);
+    r = { score, iq: iqFor(score), ok: run.ok, n, points: run.points || 0, acc: Math.round(100 * acc), maxLevel: Math.max(1, ...run.qs.slice(0, n).map(q => q.d || 1)), date: Date.now(),
+      flagged: true, offline: true, reasons: ['No hubo conexión con el servidor, así que el puntaje no se pudo verificar.'] };
+  }
+  const { score, iq, ok, n, flagged } = r, ti = iqTier(iq);
+  const mark = { id: r.id, score, iq, ok, n, date: r.date, ...(flagged ? { flagged: true } : {}) };
+  const record = !flagged && n > 0 && (!S.ninja.best || score > S.ninja.best.score);
+  if (r.ninja) { S.ninja.best = r.ninja.best; S.ninja.runs = r.ninja.runs; }
+  else { if (record) S.ninja.best = mark; S.ninja.runs.push(mark); S.ninja.runs = S.ninja.runs.slice(-50); }
+  save();
+  recordSession({ lesson: 'cog', name: 'Ninja · desafío de 5 minutos' + (flagged ? ' (no cuenta)' : ''), stars: 0, ppm: 0, acc: r.acc, ms: NINJA_MS })
+    .then(saved => saved && loadRanking()).then(() => flagged || ninjaRankLine(score));
+  const reasons = flagged ? `<div class="flag-note" role="note"><b>⚠️ Esta partida no cuenta para el ranking${r.offline ? '' : ' ni para desafiar a tus amigos'}.</b>
+      <ul>${r.reasons.map(x => `<li>${escHtml(x)}</li>`).join('')}</ul>
+      ${r.offline ? '' : '<p>Si fuiste vos, jugá como siempre con tu mouse, tu dedo o el teclado, en esta pestaña y sin extensiones que hagan clics por vos.</p>'}</div>` : '';
+  $('qResult').innerHTML = `<h3>Desafío de 5 minutos</h3>${reasons}
     <div class="house-result">${Typists.typist(ti)}<div class="house-copy"><span class="eyebrow">Tu IQ ninja estimado</span><h4 class="iq">IQ ${iq}</h4>
       <p class="joke">${rnd(IQ_JOKES[ti])}</p>
       <p>Pensás como ${TIERS[ti].name}. ${record && S.ninja.runs.length > 1 ? '¡Nuevo récord personal! ' : ''}Es una estimación lúdica según tu puntaje, no un test de IQ real.</p>
-      ${ninjaChallengeResult(score)}<p id="ninjaRankLine">${auth.name ? '' : 'Entrá con tu cuenta para aparecer en el ranking ninja.'}</p></div></div>
-    <div class="nums"><div><b>${score}</b><span>puntos</span></div><div><b>${ok}/${n}</b><span>correctas</span></div><div><b>${Math.round(100 * acc)}%</b><span>efectividad</span></div><div><b>${maxLevel}</b><span>dificultad máxima</span></div></div>
-    <p>Cada acierto suma su dificultad (de 1 a 5) y el total se multiplica por tu efectividad: ${quiz.points} × ${Math.round(100 * acc)}% = ${score} puntos.</p>
-    <div class="actions"><button class="btn primary" id="qrAgain">Otra vez <small>Enter</small></button><button class="btn" id="qrChallenge">Desafiar a un amigo</button><button class="btn" id="qrHome">Ninja mental</button></div>`;
-  $('qPlay').hidden = true; $('qResult').hidden = false; scrollTo({ top: 0 });
+      ${flagged ? '' : ninjaChallengeResult(score)}<p id="ninjaRankLine">${flagged ? '' : auth.name ? '' : 'Entrá con tu cuenta para aparecer en el ranking ninja.'}</p></div></div>
+    <div class="nums"><div><b>${score}</b><span>puntos</span></div><div><b>${ok}/${n}</b><span>correctas</span></div><div><b>${r.acc}%</b><span>efectividad</span></div><div><b>${r.maxLevel}</b><span>dificultad máxima</span></div></div>
+    <p>Cada acierto suma su dificultad (de 1 a 5) y el total se multiplica por tu efectividad: ${r.points} × ${r.acc}% = ${score} puntos.</p>
+    <div class="actions"><button class="btn primary" id="qrAgain">Otra vez <small>Enter</small></button><button class="btn" id="qrChallenge">${flagged ? 'Invitar a un amigo' : 'Desafiar a un amigo'}</button><button class="btn" id="qrHome">Ninja mental</button></div>`;
   $('qrAgain').onclick = startNinja;
-  $('qrChallenge').onclick = () => openChallenge({ kind: 'ninja', score });
+  $('qrChallenge').onclick = () => openChallenge(flagged ? { kind: 'ninja', score: 0 } : { kind: 'ninja', score, run: r.id });
   $('qrHome').onclick = goCog;
   $('qrAgain').focus({ preventScroll: true });
 }
@@ -1795,7 +1841,7 @@ function renderNinjaMax() {
   renderRankInto($('ninjaRank'), $('ninjaRankNote'), 'ninja', 10);
 }
 $('maxBtn').onclick = startNinja;
-$('maxInvite').onclick = () => openChallenge({ kind: 'ninja', score: S.ninja.best?.score || 0 });
+$('maxInvite').onclick = () => openChallenge(S.ninja.best?.id ? { kind: 'ninja', score: S.ninja.best.score, run: S.ninja.best.id } : { kind: 'ninja', score: 0 });
 $('qNext').onclick = nextQ;
 $('qBack').onclick = leaveQuiz;
 $('qEnd').onclick = () => { if (mode === 'quiz') finishQuiz(); };
@@ -1942,25 +1988,33 @@ $('planForm').onsubmit = async e => {
 };
 
 /* ---------- Challenges: invite friends by WhatsApp or email with a link ---------- */
-// ?de=ana&ppm=42&metodo=ciegas → "ana te desafía" (speed) · ?de=ana&ninja=34#ninja → Ninja mental challenge.
-// The link carries the score; nothing is stored on the server.
+// ?de=ana&ppm=42&metodo=ciegas → "ana te desafía" (speed) · ?de=ana&reto=<run>#ninja → Ninja mental challenge.
+// A speed link carries the score. A ninja link names a run graded by the server, which says its score (api/ninja.js):
+// a link without one (or with a made-up one) is just an invitation.
 let challenge = null, shareScore = null;
 const NAME_KEY = 'teclado-ciego-nombre';
 (() => {
   const q = new URLSearchParams(location.search);
   if (!q.has('de')) return;
   const from = (q.get('de') || '').replace(/[^\p{L}\p{N} _.-]/gu, '').trim().slice(0, 24);
-  const method = METHODS.find(m => m.id === q.get('metodo')), ppm = Math.round(Number(q.get('ppm'))), ninja = Math.round(Number(q.get('ninja')));
-  if (from && q.has('ninja')) challenge = { from, kind: 'ninja', score: ninja > 0 && ninja <= 300 ? ninja : 0 };
+  const method = METHODS.find(m => m.id === q.get('metodo')), ppm = Math.round(Number(q.get('ppm')));
+  if (from && (q.has('reto') || q.has('ninja'))) {
+    challenge = { from, kind: 'ninja', score: 0 };
+    const run = q.get('reto'), mine = challenge;
+    if (run) fetch('/api/ninja?reto=' + encodeURIComponent(run)).then(res => res.ok ? res.json() : null).then(r => {
+      if (!r?.score || challenge !== mine) return;
+      Object.assign(mine, { score: r.score, from: r.name || from, verified: true }); renderChallenge();
+    }).catch(() => {});
+  }
   else if (from) challenge = { from, kind: 'speed', ppm: method && ppm > 0 && ppm <= 250 ? ppm : 0, method: method?.id || 'ciegas' };
-  for (const k of ['de', 'ppm', 'metodo', 'ninja']) q.delete(k);
+  for (const k of ['de', 'ppm', 'metodo', 'ninja', 'reto']) q.delete(k);
   window.history.replaceState(null, '', location.pathname + (q.toString() ? '?' + q : '') + location.hash);
 })();
 function renderChallenge() {
   $('challengeBanner').hidden = !challenge;
   if (!challenge) return;
   if (challenge.kind === 'ninja') {
-    $('challengeTitle').textContent = challenge.score ? `${challenge.from} te desafía en Ninja mental: IQ ${iqFor(challenge.score)} (${challenge.score} puntos)` : `${challenge.from} te invita a Ninja mental`;
+    $('challengeTitle').textContent = challenge.score ? `${challenge.from} te desafía en Ninja mental: IQ ${iqFor(challenge.score)} (${challenge.score} puntos ✓ verificados)` : `${challenge.from} te invita a Ninja mental`;
     $('challengeText').textContent = challenge.score ? 'Tenés 5 minutos de figuras, números e inglés para superarlo. ¿Le ganás?' : 'Resolvé todo lo que puedas en 5 minutos y compará tu IQ ninja.';
     return;
   }
@@ -1982,12 +2036,12 @@ const isNinjaShare = () => shareScore?.kind === 'ninja';
 function shareLink() {
   const u = new URL(location.pathname, location.href);
   u.searchParams.set('de', auth.name || $('chName').value.trim().slice(0, 24) || 'Un amigo');
-  if (isNinjaShare()) { u.searchParams.set('ninja', shareScore.score); u.hash = 'ninja'; }
+  if (isNinjaShare()) { if (shareScore.run) u.searchParams.set('reto', shareScore.run); u.hash = 'ninja'; }
   else if (shareScore) { u.searchParams.set('ppm', shareScore.ppm); u.searchParams.set('metodo', shareScore.method); }
   return u.href;
 }
 function shareMessage() {
-  if (isNinjaShare()) return (shareScore.score
+  if (isNinjaShare()) return (shareScore.score && shareScore.run
     ? `¡Te desafío en Ninja mental! Saqué ${shareScore.score} puntos en el desafío de 5 minutos (IQ ninja ${iqFor(shareScore.score)}). ¿Me ganás?`
     : 'Probá el desafío de 5 minutos de Ninja mental (figuras, números e inglés) y compará tu IQ ninja con el mío.') + ' ' + shareLink();
   const m = shareScore && METHODS.find(x => x.id === shareScore.method);
