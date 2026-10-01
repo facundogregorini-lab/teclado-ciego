@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="Aprendé a escribir sin mirar el teclado: lecciones fila por fila en español, con mapa de dedos, velocidad y precisión.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect x=%272%27 y=%272%27 width=%2728%27 height=%2728%27 rx=%276%27 fill=%27%23fff%27 stroke=%27%230B6E69%27 stroke-width=%273%27/%3E%3Ctext x=%2716%27 y=%2722%27 font-family=%27monospace%27 font-size=%2716%27 font-weight=%27700%27 text-anchor=%27middle%27 fill=%27%23141A21%27%3EF%3C/text%3E%3C/svg%3E">
-<title>Teclado Ciego</title>
+<meta name="description" content="Templo Ninja: aprendé a escribir sin mirar el teclado y entrená para los tests de las entrevistas laborales, desafiando a tus amigos.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect x=%272%27 y=%272%27 width=%2728%27 height=%2728%27 rx=%276%27 fill=%27%23fff%27 stroke=%27%230B6E69%27 stroke-width=%273%27/%3E%3Ctext x=%2716%27 y=%2722%27 font-family=%27monospace%27 font-size=%2716%27 font-weight=%27700%27 text-anchor=%27middle%27 fill=%27%23141A21%27%3ET%3C/text%3E%3C/svg%3E">
+<title>Templo Ninja</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=JetBrains+Mono:wght@400;600&display=swap">
@@ -227,10 +227,11 @@ dialog::backdrop{background:rgba(10,14,18,.45)}
 <body>
 <div class="wrap">
   <header class="top">
-    <button class="brand" id="homeBtn" aria-label="Volver a las lecciones"><kbd>F</kbd>Teclado Ciego</button>
+    <button class="brand" id="homeBtn" aria-label="Templo Ninja: ir al inicio"><kbd>⛩</kbd>Templo Ninja</button>
+    <a href="#teclado" class="ninja-cta tc-cta" id="tcCta">⌨️ Teclado <span class="cta-long">Ciego</span></a>
     <a href="#ninja" class="ninja-cta" id="cogCta">🥷 Ninja <span class="cta-long">mental</span></a>
     <nav class="main-nav" aria-label="Navegación principal"><a href="#learning">Lecciones</a><a href="#evo">Mi progreso</a><a href="#ranking">Ranking</a></nav>
-    <button class="upgrade-cta" id="upgradeCta">✦ <span id="upgradeLabel">Mejorar <span class="cta-long">suscripción</span></span></button>
+    <button class="upgrade-cta" id="upgradeCta">✦ <span id="upgradeLabel">Apoyá <span class="cta-long">el templo</span></span></button>
     <button class="acct out" id="acctBtn">Entrar</button>
   </header>
   <div class="preferences">
@@ -270,7 +271,7 @@ dialog::backdrop{background:rgba(10,14,18,.45)}
         <div class="slide" data-scene="forest"><div class="frame"></div></div>
       </div>
       <div class="hero-copy">
-        <span class="eyebrow"><span class="sun-mark" aria-hidden="true">✳</span> TECLADO CIEGO · NINJA MENTAL</span>
+        <span class="eyebrow"><span class="sun-mark" aria-hidden="true">⛩</span> TEMPLO NINJA · TECLADO CIEGO Y NINJA MENTAL</span>
         <h1 id="heroTitle">Desarrollá tus habilidades.<br><em>Divirtiéndote.</em></h1>
         <p>Escribí sin mirar el teclado, entrená para los tests de las entrevistas y desafiá a tus amigos. Unos minutos por día, con personajes que evolucionan con vos: de chimpancé a alien.</p>
         <div class="actions">
@@ -542,7 +543,7 @@ dialog::backdrop{background:rgba(10,14,18,.45)}
       <div class="stat"><b id="aCount">0</b><span>sesiones guardadas</span></div>
     </div>
     <p class="plan-status" id="planStatus"></p>
-    <button class="btn" id="upgrade" hidden>✦ Pasarme a Ilimitado</button>
+    <button class="btn" id="upgrade" hidden>✦ Apoyar el templo: acceso ilimitado</button>
     <div class="hist" id="hist"></div>
     <div class="actions">
       <button class="btn primary" id="acctClose">Seguir practicando</button>
@@ -553,16 +554,15 @@ dialog::backdrop{background:rgba(10,14,18,.45)}
 
 <dialog id="planDlg" aria-labelledby="planTitle">
   <form class="dlg" id="planForm" novalidate>
-    <span class="eyebrow">TECLADO CIEGO ILIMITADO</span>
-    <h2 id="planTitle">Practicá todo lo que quieras</h2>
+    <span class="eyebrow">⛩ APORTE AL TEMPLO</span>
+    <h2 id="planTitle">Entrená sin límites, para siempre</h2>
     <p id="planReason"></p>
-    <ul class="plan-list"><li>Lecciones y mediciones sin límite, todos los días.</li><li>Tu progreso, tu evolución y tu lugar en el ranking, siempre al día.</li><li>Cancelás cuando quieras; el acceso sigue hasta el final del período pago.</li></ul>
+    <ul class="plan-list"><li>Un solo pago: sin suscripción ni débitos automáticos.</li><li>Lecciones, sesiones y desafíos ilimitados, todos los días y para siempre.</li><li>Tu pequeño aporte al templo nos permite mejorar el entrenamiento semana a semana. Los monjes ninja te lo agradecerán 🙏</li></ul>
     <p class="price" id="planPrice"></p>
-    <label class="field" for="planEmail" id="planEmailLabel">Email de tu cuenta de Mercado Pago<input id="planEmail" type="email" autocomplete="email" maxlength="120"></label>
     <p class="err" id="planErr" role="alert"></p>
-    <p class="plan-legal">Al suscribirte aceptás los <a href="terminos.html" target="_blank">términos</a> y la <a href="reembolsos.html" target="_blank">política de reembolsos</a>. <a href="precios.html" target="_blank">Ver planes</a>.</p>
+    <p class="plan-legal">Al hacer tu aporte aceptás los <a href="terminos.html" target="_blank">términos</a> y la <a href="reembolsos.html" target="_blank">política de reembolsos</a>. <a href="precios.html" target="_blank">Ver planes</a>.</p>
     <div class="actions">
-      <button type="submit" class="btn primary" id="planSubmit">Suscribirme con Mercado Pago</button>
+      <button type="submit" class="btn primary" id="planSubmit">Hacer mi aporte con Mercado Pago</button>
       <button type="button" class="linkbtn" id="planClose">Ahora no</button>
     </div>
   </form>
@@ -1370,11 +1370,13 @@ async function signedIn(token, name) {
   try { localStorage.setItem(TOKEN, token); } catch {}
   renderAccountBtn();
   try { await loadAccount(); } catch (err) { toast(err.message); }
-  const returning = new URLSearchParams(location.search).get('suscripcion') === 'ok';
-  await loadBilling(returning);
-  if (returning) {
+  const q = new URLSearchParams(location.search), back = q.get('aporte') || q.get('suscripcion'); // suscripcion: monthly plan, from before
+  await loadBilling(back === 'ok');
+  if (back) {
     window.history.replaceState(null, '', location.pathname + location.hash);
-    toast(billing.premium ? '¡Gracias! Tu plan Ilimitado ya está activo ✦' : 'Estamos esperando la confirmación de Mercado Pago. Puede tardar unos minutos.');
+    toast(back !== 'ok' ? 'El pago no se completó. Podés intentarlo de nuevo cuando quieras.'
+      : billing.premium ? '¡Gracias por tu aporte! Los monjes ninja te lo agradecen 🙏 Ya tenés acceso ilimitado ✦'
+      : 'Estamos esperando la confirmación de Mercado Pago. Puede tardar unos minutos.');
   }
   if (planAfterLogin) { planAfterLogin = false; if (limited()) showPlan('upgrade'); }
 }
@@ -1382,7 +1384,7 @@ function signedOut(msg) {
   auth = { token: null, name: null }; history = [];
   try { localStorage.removeItem(TOKEN); } catch {}
   S.lessons = {}; S.test = null; S.tests = []; S.cog = {}; S.sims = []; S.ninja = { best: null, runs: [] }; save();
-  Object.assign(billing, { premium: false, plays: 0, gift: false, subscription: null });
+  Object.assign(billing, { premium: false, plays: 0, gift: false, lifetime: false, subscription: null });
   renderAccountBtn(); renderHome(); renderPlanNote(); loadRanking();
   if (msg) toast(msg);
 }
@@ -1853,6 +1855,7 @@ $('scNinja').onclick = goCog;
 $('scMax').onclick = () => startQuiz('ninja');
 $('simBtn').onclick = () => startQuiz('sim');
 $('cogCta').onclick = e => { e.preventDefault(); goCog(); };
+$('tcCta').onclick = e => { e.preventDefault(); goHome(); $('teclado').scrollIntoView({ block: 'start' }); };
 
 /* ---------- Ranking of every account: lesson progress and best speed ---------- */
 let RANK = null, rankView = 'general';
@@ -1946,25 +1949,24 @@ function countPractice() {
   renderPlanNote();
 }
 function renderPlanNote() {
-  $('upgradeLabel').innerHTML = billing.premium ? 'Plan <span class="cta-long">Ilimitado</span>' : 'Mejorar <span class="cta-long">suscripción</span>';
+  $('upgradeLabel').innerHTML = billing.premium ? 'Ninja <span class="cta-long">ilimitado</span>' : 'Apoyá <span class="cta-long">el templo</span>';
   const note = $('planNote');
   note.hidden = !limited();
   if (note.hidden) return;
   const left = Math.max(0, billing.freePerDay - usedToday());
-  note.innerHTML = `Plan gratis: ${left ? `te ${left === 1 ? 'queda 1 práctica' : `quedan ${left} prácticas`} de ${billing.freePerDay} hoy` : 'ya usaste tus prácticas de hoy'} · <button type="button">Pasate a Ilimitado</button>`;
+  note.innerHTML = `Plan gratis: ${left ? `te ${left === 1 ? 'queda 1 práctica' : `quedan ${left} prácticas`} de ${billing.freePerDay} hoy` : 'ya usaste tus prácticas de hoy'} · <button type="button">Acceso ilimitado</button>`;
   note.querySelector('button').onclick = () => showPlan('upgrade');
 }
 function showPlan(reason) {
   // Also opened from the header CTA: without payments configured, or with the plan already active, it only informs.
   const canBuy = billing.enabled && !billing.premium;
-  $('planReason').textContent = !billing.enabled ? 'El plan Ilimitado está en camino. Mientras tanto, todo es gratis y sin límites: aprovechalo.'
-    : billing.premium ? '✦ Ya tenés el plan Ilimitado. ¡Gracias por bancar el proyecto!'
-    : reason === 'limit' ? `Ya usaste tus ${billing.freePerDay} prácticas gratis de hoy. Volvé mañana o suscribite para seguir ahora.`
+  $('planReason').textContent = !billing.enabled ? 'El acceso ilimitado está en camino. Mientras tanto, todo es gratis y sin límites: aprovechalo.'
+    : billing.premium ? '✦ Ya tenés acceso ilimitado. ¡Gracias por bancar el templo! Los monjes ninja te lo agradecen 🙏'
+    : reason === 'limit' ? `Ya usaste tus ${billing.freePerDay} prácticas gratis de hoy. Volvé mañana o hacé tu aporte para seguir ahora.`
     : `Con el plan gratis tenés ${billing.freePerDay} prácticas por día.`;
   $('planPrice').textContent = billing.enabled ? billing.price : '';
   $('planPrice').hidden = !billing.enabled; $('planSubmit').hidden = !canBuy;
-  $('planEmailLabel').hidden = !auth.name || !canBuy;
-  $('planSubmit').textContent = auth.name ? 'Suscribirme con Mercado Pago' : 'Crear cuenta o entrar para suscribirme';
+  $('planSubmit').textContent = auth.name ? 'Hacer mi aporte con Mercado Pago' : 'Crear cuenta o entrar para hacer mi aporte';
   $('planErr').textContent = ''; $('planSubmit').disabled = false;
   if (!$('planDlg').open) $('planDlg').showModal();
 }
@@ -1973,6 +1975,7 @@ function renderPlan() {
   $('upgrade').hidden = !limited();
   st.textContent = !billing.enabled ? ''
     : billing.gift ? '✦ Plan Ilimitado (cortesía)'
+    : billing.lifetime ? '✦ Acceso ilimitado para siempre. ¡Gracias por tu aporte al templo!'
     : billing.premium ? (sub?.status === 'authorized' ? '✦ Plan Ilimitado activo. Se renueva solo cada mes; lo gestionás desde Mercado Pago.' : `✦ Plan Ilimitado vigente hasta el ${new Date(sub.paidUntil).toLocaleDateString('es-AR')}.`)
     : `Plan gratis: ${billing.freePerDay} prácticas por día.`;
 }
@@ -1983,7 +1986,7 @@ $('planForm').onsubmit = async e => {
   e.preventDefault();
   if (!auth.name) { planAfterLogin = true; $('planDlg').close(); openAuth(); setAuthMode('register'); return; }
   $('planSubmit').disabled = true; $('planErr').textContent = '';
-  try { location.href = (await api('billing', { action: 'subscribe', email: $('planEmail').value })).url; }
+  try { location.href = (await api('billing', { action: 'buy' })).url; }
   catch (err) { $('planErr').textContent = err.message; $('planSubmit').disabled = false; }
 };
 
@@ -2046,14 +2049,14 @@ function shareMessage() {
     : 'Probá el desafío de 5 minutos de Ninja mental (figuras, números e inglés) y compará tu IQ ninja con el mío.') + ' ' + shareLink();
   const m = shareScore && METHODS.find(x => x.id === shareScore.method);
   return (shareScore
-    ? `¡Te desafío en Teclado Ciego! Escribí ${shareScore.ppm} palabras por minuto ${m.as} (nivel ${tierShort(tierFor(shareScore.ppm))}). ¿Me ganás?`
-    : 'Estoy aprendiendo a escribir sin mirar el teclado en Teclado Ciego. ¿Medimos quién escribe más rápido?') + ' ' + shareLink();
+    ? `¡Te desafío en Templo Ninja! Escribí ${shareScore.ppm} palabras por minuto ${m.as} (nivel ${tierShort(tierFor(shareScore.ppm))}). ¿Me ganás?`
+    : 'Estoy aprendiendo a escribir sin mirar el teclado en Templo Ninja. ¿Medimos quién escribe más rápido?') + ' ' + shareLink();
 }
 function updateShare() {
   const msg = shareMessage(), email = $('chEmail').value.trim();
   $('chPreview').textContent = msg;
   $('chWhatsapp').href = 'https://wa.me/?text=' + encodeURIComponent(msg);
-  $('chMail').href = `mailto:${/^[^\s@?&]+@[^\s@?&]+\.[^\s@?&]+$/.test(email) ? email : ''}?subject=${encodeURIComponent(isNinjaShare() ? 'Te desafío en Ninja mental' : 'Te desafío en Teclado Ciego')}&body=${encodeURIComponent(msg)}`;
+  $('chMail').href = `mailto:${/^[^\s@?&]+@[^\s@?&]+\.[^\s@?&]+$/.test(email) ? email : ''}?subject=${encodeURIComponent(isNinjaShare() ? 'Te desafío en Ninja mental' : 'Te desafío en Templo Ninja')}&body=${encodeURIComponent(msg)}`;
 }
 function openChallenge(score) {
   shareScore = score;

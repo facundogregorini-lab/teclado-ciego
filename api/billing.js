@@ -1,12 +1,13 @@
 // GET: plan info (public part + the user's plan when logged in)
-// POST { action: 'play' }: counts one of today's free practices · { action: 'subscribe', email } · { action: 'sync' }
+// POST { action: 'play' }: counts one of today's free practices · { action: 'buy' }: Mercado Pago checkout for the
+// one-time payment · { action: 'sync' }: asks Mercado Pago again (coming back from paying)
 const { redis, HttpError, requireUser, bearer, body, handler } = require('./_lib');
-const { FREE_PER_DAY, settings, playsKey, mp, storeSubscription, status } = require('./_billing');
+const { FREE_PER_DAY, settings, playsKey, mp, status } = require('./_billing');
 
 async function userInfo(name, options) {
-  const { premium, sub, gift } = await status(name, options);
+  const { premium, paid, sub, gift } = await status(name, options);
   const plays = Number(await redis('GET', playsKey(name))) || 0;
-  return { premium, plays, gift: Boolean(gift), subscription: sub && { status: sub.status, paidUntil: sub.paidUntil } };
+  return { premium, plays, gift: Boolean(gift), lifetime: Boolean(paid), subscription: sub && { status: sub.status, paidUntil: sub.paidUntil } };
 }
 
 module.exports = handler(async req => {
@@ -31,25 +32,24 @@ module.exports = handler(async req => {
 
   if (data.action === 'sync') return { ...base, ...await userInfo(name, { forceRefresh: true }) };
 
-  if (data.action === 'subscribe') {
+  if (data.action === 'buy') {
     if (!s.enabled) throw new HttpError(503, 'Los pagos todavía no están configurados.');
-    const email = String(data.email || '').trim();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new HttpError(400, 'Escribí el email de tu cuenta de Mercado Pago.');
+    if ((await status(name)).premium) throw new HttpError(409, 'Ya tenés acceso ilimitado. ¡Gracias por tu aporte!');
     const origin = process.env.APP_URL || 'https://' + req.headers.host;
-    const pre = await mp('/preapproval', {
+    const pref = await mp('/checkout/preferences', {
       method: 'POST',
       body: JSON.stringify({
-        reason: 'Teclado Ciego Ilimitado',
+        items: [{ id: 'templo-ilimitado', title: 'Templo Ninja · acceso ilimitado', description: 'Aporte al templo: pago único, sin suscripción', quantity: 1, unit_price: s.price, currency_id: s.currency }],
         external_reference: name,
-        payer_email: email,
-        back_url: origin + '/?suscripcion=ok',
-        status: 'pending',
-        auto_recurring: { frequency: 1, frequency_type: 'months', transaction_amount: s.price, currency_id: s.currency },
+        metadata: { templo: 'ilimitado' }, // tells this payment apart from the monthly charges of an old subscription
+        back_urls: { success: origin + '/?aporte=ok', pending: origin + '/?aporte=ok', failure: origin + '/?aporte=error' },
+        auto_return: 'approved',
+        notification_url: origin + '/api/mercadopago',
+        statement_descriptor: 'TEMPLO NINJA',
       }),
     });
-    await storeSubscription(pre);
-    if (!pre.init_point) throw new HttpError(502, 'Mercado Pago no devolvió el enlace de pago.');
-    return { url: pre.init_point };
+    if (!pref.init_point) throw new HttpError(502, 'Mercado Pago no devolvió el enlace de pago.');
+    return { url: pref.init_point };
   }
 
   throw new HttpError(400, 'Acción desconocida.');

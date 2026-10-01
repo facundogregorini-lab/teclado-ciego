@@ -1,10 +1,10 @@
-# Teclado Ciego
+# Templo Ninja
 
-Aplicación para aprender a escribir sin mirar el teclado, en español. El frontend no requiere compilación: `index.html` contiene las lecciones y la práctica; `scenery.css` y `scenery.js` agregan el diseño y los paisajes de `assets/`; `typists.js` y `typists.css` dibujan (en SVG) los personajes que escriben; `figures.js`, `numeric.js`, `english.js` y `cognitive.css`, Ninja mental.
+Aplicación en español con dos secciones: **⌨️ Teclado Ciego**, para aprender a escribir sin mirar el teclado, y **🥷 Ninja mental**, para entrenar los tests de razonamiento de las entrevistas laborales. El frontend no requiere compilación: `index.html` contiene las lecciones y la práctica; `scenery.css` y `scenery.js` agregan el diseño y los paisajes de `assets/`; `typists.js` y `typists.css` dibujan (en SVG) los personajes que escriben; `figures.js`, `numeric.js`, `english.js` y `cognitive.css`, Ninja mental.
 
 ## Qué tiene
 
-**Una sola página para las dos secciones.** Arriba, un hero general ("Desarrollá tus habilidades. Divirtiéndote."); debajo, una tarjeta grande por sección (⌨️ Teclado Ciego y 🥷 Ninja mental) con tu avance y botones para empezar; después el ranking (general y de cada sección) y, al final, cada sección completa, una debajo de la otra. El botón 🥷 Ninja mental del header (o `/#ninja`) lleva directo a la segunda sección.
+**Una sola página para las dos secciones.** Arriba, un hero general ("Desarrollá tus habilidades. Divirtiéndote."); debajo, una tarjeta grande por sección (⌨️ Teclado Ciego y 🥷 Ninja mental) con tu avance y botones para empezar; después el ranking (general y de cada sección) y, al final, cada sección completa, una debajo de la otra. En el header, la marca ⛩ Templo Ninja vuelve al inicio y los botones ⌨️ Teclado Ciego y 🥷 Ninja mental (o `/#ninja`) llevan directo a cada sección.
 
 - **Un lugar tranquilo para practicar:** diseño claro en tonos arena y verde, con paisajes de playa, montaña y bosque. La portada pasa sola de un paisaje a otro (cada 7 segundos, salvo con *movimiento reducido*). El selector elige el fondo de toda la página, también durante la práctica, y lo recuerda en este navegador.
 - **Cada grupo es un nivel, de chimpancé a alien:** fila guía = chimpancé, fila superior = bebé, fila inferior = niño, mayúsculas y tildes = indigente y textos = intelectual (la misma escala que la medición de velocidad). Cada nivel muestra a su personaje escribiendo: en gris hasta que empezás, con una barra de lecciones aprobadas y una marca al superarlo (dorada con 3 estrellas en todas). Al superar un nivel, el resultado muestra "¡Nivel chimpancé superado!" con el personaje siguiente. Al final, *La cima*: premio Nobel al aprobar las 26 lecciones y alien con 3 estrellas en todas.
@@ -39,25 +39,24 @@ Desde **🥷 Ninja mental** en el header, al lado del nombre de la app (o `/#nin
 
 Las figuras y los ejercicios numéricos se generan al azar y cada pregunta tiene una sola respuesta correcta. El avance se guarda en el navegador y en la cuenta (`cog` y `sims` en `api/data.js`). Cada sesión cuenta como una práctica del plan gratis.
 
-## Plan Ilimitado (freemium)
+## Aporte al templo (freemium con pago único)
 
-El botón **✦ Mejorar suscripción** del header, a la izquierda del usuario, se ve siempre, con o sin cuenta. Abre el plan; si los pagos todavía no están configurados, avisa que el plan está en camino y que por ahora todo es gratis.
+El botón **✦ Apoyá el templo** del header, a la izquierda del usuario, se ve siempre, con o sin cuenta (con acceso ilimitado dice **✦ Ninja ilimitado**). Abre el plan; si los pagos todavía no están configurados, avisa que el acceso ilimitado está en camino y que por ahora todo es gratis.
 
-
-- **Gratis:** 3 prácticas por día (hora de Argentina), con o sin cuenta. Una práctica es una lección o una medición y cuenta desde la primera tecla: abrir una lección y salir no la usa.
-- **Ilimitado:** prácticas sin límite, con una suscripción mensual de **Mercado Pago**, que cobra sola cada mes. Se cancela desde Mercado Pago y el acceso sigue hasta el fin del período pago.
+- **Gratis:** 3 prácticas por día (hora de Argentina), con o sin cuenta. Una práctica es una lección, una medición, una sesión o un desafío y cuenta desde la primera respuesta: abrir y salir no la usa.
+- **Acceso ilimitado para siempre:** un único pago con **Mercado Pago** (Checkout Pro), sin suscripción ni débitos automáticos: "Tu pequeño aporte al templo nos permite mejorar el entrenamiento semana a semana. Los monjes ninja te lo agradecerán 🙏". Precio de lanzamiento: $ 4.900. Queda guardado en `paid:<usuario>` y no vence. Las suscripciones mensuales de antes siguen valiendo hasta el final de su período pago.
 
 Mientras no estén configuradas las variables de Mercado Pago, la app no tiene límites. Para los invitados el límite se cuenta en el navegador (alguien con conocimientos técnicos podría saltearlo); para las cuentas lo lleva el servidor.
 
 ### Configurar Mercado Pago en Vercel
 
-1. En [Mercado Pago Developers](https://www.mercadopago.com.ar/developers/panel/app) creá una aplicación (producto: *Suscripciones*) y copiá el **Access Token de producción**. Para probar sin cobrar, usá primero el de prueba con usuarios de prueba.
+1. En [Mercado Pago Developers](https://www.mercadopago.com.ar/developers/panel/app) creá una aplicación (producto: *Checkout Pro*) y copiá el **Access Token de producción**. Para probar sin cobrar, usá primero el de prueba con usuarios de prueba.
 2. En Vercel → **Settings → Environment Variables** agregá:
    - `MP_ACCESS_TOKEN`: el Access Token.
-   - `MP_PRICE`: el monto mensual **en pesos** (Mercado Pago Argentina cobra suscripciones en ARS).
-   - `PRICE_LABEL` (opcional): el texto del precio en pantalla. Por defecto, `US$ 5 por mes`.
-   - `TECLADO_PREMIUM_USERS` (opcional): usuarios con el plan de cortesía, separados por comas.
-3. En la aplicación de Mercado Pago, en **Webhooks**, cargá `https://TU-DOMINIO/api/mercadopago` con el evento **Planes y suscripciones**. Sin el webhook igual funciona: el plan se revisa al volver del pago y cuando está por vencer.
+   - `MP_PRICE`: el monto del pago único **en pesos**, por ejemplo `4900`.
+   - `PRICE_LABEL` (opcional): el texto del precio en pantalla. Por defecto, `$ 4.900 · pago único` (sale de `MP_PRICE`). Si cambiás el precio, actualizá también `precios.html`.
+   - `TECLADO_PREMIUM_USERS` (opcional): usuarios con acceso de cortesía, separados por comas.
+3. La app le pasa a Mercado Pago la dirección del webhook (`https://TU-DOMINIO/api/mercadopago`) en cada pago, así que no hace falta configurarlo. Si querés, cargalo también en **Webhooks** con el evento **Pagos**. Sin el webhook igual funciona: el pago se busca al volver de Mercado Pago.
 4. **Redeploy.**
 
 Para cobrar de forma comercial, Vercel exige el plan **Pro** y en Argentina corresponde estar inscripto en ARCA y facturar.
@@ -83,12 +82,12 @@ Si falta la base, la práctica funciona igual sin cuenta y el formulario avisa q
 ## Precios, legales y demo
 
 - `precios.html`, `terminos.html`, `privacidad.html` y `reembolsos.html` (con `legal.css`) son las páginas de precios y legales, enlazadas desde el pie de la app y desde el diálogo del plan. Cada una tiene un resumen en inglés. El email de contacto es info@tecladociego.com.
-- `demo/teclado-ciego-demo.mp4` es un video de 2 minutos con un recorrido por la app (grabado con Playwright sobre el servidor local, con cuentas de ejemplo en el ranking).
+- `demo/teclado-ciego-demo.mp4` (grabado antes de llamarse Templo Ninja) es un video de 2 minutos con un recorrido por la app (grabado con Playwright sobre el servidor local, con cuentas de ejemplo en el ranking).
 
 ## Desarrollo
 
 - `npm run dev` levanta el sitio y la API en http://127.0.0.1:3000 con una base en memoria.
-- `npm test` prueba en Chromium: la portada que cambia sola, crear cuenta, practicar y evolucionar de nivel, las tildes en Mac y Safari, medir la velocidad y ver a quién te parecés, el ranking, los desafíos por WhatsApp y email, Ninja mental (las tres pistas con sus técnicas, el simulacro, el desafío de 5 minutos corregido por el servidor, con su ranking y sus desafíos, y que no cuenten las partidas con clics de un script, con el puntero que salta a las respuestas o con un puntaje inventado), entrar desde otro navegador y cerrar sesión. Después corre `tests/billing.cjs` (también suelto con `npm run test:billing`): el límite de 3 prácticas y la suscripción contra un Mercado Pago simulado.
+- `npm test` prueba en Chromium: la portada que cambia sola, crear cuenta, practicar y evolucionar de nivel, las tildes en Mac y Safari, medir la velocidad y ver a quién te parecés, el ranking, los desafíos por WhatsApp y email, Ninja mental (las tres pistas con sus técnicas, el simulacro, el desafío de 5 minutos corregido por el servidor, con su ranking y sus desafíos, y que no cuenten las partidas con clics de un script, con el puntero que salta a las respuestas o con un puntaje inventado), entrar desde otro navegador y cerrar sesión. Después corre `tests/billing.cjs` (también suelto con `npm run test:billing`): el límite de 3 prácticas, el aporte (pago único) y su webhook contra un Mercado Pago simulado, y que una suscripción mensual anterior siga valiendo.
 
 ## Publicar en Vercel
 

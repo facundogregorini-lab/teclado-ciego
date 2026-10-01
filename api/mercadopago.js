@@ -1,7 +1,7 @@
-// Webhook for Mercado Pago subscription events. The payload is only a hint:
-// the subscription is always re-read from Mercado Pago before changing anything.
+// Webhook for Mercado Pago events (one-time payments, and the monthly subscriptions from before). The payload is
+// only a hint: the payment or subscription is always re-read from Mercado Pago before changing anything.
 const { handler } = require('./_lib');
-const { settings, mp, storeSubscription } = require('./_billing');
+const { settings, mp, storeSubscription, storePayment } = require('./_billing');
 
 module.exports = handler(async req => {
   if (!settings().enabled) return { ok: true };
@@ -11,7 +11,9 @@ module.exports = handler(async req => {
   const id = String(payload.data?.id || query['data.id'] || query.id || '');
   if (!/^[\w-]{1,64}$/.test(id)) return { ok: true };
 
-  if (type.includes('preapproval')) {
+  if (type === 'payment') {
+    await storePayment(await mp('/v1/payments/' + id));
+  } else if (type.includes('preapproval')) {
     await storeSubscription(await mp('/preapproval/' + id));
   } else if (type === 'subscription_authorized_payment') {
     const payment = await mp('/authorized_payments/' + id);

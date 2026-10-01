@@ -214,3 +214,15 @@ a.btn {text-decoration:none}
 .flag-note b {color:var(--bad)}
 .flag-note ul {margin:6px 0 0;padding-left:20px}
 .flag-note p {margin:6px 0 0}
+/* Header: the two sections of Templo Ninja, side by side */
+.tc-cta {margin-left:-8px;background:var(--card,#fff);color:inherit;border:1px solid var(--line,#d9e2dc)}
+.tc-cta + .ninja-cta {margin-left:-12px}
+@media (max-width:720px) {.tc-cta,.tc-cta + .ninja-cta {margin-left:0}}
+/* Phone: brand, contribution and account on the first row; the two sections and the links below */
+@media (max-width:700px) {
+  .top .brand {order:1}
+  .top .upgrade-cta {order:2;margin-left:auto}
+  .top .acct {order:3;margin-left:0}
+  .top .tc-cta {order:4} .top .tc-cta + .ninja-cta {order:5;margin-right:auto}
+  .top .main-nav {order:6;flex:1 1 100%}
+}
