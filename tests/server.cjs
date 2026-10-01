@@ -30,5 +30,5 @@ function createServer() {
 module.exports = { createServer };
 if (require.main === module) {
   const port = Number(process.env.PORT) || 3000;
-  createServer().listen(port, '127.0.0.1', () => console.log('Teclado Ciego en http://127.0.0.1:' + port));
+  createServer().listen(port, '127.0.0.1', () => console.log('Templo Ninja en http://127.0.0.1:' + port));
 }

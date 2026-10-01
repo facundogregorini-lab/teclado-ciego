@@ -61,7 +61,8 @@ function typeText(page) {
       return order.every((el, i) => !i || order[i - 1].compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING);
     }) && (await a.textContent('#heroTitle')).includes('Desarrollá tus habilidades') && await a.locator('.sc-card').count() === 2);
     check('The ranking has a general board and one per section', (await a.textContent('#rankView')).includes('General') && await a.locator('#rankView button').count() === 5);
-    check('The header shows Ninja mental right after the brand', await a.evaluate(() => document.getElementById('homeBtn').nextElementSibling.id === 'cogCta') && (await a.textContent('#cogCta')).includes('Ninja mental'));
+    check('The app is called Templo Ninja', (await a.title()) === 'Templo Ninja' && (await a.textContent('#homeBtn')).includes('Templo Ninja'));
+    check('The header shows both sections right after the brand', await a.evaluate(() => document.getElementById('homeBtn').nextElementSibling.id === 'tcCta' && document.getElementById('tcCta').nextElementSibling.id === 'cogCta') && (await a.textContent('#tcCta')).includes('Teclado Ciego') && (await a.textContent('#cogCta')).includes('Ninja mental'));
     check('The upgrade CTA sits left of the login, also for guests', await a.isVisible('#upgradeCta') && await a.evaluate(() => document.getElementById('upgradeCta').nextElementSibling.id === 'acctBtn'));
     await a.click('#upgradeCta');
     check('Without payments the upgrade CTA explains the plan is coming', await a.isVisible('#planDlg') && (await a.textContent('#planReason')).includes('en camino') && await a.isHidden('#planSubmit'));
