@@ -28,7 +28,9 @@ function typeText(page) {
   try {
     // First computer: create an account and practice
     const a = await browser.newPage(); a.on('pageerror', e => errors.push(e.message));
-    await a.goto(SITE);
+    const authCalls = []; a.on('request', r => r.url().endsWith('/api/auth') && authCalls.push(r.method()));
+    await a.goto(SITE); await a.waitForLoadState('networkidle');
+    check('A guest without a session does not ask the server for one', authCalls.length === 0);
     check('Page IDs are unique', await a.evaluate(() => {
       const ids = [...document.querySelectorAll('[id]')].map(el => el.id);
       return new Set(ids).size === ids.length;

@@ -2138,7 +2138,8 @@ applyLayout(); applyKbMode(); renderHome(); renderAccountBtn();
 if (NINJA_HASH.test(location.hash) || challenge?.kind === 'ninja') goCog();
 addEventListener('hashchange', () => { if (NINJA_HASH.test(location.hash) && mode !== 'quiz' && mode !== 'typing') goCog(); });
 renderRanking();
-api('auth').then(r => signedIn(auth.token, r.user.name)).catch(err => {
+// Without a saved session there is nothing to check: guests skip the request (and its 401).
+(auth.token ? api('auth') : Promise.reject(Object.assign(new Error('guest'), { status: 401 }))).then(r => signedIn(auth.token, r.user.name)).catch(err => {
   if (err.status === 401) { if (auth.token) signedOut(); return; }
   if (err.status === 0 || err.status === 404) { $('acctBtn').hidden = true; $('foot').textContent = 'Tu progreso se guarda en este navegador.'; }
 }).finally(() => { loadRanking(); if (!auth.name) loadBilling(); });
