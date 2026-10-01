@@ -2,7 +2,7 @@
 // Three kinds: "tabla" (questions on a table), "grafico" (questions on a bar chart) and "porcentaje" (percentage problems).
 // Difficulty 1–5 goes from reading and subtracting to projections and percentage points. Every puzzle brings a tip
 // (the technique for that kind of question), the worked solution, and wrong options built from typical mistakes.
-window.Numeric = (() => {
+globalThis.Numeric = (() => {
   const rnd = n => Math.floor(Math.random() * n);
   const pick = a => a[rnd(a.length)];
   const shuffle = a => { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = rnd(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; };

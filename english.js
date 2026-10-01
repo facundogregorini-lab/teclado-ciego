@@ -3,7 +3,7 @@
 // and "orden" (put the sentences of a paragraph in order). Levels 1–5 go roughly from A2 to C1.
 // Unlike the figures and the numbers, these are written by hand: each item explains its answer in Spanish,
 // and each kind brings techniques (tips) to solve it better.
-window.English = (() => {
+globalThis.English = (() => {
   const rnd = n => Math.floor(Math.random() * n);
   const pick = a => a[rnd(a.length)];
   const shuffle = a => { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = rnd(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; };

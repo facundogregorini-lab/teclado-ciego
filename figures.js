@@ -2,7 +2,7 @@
 // Three kinds: "serie" (which figure comes next), "matriz" (complete the 3×3 grid) and "distinta" (odd one out).
 // Difficulty 1–5 sets how many rules change at once and how subtle they are. Everything is generated at random
 // and drawn in SVG; each puzzle has exactly one right answer and an explanation of its rule.
-window.Figures = (() => {
+globalThis.Figures = (() => {
   const rnd = n => Math.floor(Math.random() * n);
   const pick = a => a[rnd(a.length)];
   const shuffle = a => { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = rnd(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; };

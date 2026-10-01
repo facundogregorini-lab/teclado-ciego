@@ -1,6 +1,6 @@
 // Rankings of every account, kept in two Redis sorted sets.
 // rank:progress → approved lessons × 100 + stars · rank:speed → best speed measurement (words per minute)
-// rank:ninja → best score of the Ninja mental challenge · rank:cog → Ninja mental sessions passed × 1000 + stars
+// rank:ninja → best score of the Ninja mental challenge, as graded by api/ninja.js (never what the browser says) · rank:cog → Ninja mental sessions passed × 1000 + stars
 // rank:general → all stars (lessons + Ninja mental) + best speed + best challenge score.
 const { redis } = require('./_lib');
 
@@ -20,6 +20,13 @@ function scores(progress) {
   return { progress: done * 100 + stars, speed, ninja, cog: cogDone * 1000 + cogStars, general: stars + cogStars + speed + ninja };
 }
 
+// The Ninja mental challenge belongs to the server: its runs live in ninja:<name>, apart from the progress the browser sends.
+const NO_NINJA = { best: null, runs: [] };
+async function ninjaOf(name) {
+  const saved = await redis('GET', 'ninja:' + name);
+  return saved ? JSON.parse(saved) : NO_NINJA;
+}
+
 async function updateRanks(name, progress) {
   const s = scores(progress);
   await Promise.all(['progress', 'speed', 'ninja', 'cog', 'general'].map(board => s[board] > 0
@@ -27,4 +34,4 @@ async function updateRanks(name, progress) {
     : redis('ZREM', 'rank:' + board, name)));
 }
 
-module.exports = { LESSON_IDS, scores, updateRanks };
+module.exports = { LESSON_IDS, scores, updateRanks, ninjaOf };

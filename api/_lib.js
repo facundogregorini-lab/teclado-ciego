@@ -66,7 +66,8 @@ function memoryCommand([cmd, key, ...args]) {
     }
     case 'ZREVRANGE': {
       const sorted = [...(memory.get(key) || new Map())].sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? 1 : -1));
-      return sorted.slice(Number(args[0]), Number(args[1]) + 1).flatMap(([m, v]) => args[2] === 'WITHSCORES' ? [m, String(v)] : [m]);
+      const end = Number(args[1]);
+      return sorted.slice(Number(args[0]), end < 0 ? sorted.length + end + 1 : end + 1).flatMap(([m, v]) => args[2] === 'WITHSCORES' ? [m, String(v)] : [m]);
     }
     default: throw new Error('Unsupported command ' + cmd);
   }
