@@ -64,7 +64,7 @@ const check = (name, ok) => { assert.ok(ok, name); console.log('PASS', name); };
     // Guest: three free practices a day, counted in this browser
     const guest = await open();
     await guest.waitForFunction(() => window.fbq);
-    check('The Meta Pixel starts with the id from the server and counts the visit', guest.px.some(a => a[0] === 'init' && a[1] === '123456789012345') && fired(guest, 'PageView').length === 1);
+    check('The Meta Pixel starts with the id from the server, without automatic events, and counts the visit', guest.px.some(a => a[0] === 'set' && a[1] === 'autoConfig' && a[2] === false) && guest.px.some(a => a[0] === 'init' && a[1] === '123456789012345') && fired(guest, 'PageView').length === 1);
     check('Guests see how many free practices are left', (await guest.textContent('#planNote')).includes('quedan 3 prácticas de 3'));
     await guest.click('#continue'); await guest.keyboard.press('Escape');
     check('Opening a lesson without typing does not use a practice', (await guest.textContent('#planNote')).includes('quedan 3'));
