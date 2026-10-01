@@ -1,6 +1,6 @@
 # Teclado Ciego
 
-Aplicación para aprender a escribir sin mirar el teclado, en español. El frontend no requiere compilación: `index.html` contiene las lecciones y la práctica; `scenery.css` y `scenery.js` agregan el diseño y los paisajes de `assets/`; `typists.js` y `typists.css` dibujan (en SVG) los personajes que escriben; `figures.js` y `cognitive.css`, Ninja mental.
+Aplicación para aprender a escribir sin mirar el teclado, en español. El frontend no requiere compilación: `index.html` contiene las lecciones y la práctica; `scenery.css` y `scenery.js` agregan el diseño y los paisajes de `assets/`; `typists.js` y `typists.css` dibujan (en SVG) los personajes que escriben; `figures.js`, `numeric.js`, `english.js` y `cognitive.css`, Ninja mental.
 
 ## Qué tiene
 
@@ -23,17 +23,17 @@ Sin cuenta, el progreso se guarda en el navegador (`localStorage`).
 
 ## Ninja mental (tests de razonamiento de entrevistas)
 
-Desde **🥷 Ninja mental** en el header, al lado del nombre de la app (o `/#ninja`), se entrena para los tests de razonamiento abstracto que usan muchas empresas en sus procesos de selección, tomando como referencia los de [AssessmentDay](https://www.assessmentday.com/). Por ahora, solo con figuras abstractas:
+Desde **🥷 Ninja mental** en el header, al lado del nombre de la app (o `/#ninja`), se entrena para los tests que usan muchas empresas en sus procesos de selección, tomando como referencia los de [AssessmentDay](https://www.assessmentday.com/). Tiene tres pistas, cada una con el mismo diseño que las lecciones: 5 niveles de dificultad con su personaje (chimpancé, bebé, niño, indigente, intelectual), 3 tipos de ejercicio por nivel, sesiones con tiempo, un simulacro y *La cima* (premio Nobel al aprobar las 15 sesiones de la pista, alien con 3 estrellas en todas).
 
-- **Series:** ¿qué figura sigue? Las figuras cambian paso a paso (giran, se mueve un punto, se suman figuras, cambia el relleno o la forma).
-- **Matrices:** ¿qué completa la grilla de 3×3? Las reglas van por fila, por columna o con cada valor una vez en cada fila y columna.
-- **La distinta:** cuatro figuras comparten una regla y una no (forma, relleno, cantidad par o impar, cantidad igual a los lados o flechas que apuntan al punto).
+- **🔷 Figuras abstractas** (`figures.js`, generadas al azar): series (¿qué figura sigue?), matrices de 3×3 y la figura distinta. Simulacro: 11 preguntas en 11 minutos.
+- **📊 Razonamiento numérico** (`numeric.js`, generado al azar): tablas y gráficos de barras de ventas (diferencias, promedios, variaciones, participaciones, razones, monedas, proyecciones y puntos porcentuales) y problemas de porcentajes (descuentos, IVA, aumentos seguidos, márgenes). Las opciones incorrectas salen de los errores típicos (dividir por la base equivocada, sumar porcentajes, correr la coma). Simulacro: 10 preguntas en 15 minutos.
+- **🇬🇧 Inglés para el trabajo** (`english.js`, banco escrito a mano, niveles A2 a C1): comprensión de textos de trabajo con *True / False / Cannot say*, conectores para unir oraciones y ordenar oraciones en un párrafo. Cada ítem explica su respuesta en español. Simulacro: 12 preguntas en 12 minutos.
 
-El diseño es el mismo que el de las lecciones: 5 niveles de dificultad, cada uno con su personaje (chimpancé, bebé, niño, indigente, intelectual) y 3 sesiones de 6 preguntas con tiempo. Se aprueba con 4 de 6, y 6 de 6 da 3 estrellas. Después de cada respuesta se muestra la correcta y la explicación de la regla. *La cima* es el **simulacro de entrevista**: 11 preguntas mezcladas en 11 minutos (como el test gratis de AssessmentDay), sin ayuda hasta el final, que te dice a quién te parecés y repasa los errores. Premio Nobel al aprobar las 15 sesiones y alien con 3 estrellas en todas.
+**Aprender con técnicas:** cada pregunta muestra un 💡 *Técnica* para resolver ese tipo de caso (sin revelar la respuesta). Al responder aparece la explicación (en numérico, la cuenta completa) y, si corresponde, un *Para la próxima* con la técnica específica de la regla que se usó. Cada pista tiene una guía de técnicas por tipo de ejercicio. En los simulacros y el desafío de 3 minutos no hay tips, como en un test real; el repaso del simulacro muestra la técnica de cada error.
 
 **Desafío de 3 minutos:** series una tras otra, cada 3 aciertos sube la dificultad (de 1 a 5). Cada acierto suma su dificultad y el total se multiplica por la efectividad (aciertos / respondidas). Con ese puntaje se estima un IQ ninja: `85 + 22 × ln(1 + puntos / 4)`, entre 70 y 160, aclarando que es un juego y no un test de IQ real. Los personajes van por IQ: menos de 115 es chimpancé ("que nunca se enteren en el trabajo"), después bebé (115), niño (125), indigente (130), intelectual (135), premio Nobel (140) y alien (150). Tiene su ranking (el mejor puntaje de cada cuenta, en la sección y en la pestaña *Ninja* del ranking general) y se puede desafiar a amigos por WhatsApp o email como en la medición de velocidad (`?de=ana&ninja=34#ninja`).
 
-Las preguntas se generan al azar en `figures.js`, dibujadas en SVG, y cada una tiene una sola respuesta correcta. El avance se guarda en el navegador y en la cuenta (`cog` y `sims` en `api/data.js`). Cada sesión cuenta como una práctica del plan gratis.
+Las figuras y los ejercicios numéricos se generan al azar y cada pregunta tiene una sola respuesta correcta. El avance se guarda en el navegador y en la cuenta (`cog` y `sims` en `api/data.js`). Cada sesión cuenta como una práctica del plan gratis.
 
 ## Plan Ilimitado (freemium)
 
@@ -84,7 +84,7 @@ Si falta la base, la práctica funciona igual sin cuenta y el formulario avisa q
 ## Desarrollo
 
 - `npm run dev` levanta el sitio y la API en http://127.0.0.1:3000 con una base en memoria.
-- `npm test` prueba en Chromium: la portada que cambia sola, crear cuenta, practicar y evolucionar de nivel, las tildes en Mac y Safari, medir la velocidad y ver a quién te parecés, el ranking, los desafíos por WhatsApp y email, Ninja mental (series, matrices, la distinta, el simulacro, el desafío de 3 minutos con su ranking y sus desafíos), entrar desde otro navegador y cerrar sesión. Después corre `tests/billing.cjs` (también suelto con `npm run test:billing`): el límite de 3 prácticas y la suscripción contra un Mercado Pago simulado.
+- `npm test` prueba en Chromium: la portada que cambia sola, crear cuenta, practicar y evolucionar de nivel, las tildes en Mac y Safari, medir la velocidad y ver a quién te parecés, el ranking, los desafíos por WhatsApp y email, Ninja mental (las tres pistas con sus técnicas, el simulacro, el desafío de 3 minutos con su ranking y sus desafíos), entrar desde otro navegador y cerrar sesión. Después corre `tests/billing.cjs` (también suelto con `npm run test:billing`): el límite de 3 prácticas y la suscripción contra un Mercado Pago simulado.
 
 ## Publicar en Vercel
 

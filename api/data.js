@@ -27,12 +27,12 @@ function cleanProgress(p) {
     layout: p.layout === 'es' ? 'es' : 'la',
     kb: ['always', 'error', 'hidden'].includes(p.kb) ? p.kb : 'always',
     tildes: p.tildes === 'loose' ? 'loose' : 'strict',
-    // Interview training: best result per session (serie1…distinta5) and the mock tests
+    // Ninja mental: best result per session (serie1…orden5, three tracks) and the mock tests of each track
     cog: Object.fromEntries(Object.entries(p.cog && typeof p.cog === 'object' ? p.cog : {})
-      .filter(([id]) => /^(serie|matriz|distinta)[1-5]$/.test(id))
+      .filter(([id]) => /^(serie|matriz|distinta|tabla|grafico|porcentaje|lectura|conectores|orden)[1-5]$/.test(id))
       .map(([id, r]) => [id, { stars: num(r?.stars, 3), pct: num(r?.pct, 100), ms: num(r?.ms, 3_600_000) }])),
     sims: (Array.isArray(p.sims) ? p.sims : []).filter(t => t && Number(t.date) > 0).slice(-100)
-      .map(t => ({ pct: num(t.pct, 100), ms: num(t.ms, 3_600_000), date: Math.round(Number(t.date)) })),
+      .map(t => ({ pct: num(t.pct, 100), ms: num(t.ms, 3_600_000), date: Math.round(Number(t.date)), track: ['fig', 'num', 'eng'].includes(t.track) ? t.track : 'fig' })),
     // Ninja mental, 3-minute run: best score and the last runs
     ninja: {
       best: p.ninja?.best && Number(p.ninja.best.date) > 0 ? ninjaRun(p.ninja.best) : null,

@@ -46,6 +46,59 @@ body[data-view="quiz"]::before {background:linear-gradient(#f7f8f3b5,#f7f8f3a6),
 .nm-rank .rank-list .bar i {background:#9fe3c9}
 .house-copy h4.iq {font-size:clamp(2.2rem,5vw,3.2rem)}
 
+/* Tracks: figures, numbers and English */
+.track-tabs {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.track-tabs button {display:grid;grid-template-columns:auto 1fr;gap:2px 12px;align-items:center;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 16px;transition:border-color .15s,transform .15s}
+.track-tabs button:hover {transform:translateY(-2px);border-color:#97b39f}
+.track-tabs button[aria-pressed="true"] {border:2px solid var(--accent);padding:13px 15px;background:#edf4e9}
+.track-tabs .ti {grid-row:span 2;font-size:1.6rem}
+.track-tabs b {font-family:var(--display);font-weight:600;font-size:1rem;letter-spacing:-.02em}
+.track-tabs small {color:var(--muted);font-size:.75rem}
+.cog-learn {font-size:.9rem!important;color:var(--accent)!important;font-weight:700}
+.kind h4 {margin:6px 0 0;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
+.kind ul {margin:0;padding-left:18px;font-size:.8rem;color:var(--muted);display:grid;gap:4px;line-height:1.5}
+
+/* Techniques (tips) inside a question */
+.q-tip {background:#fff6dc;border:1px solid #f0d48a;border-radius:12px;padding:10px 14px;margin:0 0 16px;font-size:.9rem;line-height:1.5}
+.q-next {display:block;margin-top:8px;font-size:.9rem}
+.rv-tip {font-size:.82rem!important;color:var(--ink)!important;background:#fff6dc;border-radius:8px;padding:4px 8px;margin-top:4px!important}
+.rv.txt {grid-template-columns:28px 1fr}
+
+/* Text questions: tables, charts, passages and text options */
+.q-data {background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;max-width:620px}
+.q-cap {margin:0 0 8px;font-weight:700;font-size:.92rem}
+.q-cap span {font-weight:400;color:var(--muted)}
+.q-table {border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;font-size:.95rem}
+.q-table th,.q-table td {padding:7px 10px;border-bottom:1px solid var(--line);text-align:right}
+.q-table th:first-child {text-align:left}
+.q-table thead th {font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.q-table tr:last-child th,.q-table tr:last-child td {border-bottom:0}
+.q-chart {display:block;width:100%;max-width:560px;height:auto}
+.q-chart .bar.b0,.q-legend .b0 {fill:#7fa7c9;background:#7fa7c9}
+.q-chart .bar.b1,.q-legend .b1 {fill:#326953;background:#326953}
+.q-chart .bv {font:600 11px var(--body);fill:var(--ink);text-anchor:middle}
+.q-chart .bl {font:12px var(--body);fill:var(--muted);text-anchor:middle}
+.q-chart .axis {stroke:var(--line);stroke-width:1.5}
+.q-legend {margin:6px 0 0;font-size:.8rem;color:var(--muted);display:flex;align-items:center;gap:6px}
+.q-legend i {display:inline-block;width:12px;height:12px;border-radius:3px;margin-left:8px}
+.q-text {background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px;max-width:720px;font-size:1.02rem;line-height:1.65}
+.q-text p {margin:0 0 10px}
+.q-text p:last-child {margin:0}
+.q-stmt {background:var(--card);border-left:4px solid var(--accent);border-radius:8px;padding:8px 12px}
+.q-gap .gap {display:inline-block;min-width:70px;border-bottom:2px solid var(--accent);color:transparent}
+.q-sent {margin:0;padding:0;list-style:none;display:grid;gap:8px}
+.q-sent li {display:grid;grid-template-columns:28px 1fr;gap:8px;align-items:start}
+.q-sent b {display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-size:.8rem}
+.q-opts.txt {grid-template-columns:repeat(auto-fit,minmax(150px,1fr));max-width:900px}
+.q-opts.txt .opt-txt {white-space:nowrap}
+.q-opts.txt .opt {grid-template-columns:auto 1fr;justify-items:start;align-items:center;text-align:left;gap:10px;padding:12px 14px}
+.opt-txt {font-size:1rem;font-weight:600;color:var(--ink)}
+.cog-sample.txt .q-data,.cog-sample.txt .q-text {font-size:.85rem;padding:10px 12px}
+.cog-sample.txt .q-table th,.cog-sample.txt .q-table td {padding:4px 8px}
+.cog-sample .q-tip {margin:0;font-size:.8rem}
+.q-opts.sample.txt {grid-template-columns:repeat(2,minmax(0,1fr))}
+.q-opts.sample.txt .opt {grid-template-columns:auto 1fr;justify-items:start;padding:6px 10px}
+
 /* 3-minute run: intro and running feedback */
 .q-intro {display:grid;gap:12px;justify-items:start;max-width:62ch}
 .q-intro h3 {margin:0;font-family:var(--display);font-weight:600;font-size:1.6rem;letter-spacing:-.03em}
@@ -90,6 +143,10 @@ body[data-view="quiz"]::before {background:linear-gradient(#f7f8f3b5,#f7f8f3a6),
 @media(max-width:700px) {
   .cog-hero {padding:26px 20px;border-radius:22px}
   .cog-kinds {grid-template-columns:1fr}
+  .track-tabs {grid-template-columns:1fr;gap:6px}
+  .track-tabs button {padding:10px 12px}
+  .q-opts.txt {grid-template-columns:1fr}
+  .q-table {font-size:.82rem}.q-table th,.q-table td {padding:5px 6px}
   .q-opts,.q-opts.big {grid-template-columns:repeat(3,minmax(0,1fr))}
   .q-row .fig,.q-row .q-blank {width:calc((100% - 60px) / 6)}
   .q-arrow {display:none}

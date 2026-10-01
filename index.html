@@ -348,11 +348,17 @@ dialog::backdrop{background:rgba(10,14,18,.45)}
   </main>
 
   <main id="cog" hidden>
+    <nav class="track-tabs" id="cogTracks" aria-label="Pistas de Ninja mental">
+      <button data-v="fig" aria-pressed="true"><span class="ti">🔷</span><b>Figuras abstractas</b><small></small></button>
+      <button data-v="num" aria-pressed="false"><span class="ti">📊</span><b>Razonamiento numérico</b><small></small></button>
+      <button data-v="eng" aria-pressed="false"><span class="ti">🇬🇧</span><b>Inglés para el trabajo</b><small></small></button>
+    </nav>
     <section class="cog-hero" aria-labelledby="cogTitle">
       <div>
         <span class="eyebrow">🥷 NINJA MENTAL · TESTS DE ENTREVISTAS</span>
         <h1 id="cogTitle">Pensá rápido.<br><em>Con figuras.</em></h1>
-        <p>Los tests de razonamiento abstracto que piden muchas empresas en sus procesos de selección: series, matrices y la figura distinta. Practicá con tiempo, entendé cada regla y evolucioná.</p>
+        <p id="cogBlurb"></p>
+        <p class="cog-learn">💡 Cada pregunta trae una técnica para resolverla mejor, y cada respuesta, su explicación.</p>
         <div class="actions">
           <button class="btn primary" id="cogContinue"></button>
           <button class="btn" id="simBtn">Simulacro de entrevista <small>11 preguntas · 11 min</small></button>
@@ -378,16 +384,16 @@ dialog::backdrop{background:rgba(10,14,18,.45)}
       </div>
     </section>
     <section class="progress-summary" aria-label="Tu entrenamiento">
-      <div class="summary-intro"><span class="eyebrow">TU ENTRENAMIENTO</span><p>Cada regla, más fácil.</p></div>
+      <div class="summary-intro"><span class="eyebrow">TU ENTRENAMIENTO · <span id="cogTrackName">FIGURAS</span></span><p>Cada técnica, más fácil.</p></div>
       <div class="stats">
         <div class="stat"><b id="cStars">0</b><span>estrellas ganadas</span></div>
         <div class="stat"><b id="cDone">0</b><span>sesiones aprobadas</span></div>
         <div class="stat"><b id="cBest">—</b><span>mejor simulacro</span></div>
       </div>
     </section>
-    <section class="cog-kinds" aria-label="Tipos de ejercicio" id="cogKinds"></section>
+    <section class="cog-kinds" aria-label="Tipos de ejercicio y técnicas" id="cogKinds"></section>
     <section class="learning" aria-labelledby="cogPathTitle">
-      <div class="section-heading"><div><span class="eyebrow">TU CAMINO</span><h2 id="cogPathTitle">De chimpancé a premio Nobel.</h2></div><span>15 sesiones de 6 preguntas · 1 simulacro</span></div>
+      <div class="section-heading"><div><span class="eyebrow">TU CAMINO</span><h2 id="cogPathTitle">De chimpancé a premio Nobel.</h2></div><span>15 sesiones · 1 simulacro</span></div>
       <div class="path" id="cogPath"></div>
     </section>
   </main>
@@ -420,6 +426,7 @@ dialog::backdrop{background:rgba(10,14,18,.45)}
         <div class="q-run" id="qRun" hidden><span class="q-flash" id="qFlash" aria-live="polite">Elegí la figura que sigue.</span><button class="btn" id="qEnd" type="button">Terminar ahora</button></div>
         <p class="q-prompt" id="qPrompt"></p>
         <div class="q-fig" id="qFig"></div>
+        <p class="q-tip" id="qTip" hidden></p>
         <div class="q-opts" id="qOpts" role="group" aria-label="Opciones"></div>
         <div class="q-feedback" id="qFeedback" hidden aria-live="polite"><p id="qExplain"></p><button class="btn primary" id="qNext">Siguiente <small>Enter</small></button></div>
         <p class="hint q-hint" id="qHint">Elegí con el mouse o con las teclas 1 a 5 (o A a E) · Esc para salir</p>
@@ -552,6 +559,8 @@ dialog::backdrop{background:rgba(10,14,18,.45)}
 
 <script src="typists.js"></script>
 <script src="figures.js"></script>
+<script src="numeric.js"></script>
+<script src="english.js"></script>
 <script>
 (() => {
 const $ = id => document.getElementById(id);
@@ -1408,83 +1417,128 @@ $('logout').onclick = async () => {
   signedOut('Cerraste sesión. Tu progreso quedó guardado en tu cuenta.');
 };
 
-/* ---------- Interview training: abstract-figure puzzles (generated in figures.js) ---------- */
-// Same design as the lessons: five levels of difficulty, each with its typist (chimpancé … intelectual), three sessions
-// per level (series, matrices, odd one out) and La cima: premio Nobel with every session passed, alien with 3 stars in all.
-const COG_KINDS = [
-  { id: 'serie', name: 'Series', ask: '¿Qué figura sigue?', desc: 'Una secuencia cambia paso a paso: descubrí la regla y elegí la figura que sigue.' },
-  { id: 'matriz', name: 'Matrices', ask: '¿Qué completa la grilla?', desc: 'Filas y columnas siguen reglas: encontralas para completar el casillero vacío.' },
-  { id: 'distinta', name: 'La distinta', ask: '¿Cuál no sigue la regla?', desc: 'Cuatro figuras comparten una regla y una no: encontrá a la intrusa.' },
-];
-const COG_LEVELS = [
-  { name: 'Una regla a la vista', perQ: 75 }, { name: 'Reglas con más pasos', perQ: 65 }, { name: 'Dos reglas a la vez', perQ: 60 },
-  { name: 'Tres reglas', perQ: 55 }, { name: 'Todo junto y rápido', perQ: 50 },
-];
-const Q_PER_SESSION = 6, SIM_Q = 11, SIM_MS = 11 * 60000;
-const COG_SESSIONS = COG_LEVELS.flatMap((lv, gi) => COG_KINDS.map((k, ki) => ({ id: k.id + (gi + 1), kind: k.id, d: gi + 1, g: gi, n: gi * 3 + ki + 1, name: k.name })));
-const COG_JOKES = [
-  'Resolviste como un chimpancé: con entusiasmo y eligiendo las figuras por el color.',
-  'Nivel bebé: las figuras te parecen lindas, pero todavía no te dicen nada.',
-  'Nivel niño: ya encontrás patrones, sobre todo en las nubes.',
-  'Justo en el medio: a tu razonamiento abstracto le faltan unas monedas de práctica.',
-  'Nivel intelectual: ya te sale decir "es obvio, la flecha gira 45°".',
-  'Nivel premio Nobel: el inventor de las matrices estaría orgulloso.',
-  'Nivel alien: resolvés matrices mientras pensás en otra galaxia.',
-];
-const kindName = id => COG_KINDS.find(k => k.id === id).name;
+/* ---------- Ninja mental: interview-style tests in three tracks ---------- */
+// Figuras (figures.js), Numérico (numeric.js) and Inglés (english.js). Same design as the lessons in each track:
+// five levels of difficulty with their typist (chimpancé … intelectual), three kinds of exercise per level, a mock test,
+// and La cima: premio Nobel with every session passed, alien with 3 stars in all. Every question brings a technique (tip).
+const COG_JOKES = {
+  fig: ['Resolviste como un chimpancé: con entusiasmo y eligiendo las figuras por el color.', 'Nivel bebé: las figuras te parecen lindas, pero todavía no te dicen nada.', 'Nivel niño: ya encontrás patrones, sobre todo en las nubes.', 'Justo en el medio: a tu razonamiento abstracto le faltan unas monedas de práctica.', 'Nivel intelectual: ya te sale decir "es obvio, la flecha gira 45°".', 'Nivel premio Nobel: el inventor de las matrices estaría orgulloso.', 'Nivel alien: resolvés matrices mientras pensás en otra galaxia.'],
+  num: ['Resolviste como un chimpancé: contaste con los dedos y te sobraron dedos.', 'Nivel bebé: los números te gustan, sobre todo para morderlos.', 'Nivel niño: sabés sumar, pero los porcentajes todavía te hacen trampa.', 'Justo en el medio: hacés las cuentas, pero a veces dividís por el número equivocado.', 'Nivel intelectual: ya sabés que subir y bajar un 20% no te deja igual.', 'Nivel premio Nobel: tu contador te pide consejos.', 'Nivel alien: calculás puntos porcentuales desde otra galaxia.'],
+  eng: ['Resolviste como un chimpancé: "Cannot say" fue tu mejor amigo.', 'Nivel bebé: ya decís "however", aunque no sabés bien cuándo.', 'Nivel niño: tu inglés es de canción de los Beatles: entendés la mitad y cantás el resto.', 'Justo en el medio: te alcanza para el mail, todavía no para la reunión.', 'Nivel intelectual: ya distinguís "despite" de "although" sin pensar.', 'Nivel premio Nobel: los nativos te piden que les corrijas los mails.', 'Nivel alien: tu inglés suena a subtítulo perfecto.'],
+};
+const TRACKS = {
+  fig: {
+    id: 'fig', name: 'Figuras abstractas', short: 'Figuras', icon: '🔷', gen: Figures, title: 'Con figuras.',
+    blurb: 'Series, matrices y la figura distinta: el razonamiento abstracto (o inductivo) que piden muchas empresas en sus procesos de selección.',
+    kinds: [
+      { id: 'serie', name: 'Series', ask: '¿Qué figura sigue?', desc: 'Una secuencia cambia paso a paso: descubrí la regla y elegí la figura que sigue.', guide: Figures.TIPS.serie },
+      { id: 'matriz', name: 'Matrices', ask: '¿Qué completa la grilla?', desc: 'Filas y columnas siguen reglas: encontralas para completar el casillero vacío.', guide: Figures.TIPS.matriz },
+      { id: 'distinta', name: 'La distinta', ask: '¿Cuál no sigue la regla?', desc: 'Cuatro figuras comparten una regla y una no: encontrá a la intrusa.', guide: Figures.TIPS.distinta },
+    ],
+    levels: [{ name: 'Una regla a la vista', perQ: 75 }, { name: 'Reglas con más pasos', perQ: 65 }, { name: 'Dos reglas a la vez', perQ: 60 }, { name: 'Tres reglas', perQ: 55 }, { name: 'Todo junto y rápido', perQ: 50 }],
+    sim: { n: 11, min: 11, ref: 'Como referencia, apuntá a 8 de 11 o más.' },
+  },
+  num: {
+    id: 'num', name: 'Razonamiento numérico', short: 'Numérico', icon: '📊', gen: Numeric, title: 'Con números.',
+    blurb: 'Tablas, gráficos y porcentajes: leer datos rápido y elegir la cuenta correcta. En los tests reales casi siempre se permite calculadora: usala también acá.',
+    kinds: [
+      { id: 'tabla', name: 'Tablas', ask: '¿Qué dicen los datos?', desc: 'Ventas en una tabla: diferencias, promedios, porcentajes, monedas y proyecciones.', guide: ['Leé primero la pregunta y después buscá en la tabla solo la fila y la columna que necesitás.', 'Variación porcentual = (nuevo − viejo) ÷ viejo × 100: siempre se divide por el punto de partida.', 'Escribí las unidades (miles, millones, pesos, dólares): muchas opciones-trampa están corridas por 1.000.'] },
+      { id: 'grafico', name: 'Gráficos', ask: '¿Qué muestra el gráfico?', desc: 'Leé un gráfico de barras y calculá variaciones, participaciones y comparaciones.', guide: ['Leé los valores escritos sobre las barras: no estimes por la altura si tenés el número.', 'Crecimiento absoluto no es lo mismo que porcentual: una barra chica puede crecer más en porcentaje.', 'Estimá antes de calcular y descartá las opciones imposibles.'] },
+      { id: 'porcentaje', name: 'Porcentajes', ask: '¿Cuánto da?', desc: 'Descuentos, IVA, aumentos seguidos, márgenes y puntos porcentuales: las trampas clásicas.', guide: ['Cambios porcentuales seguidos se multiplican (×1,20 y ×0,80 = ×0,96): nunca se suman ni se cancelan.', 'Para sacar un impuesto o un aumento ya incluido, dividí por el factor (÷ 1,21), no restes el porcentaje.', 'Puntos porcentuales = la resta de dos porcentajes; variación porcentual = esa resta dividida por el inicial.'] },
+    ],
+    levels: [{ name: 'Leer y calcular', perQ: 90 }, { name: 'Variaciones y promedios', perQ: 90 }, { name: 'Participaciones y razones', perQ: 80 }, { name: 'Unidades y totales', perQ: 75 }, { name: 'Proyecciones y puntos porcentuales', perQ: 70 }],
+    sim: { n: 10, min: 15, ref: 'Como referencia, apuntá a 7 de 10 o más.' },
+  },
+  eng: {
+    id: 'eng', name: 'Inglés para el trabajo', short: 'Inglés', icon: '🇬🇧', gen: English, title: 'En inglés.',
+    blurb: 'Comprensión de textos (True / False / Cannot say), conectores y orden de oraciones, como en la parte verbal de los tests de selección en inglés.',
+    kinds: [
+      { id: 'lectura', name: 'Comprensión', ask: 'True, False o Cannot say', desc: 'Textos cortos de trabajo: decidí si cada afirmación es verdadera, falsa o si con el texto no se puede saber.', guide: English.GUIDE.lectura },
+      { id: 'conectores', name: 'Conectores', ask: '¿Qué conector va?', desc: 'Uní dos ideas con la palabra justa: however, although, unless, therefore…', guide: English.GUIDE.conectores },
+      { id: 'orden', name: 'Ordenar oraciones', ask: '¿En qué orden van?', desc: 'Armá un párrafo coherente siguiendo los pronombres y los conectores.', guide: English.GUIDE.orden },
+    ],
+    levels: [{ name: 'Básico (A2)', perQ: 75 }, { name: 'Pre-intermedio (B1)', perQ: 70 }, { name: 'Intermedio (B1+)', perQ: 65 }, { name: 'Intermedio alto (B2)', perQ: 60 }, { name: 'Avanzado (C1)', perQ: 55 }],
+    sim: { n: 12, min: 12, ref: 'Como referencia, apuntá a 9 de 12 o más.' },
+  },
+};
+const TRACK_KEY = 'teclado-ciego-track';
+let cogTrack = 'fig';
+try { if (TRACKS[localStorage.getItem(TRACK_KEY)]) cogTrack = localStorage.getItem(TRACK_KEY); } catch {}
+const sizeOf = kind => kind === 'orden' ? 5 : 6; // there are 5 ordering paragraphs per level
+const passFor = n => Math.ceil(n * .66);
+const SESSIONS = Object.fromEntries(Object.values(TRACKS).map(t => [t.id, t.levels.flatMap((lv, gi) => t.kinds.map((k, ki) => ({ id: k.id + (gi + 1), track: t.id, kind: k.id, d: gi + 1, g: gi, n: gi * 3 + ki + 1, name: k.name, size: sizeOf(k.id) })))]));
+const kindInfo = id => Object.values(TRACKS).flatMap(t => t.kinds).find(k => k.id === id);
 const cogStarsFor = (ok, n) => ok === n ? 3 : ok / n >= .8 ? 2 : ok / n >= .66 ? 1 : 0;
 const tierForPct = pct => [0, 20, 35, 50, 65, 80, 95].filter(v => pct >= v).length - 1;
-function cogState(gi) {
-  const ss = gi === FINAL ? COG_SESSIONS : COG_SESSIONS.filter(x => x.g === gi), done = ss.filter(x => S.cog[x.id]?.stars >= 1).length;
+const simsOf = tr => S.sims.filter(t => (t.track || 'fig') === tr);
+function cogState(gi, tr = cogTrack) {
+  const all = SESSIONS[tr], ss = gi === FINAL ? all : all.filter(x => x.g === gi), done = ss.filter(x => S.cog[x.id]?.stars >= 1).length;
   const gold = ss.every(x => S.cog[x.id]?.stars === 3);
   return { done, total: ss.length, complete: done === ss.length, gold, tier: gi === FINAL ? (gold ? ALIEN : NOBEL) : gi };
 }
 function cogText(gi, st) {
-  if (gi === FINAL) return st.gold ? '¡Alien! Las 15 sesiones con 3 estrellas.'
-    : st.complete ? '¡Premio Nobel! Aprobaste las 15 sesiones. Con 3 estrellas en todas, alien.'
-    : `Aprobá las 15 sesiones para ser premio Nobel (llevás ${st.done}). Con 3 estrellas en todas, alien.`;
+  if (gi === FINAL) return st.gold ? `¡Alien! Las ${st.total} sesiones con 3 estrellas.`
+    : st.complete ? `¡Premio Nobel! Aprobaste las ${st.total} sesiones. Con 3 estrellas en todas, alien.`
+    : `Aprobá las ${st.total} sesiones para ser premio Nobel (llevás ${st.done}). Con 3 estrellas en todas, alien.`;
   if (st.complete) return st.gold ? '¡Nivel superado con 3 estrellas en todas!' : `¡Nivel superado! Sigue: nivel ${tierShort(gi + 1 === FINAL ? NOBEL : gi + 1)}.`;
   return st.done ? `${st.done} de ${st.total} sesiones para superarlo.` : `Aprobá las ${st.total} sesiones para superarlo.`;
 }
-function cogCard(gi) {
-  const st = cogState(gi);
+function cogCard(gi, tr = cogTrack) {
+  const st = cogState(gi, tr);
   const steps = gi === FINAL ? '' : `<span class="evo-steps">${Array.from({ length: st.total }, (_, i) => `<i class="${i < st.done ? 'on' : ''}"></i>`).join('')}</span>`;
   return `<figure class="evo-card" data-tier="${st.tier}" data-done="${st.done}">${evoArt(gi, st)}<figcaption><b>Nivel ${tierShort(st.tier)}</b><span>${cogText(gi, st)}</span>${steps}</figcaption></figure>`;
 }
-const nextSession = () => COG_SESSIONS.find(x => !(S.cog[x.id]?.stars >= 1)) || COG_SESSIONS[COG_SESSIONS.length - 1];
+const nextSession = (tr = cogTrack) => SESSIONS[tr].find(x => !(S.cog[x.id]?.stars >= 1)) || SESSIONS[tr][SESSIONS[tr].length - 1];
+const escHtml = v => String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 function qFigure(q, cls = 'fig') {
+  if (q.text) return q.stimulus || '';
   const blank = '<div class="q-blank">?</div>';
   if (q.kind === 'serie') return `<div class="q-row">${q.seq.map(t => Figures.draw(t, cls)).join('<span class="q-arrow" aria-hidden="true">→</span>')}<span class="q-arrow" aria-hidden="true">→</span>${blank}</div>`;
   if (q.kind === 'matriz') return `<div class="q-grid">${q.grid.map(t => Figures.draw(t, cls)).join('')}${blank}</div>`;
   return '';
 }
+const optHtml = (q, o) => q.text ? `<span class="opt-txt">${escHtml(o)}</span>` : Figures.draw(o);
 function renderCog() {
-  const nx = nextSession(), anyDone = COG_SESSIONS.some(x => S.cog[x.id]);
+  const T = TRACKS[cogTrack], all = SESSIONS[cogTrack], nx = nextSession(), anyDone = all.some(x => S.cog[x.id]);
+  document.querySelectorAll('#cogTracks button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === cogTrack)));
+  document.querySelectorAll('#cogTracks button small').forEach(el => { const ss = SESSIONS[el.parentElement.dataset.v]; el.textContent = `${ss.filter(x => S.cog[x.id]?.stars >= 1).length}/${ss.length} sesiones`; });
+  $('cogTitle').innerHTML = `Pensá rápido.<br><em>${T.title}</em>`;
+  $('cogBlurb').textContent = T.blurb;
   $('cogContinue').innerHTML = `${anyDone ? 'Seguir' : 'Empezar'}: sesión ${nx.n} <small>${nx.name} · nivel ${tierShort(nx.g)}</small>`;
-  $('cStars').textContent = `${COG_SESSIONS.reduce((a, x) => a + (S.cog[x.id]?.stars || 0), 0)}/${COG_SESSIONS.length * 3}`;
-  $('cDone').textContent = `${COG_SESSIONS.filter(x => S.cog[x.id]?.stars >= 1).length}/${COG_SESSIONS.length}`;
-  const best = S.sims.reduce((b, t) => Math.max(b, t.pct), -1);
+  $('simBtn').innerHTML = `Simulacro de entrevista <small>${T.sim.n} preguntas · ${T.sim.min} min</small>`;
+  $('cogTrackName').textContent = T.short.toUpperCase();
+  $('cStars').textContent = `${all.reduce((a, x) => a + (S.cog[x.id]?.stars || 0), 0)}/${all.length * 3}`;
+  $('cDone').textContent = `${all.filter(x => S.cog[x.id]?.stars >= 1).length}/${all.length}`;
+  const sims = simsOf(cogTrack), best = sims.reduce((b, t) => Math.max(b, t.pct), -1);
   $('cBest').textContent = best < 0 ? '—' : best + '%';
-  const sample = Figures.make.serie(1);
-  $('cogSample').innerHTML = `<p>${sample.prompt}</p>${qFigure(sample, 'fig')}<div class="q-opts sample">${sample.options.map((t, i) => `<span class="opt${i === sample.answer ? ' right' : ''}"><b>${'ABCDE'[i]}</b>${Figures.draw(t)}</span>`).join('')}</div>`;
-  $('cogKinds').innerHTML = COG_KINDS.map(k => { const q = Figures.make[k.id](2); return `<article class="kind"><h3>${k.name}</h3><p>${k.desc}</p><div class="kind-fig">${(q.seq || q.grid?.slice(0, 3) || q.options).slice(0, 4).map(t => Figures.draw(t)).join('')}</div></article>`; }).join('');
-  $('cogPath').replaceChildren(...COG_LEVELS.map((lv, gi) => {
+  const sample = T.gen.make[T.kinds[0].id](1, new Set());
+  $('cogSample').className = 'cog-sample' + (sample.text ? ' txt' : '');
+  $('cogSample').innerHTML = `<p>${escHtml(sample.prompt)}</p>${qFigure(sample, 'fig')}<div class="q-opts sample${sample.text ? ' txt' : ''}">${sample.options.map((o, i) => `<span class="opt${i === sample.answer ? ' right' : ''}"><b>${'ABCDE'[i]}</b>${optHtml(sample, o)}</span>`).join('')}</div><p class="q-tip">💡 ${escHtml(sample.tip)}</p>`;
+  $('cogKinds').innerHTML = T.kinds.map(k => `<article class="kind"><h3>${k.name}</h3><p>${k.desc}</p><h4>Técnicas</h4><ul>${k.guide.slice(0, 3).map(g => `<li>${escHtml(g)}</li>`).join('')}</ul></article>`).join('');
+  $('cogPathTitle').textContent = `${T.icon} ${T.name}: de chimpancé a premio Nobel.`;
+  $('cogPath').replaceChildren(...T.levels.map((lv, gi) => {
     const sec = document.createElement('section'); sec.className = 'group';
-    sec.innerHTML = `<div class="group-head"><div><h2>${lv.name}</h2><p>Dificultad ${gi + 1} de 5 · ${lv.perQ} segundos por pregunta. Aprobás con 4 de ${Q_PER_SESSION}; 3 estrellas con ${Q_PER_SESSION} de ${Q_PER_SESSION}.</p></div>${cogCard(gi)}</div>`;
+    sec.innerHTML = `<div class="group-head"><div><h2>${lv.name}</h2><p>Dificultad ${gi + 1} de 5 · ${lv.perQ} segundos por pregunta. Aprobás con ${passFor(6)} de 6 (${passFor(5)} de 5 en ordenar oraciones); todas bien, 3 estrellas.</p></div>${cogCard(gi)}</div>`;
     const cards = document.createElement('div'); cards.className = 'cards';
-    for (const x of COG_SESSIONS.filter(x => x.g === gi)) {
+    for (const x of all.filter(x => x.g === gi)) {
       const rec = S.cog[x.id], b = document.createElement('button');
       b.className = 'lc' + (x === nx ? ' next' : '');
-      b.innerHTML = `<span class="meta"><span>Sesión ${x.n}</span>${x === nx ? '<span class="pill">Sigue</span>' : stars(rec?.stars || 0)}</span><span class="caps"><span class="name">${x.name}</span></span><span class="best">${rec ? `Mejor: ${Math.round(rec.pct * Q_PER_SESSION / 100)}/${Q_PER_SESSION} · ${fmt(rec.ms)}` : COG_KINDS.find(k => k.id === x.kind).ask}</span>`;
+      b.innerHTML = `<span class="meta"><span>Sesión ${x.n}</span>${x === nx ? '<span class="pill">Sigue</span>' : stars(rec?.stars || 0)}</span><span class="caps"><span class="name">${x.name}</span></span><span class="best">${rec ? `Mejor: ${Math.round(rec.pct * x.size / 100)}/${x.size} · ${fmt(rec.ms)}` : kindInfo(x.kind).ask}</span>`;
       b.onclick = () => startQuiz(x);
       cards.append(b);
     }
     sec.append(cards);
     return sec;
-  }), Object.assign(document.createElement('section'), { className: 'group final', innerHTML: `<div class="group-head"><div><h2>La cima</h2><p>El simulacro de entrevista: ${SIM_Q} preguntas mezcladas en ${SIM_MS / 60000} minutos, sin ayuda hasta el final. Te dice a quién te parecés.</p></div>${cogCard(FINAL)}</div><div class="cards"><button class="lc" id="simCard"><span class="meta"><span>Simulacro</span></span><span class="caps"><span class="name">Simulacro de entrevista</span></span><span class="best">${best < 0 ? 'Sin intentos' : `Mejor: ${best}% · ${S.sims.length} ${S.sims.length === 1 ? 'intento' : 'intentos'}`}</span></button></div>` }));
+  }), Object.assign(document.createElement('section'), { className: 'group final', innerHTML: `<div class="group-head"><div><h2>La cima</h2><p>El simulacro de entrevista: ${T.sim.n} preguntas mezcladas en ${T.sim.min} minutos, sin ayuda hasta el final. Te dice a quién te parecés y repasa tus errores con sus técnicas.</p></div>${cogCard(FINAL)}</div><div class="cards"><button class="lc" id="simCard"><span class="meta"><span>Simulacro</span></span><span class="caps"><span class="name">Simulacro de entrevista</span></span><span class="best">${best < 0 ? 'Sin intentos' : `Mejor: ${best}% · ${sims.length} ${sims.length === 1 ? 'intento' : 'intentos'}`}</span></button></div>` }));
   $('simCard').onclick = () => startQuiz('sim');
   renderNinjaMax();
 }
+function setTrack(tr) {
+  if (!TRACKS[tr]) return;
+  cogTrack = tr; try { localStorage.setItem(TRACK_KEY, tr); } catch {}
+  renderCog();
+}
+document.querySelectorAll('#cogTracks button').forEach(b => b.onclick = () => setTrack(b.dataset.v));
 function goCog() {
   mode = 'cog'; running = false; clearInterval(timer);
   if (location.hash !== '#ninja') window.history.replaceState(null, '', location.pathname + location.search + '#ninja');
@@ -1509,13 +1563,13 @@ const IQ_JOKES = [
 function startQuiz(sess) {
   if (sess === 'ninja') return startNinja();
   if (!mayStart()) return;
-  const sim = sess === 'sim';
+  const sim = sess === 'sim', tr = sim ? cogTrack : sess.track, T = TRACKS[tr], used = new Set();
   const qs = sim
-    ? shuffle(Array.from({ length: SIM_Q }, (_, i) => Figures.make[COG_KINDS[i % 3].id](3 + (i % 3 + Math.floor(i / 3)) % 3)))
-    : Array.from({ length: Q_PER_SESSION }, () => Figures.make[sess.kind](sess.d));
-  quiz = { sess, sim, qs, i: 0, ok: 0, picks: [], limit: sim ? SIM_MS : Q_PER_SESSION * COG_LEVELS[sess.d - 1].perQ * 1000, t0: performance.now() };
+    ? shuffle(Array.from({ length: T.sim.n }, (_, i) => T.gen.make[T.kinds[i % 3].id](3 + (i % 3 + Math.floor(i / 3)) % 3, used)))
+    : Array.from({ length: sess.size }, () => T.gen.make[sess.kind](sess.d, used));
+  quiz = { sess, sim, tr, qs, i: 0, ok: 0, picks: [], limit: sim ? T.sim.min * 60000 : sess.size * T.levels[sess.d - 1].perQ * 1000, t0: performance.now() };
   mode = 'quiz'; counted = false; setQuizLabels(false); $('qIntro').hidden = true;
-  $('qGroup').textContent = sim ? `Simulacro · ${SIM_Q} preguntas en ${SIM_MS / 60000} minutos` : `Sesión ${sess.n} · nivel ${tierShort(sess.g)} · dificultad ${sess.d}`;
+  $('qGroup').textContent = sim ? `${T.icon} ${T.short} · simulacro de ${T.sim.n} preguntas en ${T.sim.min} minutos` : `${T.icon} ${T.short} · sesión ${sess.n} · nivel ${tierShort(sess.g)} · dificultad ${sess.d}`;
   $('qName').textContent = sim ? 'Simulacro de entrevista' : sess.name;
   $('qPlay').hidden = false; $('qResult').hidden = true;
   show('quiz'); renderQ();
@@ -1564,11 +1618,15 @@ function renderQ() {
     $('qBar').style.width = (100 * quiz.i / quiz.qs.length) + '%';
   }
   $('qPrompt').textContent = q.prompt;
-  $('qFig').innerHTML = qFigure(q); $('qFig').hidden = q.kind === 'distinta';
-  $('qOpts').className = 'q-opts' + (q.kind === 'distinta' ? ' big' : '');
+  const fig = qFigure(q);
+  $('qFig').innerHTML = fig; $('qFig').hidden = !fig;
+  // The technique for this question, except in the mock test and the 3-minute run (as in a real test)
+  $('qTip').hidden = !q.tip || quiz.sim || quiz.ninja;
+  $('qTip').innerHTML = q.tip ? `💡 <b>Técnica:</b> ${escHtml(q.tip)}` : '';
+  $('qOpts').className = 'q-opts' + (q.text ? ' txt' : q.kind === 'distinta' ? ' big' : '');
   $('qOpts').replaceChildren(...q.options.map((t, i) => {
     const b = document.createElement('button'); b.className = 'opt'; b.type = 'button';
-    b.innerHTML = `<b>${'ABCDE'[i]}</b>${Figures.draw(t)}`; b.setAttribute('aria-label', 'Opción ' + 'ABCDE'[i]);
+    b.innerHTML = `<b>${'ABCDE'[i]}</b>${optHtml(q, t)}`; b.setAttribute('aria-label', 'Opción ' + 'ABCDE'[i] + (q.text ? ': ' + t : ''));
     b.onclick = () => answerQ(i);
     return b;
   }));
@@ -1604,6 +1662,8 @@ function answerQ(k) {
   btns[q.answer].classList.add('right'); if (!right) btns[k].classList.add('wrong');
   $('qOk').textContent = quiz.ok;
   $('qExplain').innerHTML = `<b>${right ? '✓ ¡Correcto!' : `✗ Era la ${'ABCDE'[q.answer]}.`}</b> `; $('qExplain').append(q.explain);
+  const next = q.after && q.after !== q.tip ? q.after : !right ? q.tip : '';
+  if (next) $('qExplain').insertAdjacentHTML('beforeend', `<span class="q-next">💡 <b>Para la próxima:</b> ${escHtml(next)}</span>`);
   $('qFeedback').hidden = false; $('qNext').focus({ preventScroll: true });
 }
 function nextQ() {
@@ -1620,42 +1680,42 @@ function finishQuiz() {
   $('qBar').style.width = '100%'; $('qTime').textContent = fmt(quiz.limit - ms);
   let html;
   if (quiz.sim) {
-    const ti = tierForPct(pct);
-    S.sims.push({ pct, ms: Math.round(ms), date: Date.now() }); S.sims = S.sims.slice(-100);
+    const ti = tierForPct(pct), T = TRACKS[quiz.tr];
+    S.sims.push({ pct, ms: Math.round(ms), date: Date.now(), track: quiz.tr }); S.sims = S.sims.slice(-100);
     const wrong = quiz.qs.map((q, i) => ({ q, i, pick: quiz.picks[i] })).filter(x => x.pick !== x.q.answer);
-    html = `<h3>Simulacro de entrevista</h3>
+    html = `<h3>Simulacro de entrevista · ${T.short}</h3>
       <div class="house-result">${Typists.typist(ti)}<div class="house-copy"><span class="eyebrow">Con ${ok} de ${n} correctas resolviste como</span><h4>${cap1(TIERS[ti].name)}</h4>
-        <p class="joke">${COG_JOKES[ti]}</p><p>${timedOut ? 'Se terminó el tiempo: las preguntas sin responder cuentan como incorrectas. ' : ''}Como referencia, apuntá a 8 de 11 o más.</p></div></div>
+        <p class="joke">${COG_JOKES[quiz.tr][ti]}</p><p>${timedOut ? 'Se terminó el tiempo: las preguntas sin responder cuentan como incorrectas. ' : ''}${T.sim.ref}</p></div></div>
       <div class="nums"><div><b>${ok}/${n}</b><span>correctas</span></div><div><b>${pct}%</b><span>aciertos</span></div><div><b>${fmt(ms)}</b><span>tiempo</span></div></div>
-      ${wrong.length ? `<div class="review"><h4>Para repasar</h4>${wrong.map(x => `<div class="rv"><span class="rv-n">${x.i + 1}</span><div><p><b>${kindName(x.q.kind)}.</b> ${x.pick == null ? 'Sin responder' : `Elegiste la ${'ABCDE'[x.pick]}`}; era la ${'ABCDE'[x.q.answer]}.</p><p class="rv-x"></p></div>${Figures.draw(x.q.options[x.q.answer], 'fig small')}</div>`).join('')}</div>` : '<p>¡Sin errores!</p>'}`;
-    setTimeout(() => document.querySelectorAll('#qResult .rv-x').forEach((el, i) => { el.textContent = wrong[i].q.explain; }));
+      ${wrong.length ? `<div class="review"><h4>Para repasar</h4>${wrong.map(x => `<div class="rv${x.q.text ? ' txt' : ''}"><span class="rv-n">${x.i + 1}</span><div><p><b>${kindInfo(x.q.kind).name}.</b> ${escHtml(x.q.prompt)} ${x.pick == null ? 'Sin responder' : `Elegiste la ${'ABCDE'[x.pick]}`}; era la ${'ABCDE'[x.q.answer]}${x.q.text ? ` (${escHtml(x.q.options[x.q.answer])})` : ''}.</p><p class="rv-x">${escHtml(x.q.explain)}</p><p class="rv-tip">💡 ${escHtml(x.q.after || x.q.tip)}</p></div>${x.q.text ? '' : Figures.draw(x.q.options[x.q.answer], 'fig small')}</div>`).join('')}</div>` : '<p>¡Sin errores!</p>'}`;
   } else {
-    const st = cogStarsFor(ok, n), before = cogState(sess.g), finBefore = cogState(FINAL), prev = S.cog[sess.id];
+    const tr = quiz.tr, st = cogStarsFor(ok, n), before = cogState(sess.g, tr), finBefore = cogState(FINAL, tr), prev = S.cog[sess.id];
     if (!prev || st > prev.stars || (st === prev.stars && pct > prev.pct)) S.cog[sess.id] = { stars: st, pct, ms: Math.round(ms) };
-    const after = cogState(sess.g), fin = cogState(FINAL), P = tierShort(sess.g);
+    const after = cogState(sess.g, tr), fin = cogState(FINAL, tr), P = tierShort(sess.g);
     let gi = sess.g, st2 = after, fresh = false, title = `Nivel ${P}`, txt = cogText(sess.g, after);
     if (fin.tier > finBefore.tier || (fin.complete && !finBefore.complete)) { gi = FINAL; st2 = fin; fresh = true; title = fin.gold ? '¡Evolucionaste a alien!' : '¡Evolucionaste a premio Nobel!'; txt = cogText(FINAL, fin); }
     else if (after.complete && !before.complete) {
-      gi = sess.g + 1; st2 = { ...cogState(gi), done: 1 }; fresh = true; title = `¡Nivel ${P} superado!`;
+      gi = sess.g + 1; st2 = { ...cogState(gi, tr), done: 1 }; fresh = true; title = `¡Nivel ${P} superado!`;
       txt = gi === FINAL ? 'Aprobá todas las sesiones para llegar a premio Nobel, y probá el simulacro.' : `Evolucionaste: ahora vas por el nivel ${tierShort(gi)}.`;
     } else if (after.gold && !before.gold) { title = `¡Nivel ${P} con 3 estrellas!`; fresh = true; }
-    else if (!st && !(prev?.stars >= 1)) txt = `Acertá 4 de ${n} para aprobarla y avanzar en el nivel ${P}.`;
+    else if (!st && !(prev?.stars >= 1)) txt = `Acertá ${passFor(n)} de ${n} para aprobarla y avanzar en el nivel ${P}.`;
     const msg = timedOut ? 'Se terminó el tiempo: las preguntas sin responder cuentan como incorrectas.'
-      : st === 3 ? '¡Perfecto! Todas bien.' : st ? `Aprobada. Con ${st === 1 ? '5' : '6'} de ${n} ganás otra estrella.` : 'Todavía no: leé las explicaciones y probá de nuevo.';
+      : st === 3 ? '¡Perfecto! Todas bien.' : st ? `Aprobada. Con ${st === 1 ? Math.ceil(n * .8) : n} de ${n} ganás otra estrella.` : 'Todavía no: leé las explicaciones y las técnicas, y probá de nuevo.';
     html = `<h3>${st ? 'Sesión aprobada' : 'Casi: repetila'}</h3>${stars(st, 'bigstars')}
       <div class="nums"><div><b>${ok}/${n}</b><span>correctas</span></div><div><b>${pct}%</b><span>aciertos</span></div><div><b>${fmt(ms)}</b><span>tiempo</span></div></div>
       <p>${msg}</p><div class="result-evo">${evoArt(gi, st2, fresh)}<div><b>${title}</b><p>${txt}</p></div></div>`;
   }
   save();
-  recordSession({ lesson: 'cog', name: quiz.sim ? 'Simulacro de entrevista' : `Ninja · ${sess.name} (sesión ${sess.n})`, stars: quiz.sim ? 0 : S.cog[sess.id]?.stars || 0, ppm: 0, acc: pct, ms: Math.round(ms) });
-  const nx = !quiz.sim && COG_SESSIONS[COG_SESSIONS.indexOf(sess) + 1];
+  recordSession({ lesson: 'cog', name: quiz.sim ? `Ninja · simulacro de ${TRACKS[quiz.tr].short}` : `Ninja · ${TRACKS[quiz.tr].short} · ${sess.name} (sesión ${sess.n})`, stars: quiz.sim ? 0 : S.cog[sess.id]?.stars || 0, ppm: 0, acc: pct, ms: Math.round(ms) });
+  const nx = !quiz.sim && SESSIONS[quiz.tr][SESSIONS[quiz.tr].indexOf(sess) + 1];
   $('qResult').innerHTML = html + `<div class="actions">
       ${nx ? `<button class="btn primary" id="qrNext">Siguiente: sesión ${nx.n} <small>Enter</small></button>` : ''}
       <button class="btn${nx ? '' : ' primary'}" id="qrAgain">${quiz.sim ? 'Otro simulacro' : 'Repetir'}${nx ? '' : ' <small>Enter</small>'}</button>
       <button class="btn" id="qrHome">Ninja mental</button></div>`;
   $('qPlay').hidden = true; $('qResult').hidden = false; scrollTo({ top: 0 });
   $('qrNext') && ($('qrNext').onclick = () => startQuiz(nx));
-  $('qrAgain').onclick = () => startQuiz(sess);
+  const tr = quiz.tr;
+  $('qrAgain').onclick = () => { if (quiz.sim) cogTrack = tr; startQuiz(sess); };
   $('qrHome').onclick = goCog;
   (($('qrNext') || $('qrAgain'))).focus({ preventScroll: true });
 }
