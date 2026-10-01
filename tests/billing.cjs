@@ -17,7 +17,8 @@ const fakeMP = http.createServer(async (req, res) => {
     assert.equal(body.items[0].unit_price, 4900); assert.equal(body.items[0].quantity, 1);
     assert.ok(!body.auto_recurring && body.notification_url.endsWith('/api/mercadopago'));
     payments.set(id, { id, status: 'approved', transaction_amount: 4900, external_reference: body.external_reference, metadata: body.metadata });
-    return send({ id: 'pref_' + id, init_point: body.back_urls.success });
+    // The token is a test one (TEST-…): the app must send the user to the sandbox checkout, not the real one.
+    return send({ id: 'pref_' + id, init_point: MP + '/checkout-real', sandbox_init_point: body.back_urls.success + '&sandbox=1' });
   }
   const pay = /^\/v1\/payments\/(pay_\d+)$/.exec(url.pathname);
   if (pay && payments.has(pay[1])) return send(payments.get(pay[1]));

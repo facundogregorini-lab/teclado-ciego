@@ -48,8 +48,11 @@ module.exports = handler(async req => {
         statement_descriptor: 'TEMPLO NINJA',
       }),
     });
-    if (!pref.init_point) throw new HttpError(502, 'Mercado Pago no devolvió el enlace de pago.');
-    return { url: pref.init_point };
+    // With test credentials (TEST-…) the checkout has to be the sandbox one, or Mercado Pago rejects the test users.
+    const isTest = (process.env.MP_ACCESS_TOKEN || '').startsWith('TEST-');
+    const url = (isTest && pref.sandbox_init_point) || pref.init_point;
+    if (!url) throw new HttpError(502, 'Mercado Pago no devolvió el enlace de pago.');
+    return { url };
   }
 
   throw new HttpError(400, 'Acción desconocida.');
