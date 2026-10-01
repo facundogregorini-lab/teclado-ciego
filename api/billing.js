@@ -3,16 +3,20 @@
 // one-time payment · { action: 'sync' }: asks Mercado Pago again (coming back from paying)
 const { redis, HttpError, requireUser, bearer, body, handler } = require('./_lib');
 const { FREE_PER_DAY, settings, playsKey, mp, status } = require('./_billing');
+const { metaSettings, purchaseId } = require('./_meta');
 
 async function userInfo(name, options) {
+  const s = settings();
   const { premium, paid, sub, gift } = await status(name, options);
   const plays = Number(await redis('GET', playsKey(name))) || 0;
-  return { premium, plays, gift: Boolean(gift), lifetime: Boolean(paid), subscription: sub && { status: sub.status, paidUntil: sub.paidUntil } };
+  return { premium, plays, gift: Boolean(gift), lifetime: Boolean(paid), subscription: sub && { status: sub.status, paidUntil: sub.paidUntil },
+    // For the page's Purchase event: same id as the one the server reports, so Meta counts it once
+    purchase: paid ? { id: purchaseId(paid.id), value: paid.amount, currency: paid.currency || s.currency } : null };
 }
 
 module.exports = handler(async req => {
   const s = settings();
-  const base = { enabled: s.enabled, price: s.label, freePerDay: FREE_PER_DAY };
+  const base = { enabled: s.enabled, price: s.label, amount: s.price, currency: s.currency, freePerDay: FREE_PER_DAY, pixel: metaSettings().pixel };
 
   if (req.method === 'GET') {
     if (!bearer(req)) return base;
@@ -36,12 +40,16 @@ module.exports = handler(async req => {
     if (!s.enabled) throw new HttpError(503, 'Los pagos todavía no están configurados.');
     if ((await status(name)).premium) throw new HttpError(409, 'Ya tenés acceso ilimitado. ¡Gracias por tu aporte!');
     const origin = process.env.APP_URL || 'https://' + req.headers.host;
+    // Meta's browser ids travel with the payment, for the purchase the server reports (api/_meta.js)
+    const track = data.track && typeof data.track === 'object' ? data.track : {};
+    const clean = (v, re) => (typeof v === 'string' && re.test(v) ? v : undefined);
+    const fb = { fbp: clean(track.fbp, /^fb\.\d\.\d+\.\d+$/), fbc: clean(track.fbc, /^fb\.\d\.\d+\.[\w.-]{1,500}$/), ua: String(req.headers['user-agent'] || '').slice(0, 400) || undefined };
     const pref = await mp('/checkout/preferences', {
       method: 'POST',
       body: JSON.stringify({
         items: [{ id: 'templo-ilimitado', title: 'Templo Ninja · acceso ilimitado', description: 'Aporte al templo: pago único, sin suscripción', quantity: 1, unit_price: s.price, currency_id: s.currency }],
         external_reference: name,
-        metadata: { templo: 'ilimitado' }, // tells this payment apart from the monthly charges of an old subscription
+        metadata: { templo: 'ilimitado', ...fb }, // templo: tells this payment apart from the monthly charges of an old subscription
         back_urls: { success: origin + '/?aporte=ok', pending: origin + '/?aporte=ok', failure: origin + '/?aporte=error' },
         auto_return: 'approved',
         notification_url: origin + '/api/mercadopago',

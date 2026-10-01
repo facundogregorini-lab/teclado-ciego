@@ -2,6 +2,7 @@
 // Free plan: FREE_PER_DAY practice sessions per day. Unlimited access: a one-time payment ("aporte al templo",
 // Checkout Pro) that never expires. Monthly subscriptions (preapproval API) from before still count until they end.
 const { redis, HttpError } = require('./_lib');
+const { reportPurchase } = require('./_meta');
 
 const DAY_MS = 86400e3, GRACE_MS = 3 * DAY_MS, FREE_PER_DAY = 3;
 const env = name => (process.env[name] || '').trim();
@@ -43,11 +44,14 @@ const readSub = async name => JSON.parse(await redis('GET', 'sub:' + name) || 'n
 const readPaid = async name => JSON.parse(await redis('GET', 'paid:' + name) || 'null');
 
 // Stores an approved one-time payment: from then on, the account is unlimited for good.
+// The first time it is seen (webhook or coming back from paying, whichever is first) it is reported to Meta.
 async function storePayment(payment) {
   const name = String(payment.external_reference || '');
   if (payment.status !== 'approved' || payment.metadata?.templo !== 'ilimitado' || !/^[a-z0-9_.-]{3,20}$/.test(name)) return null;
-  const paid = { id: payment.id, amount: Number(payment.transaction_amount) || 0, date: Date.parse(payment.date_approved || '') || Date.now() };
-  await redis('SET', 'paid:' + name, JSON.stringify(paid));
+  const paid = { id: payment.id, amount: Number(payment.transaction_amount) || 0, currency: payment.currency_id || 'ARS', date: Date.parse(payment.date_approved || '') || Date.now() };
+  const first = await redis('SET', 'paid:' + name, JSON.stringify(paid), 'NX') === 'OK';
+  if (!first) await redis('SET', 'paid:' + name, JSON.stringify(paid));
+  if (first) await reportPurchase(name, payment);
   return paid;
 }
 

@@ -48,6 +48,20 @@ El botón **✦ Apoyá el templo** del header, a la izquierda del usuario, se ve
 
 Mientras no estén configuradas las variables de Mercado Pago, la app no tiene límites. Para los invitados el límite se cuenta en el navegador (alguien con conocimientos técnicos podría saltearlo); para las cuentas lo lleva el servidor.
 
+### Píxel de Meta (anuncios)
+
+Si en Vercel está `META_PIXEL_ID`, la app carga el Píxel de Meta (el ID llega desde `/api/billing`; sin la variable no se carga nada) y manda estos eventos:
+
+| Evento | Cuándo |
+| --- | --- |
+| `PageView` | Al abrir la app. |
+| `CompleteRegistration` | Al crear una cuenta. |
+| `Practica` (personalizado) | Al empezar una práctica (primera tecla o primera respuesta), con `seccion`: `teclado-ciego` o `ninja-mental`, y `desafio` si es el de 5 minutos. |
+| `InitiateCheckout` | Al ir a pagar el aporte, con el precio. |
+| `Purchase` | Al volver de Mercado Pago con el pago aprobado (una vez por navegador). |
+
+Con `META_CAPI_TOKEN` (token de la API de conversiones, en el Administrador de eventos → el píxel → Configuración), el servidor también informa cada `Purchase` la primera vez que ve el pago aprobado (webhook o vuelta del pago). Usa el mismo `event_id` que el navegador (`pay_<id del pago>`), así Meta lo cuenta una sola vez, y le pasa el monto, las cookies `_fbp`/`_fbc` (viajan en la metadata del pago), el navegador y el usuario cifrado con SHA-256. Opcional: `META_GRAPH_VERSION` (por defecto `v23.0`).
+
 ### Configurar Mercado Pago en Vercel
 
 1. En [Mercado Pago Developers](https://www.mercadopago.com.ar/developers/panel/app) creá una aplicación (producto: *Checkout Pro*) y copiá el **Access Token de producción**. Para probar sin cobrar, usá primero el de prueba con usuarios de prueba.
