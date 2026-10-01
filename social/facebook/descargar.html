@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Descargar imágenes · Templo Ninja</title>
+<style>
+:root{color-scheme:light;--ink:#141a21;--jade:#0b6e69;--sand:#f4ebdd;--gold:#e0a126;--line:#d2d8df}
+*{box-sizing:border-box}body{margin:0;background:var(--sand);color:var(--ink);font-family:Arial,sans-serif}
+main{width:min(1120px,calc(100% - 32px));margin:48px auto}h1{font-size:clamp(36px,6vw,68px);margin:0 0 12px}.intro{font-size:20px;line-height:1.5;max-width:760px}
+.actions{display:flex;gap:12px;flex-wrap:wrap;margin:28px 0 36px}.button{border:0;border-radius:999px;background:var(--jade);color:white;font:700 17px Arial;padding:15px 24px;cursor:pointer;text-decoration:none}.button.alt{background:white;color:var(--ink);border:1px solid var(--line)}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}.card{background:white;border:1px solid var(--line);border-radius:22px;padding:16px;box-shadow:0 12px 30px #141a2112}.card img{display:block;width:100%;border-radius:12px}.card h2{font-size:20px;margin:16px 0 12px}.card .button{display:inline-block;font-size:15px;padding:12px 18px}.status{min-height:24px;font-weight:700;color:var(--jade)}
+@media(max-width:700px){main{margin-top:24px}.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main>
+  <h1>Imágenes de Templo Ninja</h1>
+  <p class="intro">Las cuatro piezas están listas en 1080 × 1080. Podés descargar cada PNG por separado o usar el botón para descargarlas todas.</p>
+  <div class="actions">
+    <button class="button" id="download-all">Descargar las 4 imágenes</button>
+    <a class="button alt" href="README.md">Ver copies y calendario</a>
+  </div>
+  <p class="status" id="status" aria-live="polite"></p>
+  <section class="grid" id="gallery"></section>
+</main>
+<script>
+const images = [
+  ['01-bienvenida-templo-ninja', 'Bienvenida al templo'],
+  ['02-desafio-velocidad', 'Desafío de velocidad'],
+  ['03-ninja-mental', 'Ninja mental'],
+  ['04-desafia-amigo', 'Desafiá a un amigo']
+];
+const gallery = document.querySelector('#gallery');
+const status = document.querySelector('#status');
+for (const [name, title] of images) {
+  const card = document.createElement('article');
+  card.className = 'card';
+  card.innerHTML = `<img src="${name}.svg" alt="${title}" width="1080" height="1080"><h2>${title}</h2><button class="button" data-name="${name}">Descargar PNG</button>`;
+  gallery.append(card);
+}
+async function svgToPng(name) {
+  const response = await fetch(`${name}.svg`);
+  if (!response.ok) throw new Error(`No se pudo abrir ${name}.svg`);
+  const svg = await response.text();
+  const blob = new Blob([svg], {type: 'image/svg+xml'});
+  const url = URL.createObjectURL(blob);
+  try {
+    const image = new Image();
+    await new Promise((resolve, reject) => { image.onload = resolve; image.onerror = reject; image.src = url; });
+    const canvas = document.createElement('canvas');
+    canvas.width = 1080; canvas.height = 1080;
+    canvas.getContext('2d').drawImage(image, 0, 0, 1080, 1080);
+    return await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+  } finally { URL.revokeObjectURL(url); }
+}
+async function download(name) {
+  status.textContent = `Preparando ${name}.png…`;
+  const blob = await svgToPng(name);
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url; link.download = `${name}.png`; link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+gallery.addEventListener('click', async event => {
+  const name = event.target.dataset.name;
+  if (!name) return;
+  try { await download(name); status.textContent = 'Imagen descargada.'; }
+  catch (error) { status.textContent = error.message; }
+});
+document.querySelector('#download-all').addEventListener('click', async () => {
+  try {
+    for (const [name] of images) { await download(name); await new Promise(resolve => setTimeout(resolve, 350)); }
+    status.textContent = 'Las cuatro descargas están listas.';
+  } catch (error) { status.textContent = error.message; }
+});
+</script>
+</body>
+</html>

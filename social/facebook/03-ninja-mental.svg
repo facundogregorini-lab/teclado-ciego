@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080">
+  <rect width="1080" height="1080" fill="#E8EBEF"/>
+  <path d="M0 0H1080V210Q790 310 540 200T0 220Z" fill="#0B6E69"/>
+  <text x="70" y="87" font-family="Arial, sans-serif" font-size="26" font-weight="800" letter-spacing="5" fill="#D3EBE8">TEMPLO NINJA</text>
+  <text x="70" y="160" font-family="Arial, sans-serif" font-size="62" font-weight="900" fill="#FFFFFF">TU MENTE SE ENTRENA</text>
+  <g transform="translate(540 455)">
+    <circle r="190" fill="#FFFFFF" stroke="#141A21" stroke-width="16"/>
+    <path d="M-115 5 C-155-120-20-170 8-92 C45-176 167-118 118-14 C190 72 81 164 7 106 C-75 177-181 79-115 5Z" fill="#E0A126" stroke="#141A21" stroke-width="13"/>
+    <path d="M0-103V111 M-105-8H105 M-70-85Q-23-29-74 32 M77-78Q25-29 81 28 M-74 34Q-28 70-43 115 M79 30Q27 72 44 111" fill="none" stroke="#141A21" stroke-width="12" stroke-linecap="round"/>
+    <path d="M-173-44 Q0-144 173-44 L148 17 Q0-61-148 17Z" fill="#0B6E69"/>
+    <path d="M-85-27 Q-45-52-5-24 Q-45 13-85-27 M5-24 Q45-52 85-27 Q45 13 5-24" fill="#141A21"/>
+  </g>
+  <g font-family="Arial, sans-serif" font-weight="900" text-anchor="middle">
+    <rect x="92" y="714" width="268" height="108" rx="28" fill="#FFFFFF"/><text x="226" y="782" font-size="32" fill="#141A21">FIGURAS</text>
+    <rect x="406" y="714" width="268" height="108" rx="28" fill="#FFFFFF"/><text x="540" y="782" font-size="32" fill="#141A21">NÚMEROS</text>
+    <rect x="720" y="714" width="268" height="108" rx="28" fill="#FFFFFF"/><text x="854" y="782" font-size="32" fill="#141A21">INGLÉS</text>
+  </g>
+  <text x="540" y="900" text-anchor="middle" font-family="Arial, sans-serif" font-size="47" font-weight="900" fill="#141A21">DESAFÍO DE 3 MINUTOS</text>
+  <rect x="363" y="945" width="354" height="77" rx="39" fill="#0B6E69"/>
+  <text x="540" y="996" text-anchor="middle" font-family="Arial, sans-serif" font-size="28" font-weight="900" fill="#FFFFFF">ACEPTÁ EL RETO</text>
+</svg>
