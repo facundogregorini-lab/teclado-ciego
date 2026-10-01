@@ -95,6 +95,39 @@ window.Figures = (() => {
   const sentence = rules => { const t = rules.map(r => r.txt); const s = t.length > 1 ? t.slice(0, -1).join(', ') + ' y ' + t[t.length - 1] : t[0]; return s[0].toUpperCase() + s.slice(1) + '.'; };
 
   /* ---------- Series: which figure comes next ---------- */
+  /* ---------- Techniques: a tip before answering (how to approach it) and one after (for the rule that was used) ---------- */
+  const TIPS = {
+    serie: [
+      'Mirá un atributo por vez: forma, relleno, cantidad, posición del punto y giro. Anotá mentalmente qué cambia y qué se queda quieto.',
+      'Compará solo dos figuras seguidas: lo que cambia entre ellas es la regla. Después confirmalo con el resto de la serie.',
+      'Antes de mirar las opciones, imaginá cómo debería ser la próxima figura. Después buscá la opción que coincide.',
+      'Descartá rápido: si ya sabés que el relleno tiene que ser negro, eliminá todas las opciones que no lo son y seguí con las demás.',
+    ],
+    matriz: [
+      'Recorré primero las filas: ¿algo se mantiene igual en toda la fila? Después hacé lo mismo con las columnas.',
+      'Si en cada fila aparecen los mismos tres valores en distinto orden, al casillero vacío le toca el que falta en su fila y en su columna.',
+      'Trabajá atributo por atributo: primero resolvé la forma, después el relleno, después la cantidad. No intentes ver todo junto.',
+      'La última fila y la última columna son las que definen el casillero vacío: concentrate en ellas.',
+    ],
+    distinta: [
+      'Primero buscá qué tienen en común cuatro figuras, no qué tiene de raro una.',
+      'Revisá en orden: forma, relleno, cantidad (¿par o impar?) y relaciones (¿la cantidad coincide con los lados? ¿la flecha apunta al punto?).',
+      'Si a simple vista nada es distinto, la regla es una relación entre dos atributos, no un atributo solo.',
+    ],
+  };
+  const AFTER = {
+    rot: 'Para los giros, medí el ángulo entre dos figuras seguidas: media esquina son 45°, un cuarto de vuelta son 90°.',
+    pos: 'Para el punto que se mueve, contá cuántos lugares salta entre una figura y la siguiente, siempre en el mismo sentido.',
+    count: 'Para la cantidad, contá las figuras de cada paso y fijate si suma o resta siempre lo mismo.',
+    fill: 'Los rellenos suelen repetirse en ciclos de 2 o 3: encontrá el ciclo y seguilo.',
+    shape: 'Si cambia la forma, buscá el ciclo de formas que se repite.',
+    latin: 'Regla de "una vez por fila y columna": al casillero vacío le toca el valor que todavía no apareció en su fila.',
+    line: 'Si un atributo depende de la fila (o de la columna), mirá cómo es en el resto de la última fila (o columna).',
+    shapeOdd: 'Cuando cuatro comparten la forma o el relleno, no te distraigas con lo que cambia a propósito (cantidad, relleno): es ruido.',
+    parity: 'Contá las figuras de cada opción y fijate si son pares o impares: es una regla muy común en estos tests.',
+    sides: 'Relación entre atributos: compará la cantidad de figuras con la cantidad de lados de cada una.',
+    points: 'Relación entre atributos: seguí la dirección de cada flecha y fijate si apunta al punto.',
+  };
   const RULES_BY_D = { 1: 1, 2: 1, 3: 2, 4: 2, 5: 3 };
   function serie(d) {
     const n = RULES_BY_D[d];
@@ -106,7 +139,7 @@ window.Figures = (() => {
     const rules = attrs.map(a => makeRule(a, d, base));
     const at = i => { const t = { ...base }; for (const r of rules) t[r.attr] = r.at(i); return t; };
     const seq = [0, 1, 2, 3, 4].map(at);
-    return { kind: 'serie', prompt: '¿Qué figura sigue en la serie?', seq, ...choices(at(5), attrs, d <= 2 ? 4 : 5), explain: sentence(rules) };
+    return { kind: 'serie', prompt: '¿Qué figura sigue en la serie?', seq, ...choices(at(5), attrs, d <= 2 ? 4 : 5), explain: sentence(rules), tip: pick(TIPS.serie), after: attrs.map(a => AFTER[a]).join(' ') };
   }
 
   /* ---------- Matrices: complete the 3×3 grid ---------- */
@@ -130,7 +163,7 @@ window.Figures = (() => {
     });
     const at = (r, c) => { const t = { ...base }; for (const ru of rules) t[ru.attr] = ru.at(r, c); return t; };
     const grid = [0, 1, 2].flatMap(r => [0, 1, 2].map(c => at(r, c))).slice(0, 8);
-    return { kind: 'matriz', prompt: '¿Qué figura completa la matriz?', grid, ...choices(at(2, 2), attrs, d <= 2 ? 4 : 5), explain: sentence(rules) };
+    return { kind: 'matriz', prompt: '¿Qué figura completa la matriz?', grid, ...choices(at(2, 2), attrs, d <= 2 ? 4 : 5), explain: sentence(rules), tip: pick(TIPS.matriz), after: modes.includes('latin') ? AFTER.latin : AFTER.line };
   }
 
   /* ---------- Odd one out ---------- */
@@ -164,12 +197,12 @@ window.Figures = (() => {
       }
       if (variant !== 'parity') free.push('parity'); // an even/odd count must not single out another figure
       if (new Set(tiles.map(key)).size < 5 || !noFalseRule(tiles, free)) continue;
-      return { kind: 'distinta', prompt: '¿Cuál figura es distinta a las demás?', options: tiles, answer: odd, explain };
+      return { kind: 'distinta', prompt: '¿Cuál figura es distinta a las demás?', options: tiles, answer: odd, explain, tip: pick(TIPS.distinta), after: AFTER[{ shape: 'shapeOdd', fill: 'shapeOdd' }[variant] || variant] };
     }
     return distinta(Math.max(1, d - 1));
   }
 
   // Every puzzle remembers its difficulty (the 3-minute run scores right answers by it).
   const make = Object.fromEntries(Object.entries({ serie, matriz, distinta }).map(([k, fn]) => [k, d => ({ ...fn(d), d })]));
-  return { make, draw, KINDS: Object.keys(make) };
+  return { make, draw, KINDS: Object.keys(make), TIPS };
 })();
