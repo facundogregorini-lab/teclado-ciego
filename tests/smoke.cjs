@@ -41,10 +41,10 @@ function typeText(page) {
     const firstScene = await a.getAttribute('html', 'data-hero-scene');
     await a.waitForFunction(s => document.documentElement.dataset.heroScene !== s, firstScene, { timeout: 10000 });
     check('The hero changes landscape by itself', await a.locator('.hero-slides .slide.on').count() === 1);
-    const levels = await a.$$eval('.evo-card b', els => els.map(e => e.textContent));
+    const levels = await a.$$eval('#learning .evo-card b', els => els.map(e => e.textContent));
     check('Each group is its own level, with the final one at the end', levels.join() === 'Nivel chimpancé,Nivel bebé,Nivel niño,Nivel indigente,Nivel intelectual,Nivel premio Nobel');
-    check('Each level shows its own typist', new Set(await a.$$eval('.evo-card svg', els => els.map(e => e.innerHTML))).size === 6);
-    check('Levels not started look locked', await a.locator('.evo-art.locked').count() === 6);
+    check('Each level shows its own typist', new Set(await a.$$eval('#learning .evo-card svg', els => els.map(e => e.innerHTML))).size === 6);
+    check('Levels not started look locked', await a.locator('#learning .evo-art.locked').count() === 6);
     await a.click('#continue');
     await a.locator('.scene-picker [data-scene="forest"]').press('Space');
     check('Changing the landscape by keyboard does not type into the exercise',
@@ -52,6 +52,11 @@ function typeText(page) {
     await a.click('.main-nav a[href="#learning"]');
     check('Lesson navigation returns home', await a.isVisible('#home') && await a.isHidden('#lesson'));
     check('Guests see the login button', (await a.textContent('#acctBtn')).trim() === 'Entrar');
+    check('The home has a general hero, a big card per section and the rankings before the sections', await a.evaluate(() => {
+      const order = ['heroTitle', 'sections', 'ranking', 'teclado', 'cog'].map(id => document.getElementById(id));
+      return order.every((el, i) => !i || order[i - 1].compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING);
+    }) && (await a.textContent('#heroTitle')).includes('Desarrollá tus habilidades') && await a.locator('.sc-card').count() === 2);
+    check('The ranking has a general board and one per section', (await a.textContent('#rankView')).includes('General') && await a.locator('#rankView button').count() === 5);
     check('The header shows Ninja mental right after the brand', await a.evaluate(() => document.getElementById('homeBtn').nextElementSibling.id === 'cogCta') && (await a.textContent('#cogCta')).includes('Ninja mental'));
     check('The upgrade CTA sits left of the login, also for guests', await a.isVisible('#upgradeCta') && await a.evaluate(() => document.getElementById('upgradeCta').nextElementSibling.id === 'acctBtn'));
     await a.click('#upgradeCta');
@@ -69,7 +74,7 @@ function typeText(page) {
     check('The lesson result shows the level progress', (await a.textContent('.result-evo')).includes('1 de 6 lecciones'));
     await a.waitForTimeout(300);
     await a.click('#rHome');
-    check('The started level is no longer locked', await a.getAttribute('.evo-card >> nth=0', 'data-done') === '1' && await a.locator('.evo-art.locked').count() === 5);
+    check('The started level is no longer locked', await a.getAttribute('#learning .evo-card >> nth=0', 'data-done') === '1' && await a.locator('#learning .evo-art.locked').count() === 5);
 
     // On-screen keyboards (Android reports keys as "Unidentified"): text arrives only as input
     await a.click('.lc >> nth=19');
@@ -163,7 +168,7 @@ function typeText(page) {
 
     // Interview training: abstract figures, same design as the lessons
     await a.click('#cogCta');
-    check('The header CTA opens Ninja mental', await a.isVisible('#cog') && await a.isHidden('#home') && a.url().endsWith('#ninja'));
+    check('The header CTA takes you to Ninja mental, on the same page', await a.isVisible('#cog') && await a.isVisible('#home') && a.url().endsWith('#ninja'));
     const cogLevels = await a.$$eval('#cogPath .evo-card b', els => els.map(e => e.textContent));
     check('Each training level has its own typist', cogLevels.join() === 'Nivel chimpancé,Nivel bebé,Nivel niño,Nivel indigente,Nivel intelectual,Nivel premio Nobel');
     check('There are 15 sessions and the mock test', await a.locator('#cogPath .lc').count() === 16);
@@ -191,20 +196,21 @@ function typeText(page) {
     check('The mock test says who you solve like', (await a.textContent('#qResult .house-copy h4')).length > 0 && await a.isVisible('#qResult .typist-art'));
     await a.click('#qrHome');
     check('The best mock test is shown', (await a.textContent('#cBest')).endsWith('%'));
-    // 3-minute run: series one after another, harder with every 3 right answers, then score and IQ
+    // 5-minute run: figures, numbers and English in turn, harder with every 3 right answers, then score and IQ
     // Remember each generated series to answer it right (the page has no way to show the answer before choosing)
-    await a.evaluate(() => { const make = Figures.make.serie; Figures.make.serie = d => (window.lastQ = make(d)); });
+    await a.evaluate(() => { for (const G of [Figures, Numeric, English]) for (const k of Object.keys(G.make)) { const f = G.make[k]; G.make[k] = (d, u) => (window.lastQ = f(d, u)); } });
     await a.click('#maxBtn');
-    check('The 3-minute run first explains how it works', await a.isVisible('#qIntro') && await a.isHidden('#qPlay') && (await a.textContent('#qTime')) === '3:00');
+    check('The 5-minute run first explains how it works', await a.isVisible('#qIntro') && await a.isHidden('#qPlay') && (await a.textContent('#qTime')) === '5:00');
     await a.waitForTimeout(1200);
-    check('The clock waits for "Empezar"', (await a.textContent('#qTime')) === '3:00');
+    check('The clock waits for "Empezar"', (await a.textContent('#qTime')) === '5:00');
     await a.keyboard.press('Enter');
-    check('The 3-minute run starts with a series and a way to finish', await a.isVisible('#qFig .fig') && await a.isVisible('#qEnd'));
-    for (let i = 0; i < 5; i++) { await a.keyboard.press(String(1 + await a.evaluate(i => i === 4 ? (lastQ.answer + 1) % lastQ.options.length : lastQ.answer, i))); await a.waitForTimeout(700); }
+    check('The 5-minute run starts with a series and a way to finish', await a.isVisible('#qFig .fig') && await a.isVisible('#qEnd'));
+    for (let i = 0; i < 5; i++) { await a.keyboard.press(String(1 + await a.evaluate(i => i === 4 ? (lastQ.answer + 1) % lastQ.options.length : lastQ.answer, i))); await a.waitForTimeout(1300); }
     check('The run counts answers and points as it goes', (await a.textContent('#qNum')) === '5' && (await a.textContent('#qOk')) !== '0' && (await a.textContent('#qNumLbl')) === 'respondidas');
     check('Every 3 right answers the difficulty goes up', (await a.textContent('#qGroup')).includes('dificultad 2 de 5'));
+    check('The run mixes figures, numbers and English', await a.evaluate(() => window.lastQ.kind === 'conectores') && await a.isVisible('#qFig .q-gap'));
     check('Each answer says what happened', (await a.textContent('#qFlash')).startsWith('✗ Era la'));
-    await a.evaluate(() => { const now = performance.now.bind(performance); performance.now = () => now() + 181000; });
+    await a.evaluate(() => { const now = performance.now.bind(performance); performance.now = () => now() + 301000; });
     await a.waitForSelector('#qResult:not([hidden]) .iq');
     check('The run ends with a score and a playful IQ', /^IQ \d+$/.test(await a.textContent('#qResult .iq')) && (await a.textContent('#qResult .nums')).includes('efectividad') && (await a.textContent('#qResult')).includes('no un test de IQ real'));
     await a.waitForFunction(() => document.querySelector('#ninjaRankLine')?.textContent.includes('#1'));
@@ -227,7 +233,7 @@ function typeText(page) {
     // Numerical reasoning and English tracks, with a technique (tip) in every question
     await a.evaluate(() => { for (const G of [Numeric, English]) for (const k of Object.keys(G.make)) { const f = G.make[k]; G.make[k] = (d, u) => { const q = f(d, u); (window.qlog ||= []).push(q); return q; }; } });
     await a.click('#cogTracks [data-v="num"]');
-    check('Ninja mental has a numerical reasoning track', (await a.textContent('#cogTitle')).includes('Con números') && (await a.textContent('#cogKinds')).includes('Técnicas') && await a.locator('#cogPath .lc').count() === 16);
+    check('Ninja mental has a numerical reasoning track', (await a.textContent('#cogTitle')).includes('Razonamiento numérico') && (await a.textContent('#cogKinds')).includes('Técnicas') && await a.locator('#cogPath .lc').count() === 16);
     await a.evaluate(() => { window.qlog = []; });
     await a.click('#cogContinue');
     check('A numerical session shows a table, a tip and text options', await a.isVisible('#qFig .q-table') && await a.isVisible('#qTip') && (await a.textContent('#qTip')).includes('Técnica') && await a.locator('#qOpts .opt-txt').count() === 4);
@@ -238,7 +244,7 @@ function typeText(page) {
     check('Chart questions draw a bar chart', await a.locator('#qFig svg.q-chart rect.bar').count() === 8);
     await a.keyboard.press('Escape');
     await a.click('#cogTracks [data-v="eng"]');
-    check('Ninja mental has an English track', (await a.textContent('#cogTitle')).includes('En inglés'));
+    check('Ninja mental has an English track', (await a.textContent('#cogTitle')).includes('Inglés para el trabajo'));
     await a.evaluate(() => { window.qlog = []; });
     await a.click('#cogContinue');
     check('Reading questions are True / False / Cannot say', (await a.textContent('#qOpts')).includes('Cannot say') && await a.locator('#qOpts .opt').count() === 3 && await a.isVisible('#qFig .q-stmt'));
@@ -261,6 +267,10 @@ function typeText(page) {
     check('Lessons are one click away', await a.isVisible('#home') && !a.url().includes('#ninja'));
     await a.click('#rankView [data-v="ninja"]');
     check('The main ranking has a Ninja tab', (await a.textContent('#rankList li.me')).includes('IQ'));
+    await a.click('#rankView [data-v="cog"]');
+    check('The Ninja mental progress ranking lists the user or says how to join', (await a.locator('#rankList li.me').count()) ? (await a.textContent('#rankList li.me')).includes('sesiones') : /Aprobá una sesión|Estrenalo/.test(await a.textContent('#rankNote')));
+    await a.click('#rankView [data-v="general"]');
+    check('The general ranking adds everything up', (await a.textContent('#rankList li.me')).includes('pts'));
     await a.click('#rankView [data-v="progress"]');
 
     // Challenge a friend: the link carries the score
@@ -297,9 +307,9 @@ function typeText(page) {
     await nf.goto(SITE + '/?de=ana&ninja=12#ninja');
     check('A ninja challenge opens Ninja mental with the banner', await nf.isVisible('#cog') && (await nf.textContent('#challengeTitle')).includes('ana te desafía en Ninja mental'));
     await nf.click('#challengeAccept');
-    check('Accepting starts the 3-minute run', (await nf.textContent('#qName')) === 'Desafío de 3 minutos');
+    check('Accepting starts the 5-minute run', (await nf.textContent('#qName')) === 'Desafío de 5 minutos');
     await nf.click('#qGo');
-    await nf.evaluate(() => { const now = performance.now.bind(performance); performance.now = () => now() + 181000; });
+    await nf.evaluate(() => { const now = performance.now.bind(performance); performance.now = () => now() + 301000; });
     await nf.waitForSelector('#qResult:not([hidden]) .challenge-result');
     check('The friend learns who won the ninja challenge', (await nf.textContent('.challenge-result')).includes('ana'));
     await b.fill('#pass', 'secreto1'); await b.click('#authSubmit');
