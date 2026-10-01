@@ -270,18 +270,61 @@ dialog::backdrop{background:rgba(10,14,18,.45)}
         <div class="slide" data-scene="forest"><div class="frame"></div></div>
       </div>
       <div class="hero-copy">
-        <span class="eyebrow"><span class="sun-mark" aria-hidden="true">✳</span> UN MOMENTO PARA VOS</span>
-        <h1 id="heroTitle">Escribí sin mirar.<br><em>A tu ritmo.</em></h1>
-        <p>Soltá la vista del teclado. Encontrá tu ritmo.<br> Unas pocas teclas por día, un poco más de libertad.</p>
+        <span class="eyebrow"><span class="sun-mark" aria-hidden="true">✳</span> TECLADO CIEGO · NINJA MENTAL</span>
+        <h1 id="heroTitle">Desarrollá tus habilidades.<br><em>Divirtiéndote.</em></h1>
+        <p>Escribí sin mirar el teclado, entrená para los tests de las entrevistas y desafiá a tus amigos. Unos minutos por día, con personajes que evolucionan con vos: de chimpancé a alien.</p>
         <div class="actions">
-          <button class="btn primary" id="continue"></button>
-          <button class="btn" id="testBtn">Medir mi velocidad <span aria-hidden="true">↗</span></button>
+          <a class="btn primary" href="#sections">Elegí por dónde empezar <span aria-hidden="true">↓</span></a>
+          <a class="btn" href="#ranking">Ver el ranking</a>
         </div>
-        <span class="hero-note">26 lecciones cortas · De chimpancé a alien, una lección a la vez</span>
         <span class="plan-note" id="planNote" hidden></span>
       </div>
       <div class="landscape-note"><span id="sceneCaption">Un respiro junto al mar</span><span class="hero-dots" aria-hidden="true"><i></i><i></i><i></i></span></div>
     </section>
+    <section class="sections-cta" id="sections" aria-label="Secciones">
+      <article class="sc-card sc-type">
+        <div class="sc-top"><span class="sc-icon" aria-hidden="true">⌨️</span><div><span class="eyebrow">SECCIÓN 1</span><h2>Teclado Ciego</h2></div></div>
+        <p>Aprendé a escribir sin mirar el teclado: 26 lecciones cortas con guía de dedos, mediciones de velocidad y tu evolución en cada nivel.</p>
+        <div class="sc-stats"><div><b id="scLessons">0/26</b><span>lecciones</span></div><div><b id="scPpm">—</b><span>mejor ppm</span></div></div>
+        <div class="actions">
+          <button class="btn primary big" id="continue"></button>
+          <button class="btn" id="testBtn">Medir mi velocidad <span aria-hidden="true">↗</span></button>
+        </div>
+        <a class="sc-more" href="#teclado">Ver la sección completa ↓</a>
+      </article>
+      <article class="sc-card sc-ninja">
+        <div class="sc-top"><span class="sc-icon" aria-hidden="true">🥷</span><div><span class="eyebrow">SECCIÓN 2</span><h2>Ninja mental</h2></div></div>
+        <p>Entrená para los tests de las entrevistas laborales: figuras abstractas, razonamiento numérico e inglés para el trabajo, con técnicas en cada ejercicio.</p>
+        <div class="sc-stats"><div><b id="scSessions">0/45</b><span>sesiones</span></div><div><b id="scIq">—</b><span>mejor IQ ninja</span></div></div>
+        <div class="actions">
+          <button class="btn primary big" id="scNinja">Entrenar</button>
+          <button class="btn" id="scMax">Desafío de 5 minutos <span aria-hidden="true">⚡</span></button>
+        </div>
+        <a class="sc-more" href="#cog">Ver la sección completa ↓</a>
+      </article>
+    </section>
+    <section class="ranking" id="ranking" aria-labelledby="rankTitle">
+      <div class="rank-head">
+        <div>
+          <span class="eyebrow">TODOS LOS QUE PRACTICAN</span>
+          <h2 id="rankTitle" class="rank-title">Ranking</h2>
+          <p id="rankLead">El general suma todo: estrellas de las lecciones y de Ninja mental, tu mejor velocidad y tu mejor desafío. También hay ranking de cada sección. Aparecés con tu usuario cuando entrás con tu cuenta.</p>
+        </div>
+        <div class="rank-tabs" role="group" aria-label="Tipo de ranking" id="rankView">
+          <button data-v="general" aria-pressed="true"><b>🏆 General</b></button>
+          <span class="rt-group">⌨️ Teclado Ciego</span>
+          <button data-v="progress" aria-pressed="false">Avance</button>
+          <button data-v="speed" aria-pressed="false">Velocidad</button>
+          <span class="rt-group">🥷 Ninja mental</span>
+          <button data-v="cog" aria-pressed="false">Avance</button>
+          <button data-v="ninja" aria-pressed="false">Desafío</button>
+        </div>
+      </div>
+      <ol class="rank-list" id="rankList" aria-live="polite"></ol>
+      <p class="rank-note" id="rankNote"></p>
+    </section>
+    <section class="block" id="teclado" aria-labelledby="typingTitle">
+      <div class="block-head"><span class="sc-icon" aria-hidden="true">⌨️</span><div><span class="eyebrow">SECCIÓN 1 · TECLADO CIEGO</span><h2 id="typingTitle">Escribí sin mirar. <em>A tu ritmo.</em></h2><p>Soltá la vista del teclado. Unas pocas teclas por día, un poco más de libertad.</p></div></div>
     <section class="progress-summary" aria-label="Tu progreso">
       <div class="summary-intro"><span class="eyebrow">PASO A PASO</span><p>Cada tecla cuenta.</p></div>
       <div class="stats">
@@ -329,25 +372,9 @@ dialog::backdrop{background:rgba(10,14,18,.45)}
       <div class="chart" id="chart"><svg id="chartSvg" role="img" aria-label="Palabras por minuto en cada medición, por método"></svg><div class="tt" id="tt" hidden></div></div>
       <div class="hist" id="evoTable" hidden></div>
     </section>
-    <section class="ranking" id="ranking" aria-labelledby="rankTitle">
-      <div class="rank-head">
-        <div>
-          <span class="eyebrow">TODOS LOS QUE PRACTICAN</span>
-          <h2 id="rankTitle" class="rank-title">Ranking</h2>
-          <p id="rankLead">Quién avanzó más en las lecciones, quién escribe más rápido y quién tiene el IQ ninja más alto. Aparecés con tu usuario cuando entrás con tu cuenta.</p>
-        </div>
-        <div class="seg" role="group" aria-label="Tipo de ranking" id="rankView">
-          <button data-v="progress" aria-pressed="true">Avance</button>
-          <button data-v="speed" aria-pressed="false">Velocidad</button>
-          <button data-v="ninja" aria-pressed="false">Ninja</button>
-        </div>
-      </div>
-      <ol class="rank-list" id="rankList" aria-live="polite"></ol>
-      <p class="rank-note" id="rankNote"></p>
     </section>
-  </main>
-
-  <main id="cog" hidden>
+    <section class="block" id="cog" aria-labelledby="cogBlockTitle">
+      <div class="block-head"><span class="sc-icon" aria-hidden="true">🥷</span><div><span class="eyebrow">SECCIÓN 2 · NINJA MENTAL</span><h2 id="cogBlockTitle">Pensá rápido. <em>Ganá la entrevista.</em></h2><p>Los tests que usan las empresas para elegir candidatos, en tres pistas con niveles, técnicas y simulacros.</p></div></div>
     <nav class="track-tabs" id="cogTracks" aria-label="Pistas de Ninja mental">
       <button data-v="fig" aria-pressed="true"><span class="ti">🔷</span><b>Figuras abstractas</b><small></small></button>
       <button data-v="num" aria-pressed="false"><span class="ti">📊</span><b>Razonamiento numérico</b><small></small></button>
@@ -355,8 +382,8 @@ dialog::backdrop{background:rgba(10,14,18,.45)}
     </nav>
     <section class="cog-hero" aria-labelledby="cogTitle">
       <div>
-        <span class="eyebrow">🥷 NINJA MENTAL · TESTS DE ENTREVISTAS</span>
-        <h1 id="cogTitle">Pensá rápido.<br><em>Con figuras.</em></h1>
+        <span class="eyebrow" id="cogEyebrow">TU PISTA</span>
+        <h3 id="cogTitle" class="cog-title">🔷 Figuras abstractas</h3>
         <p id="cogBlurb"></p>
         <p class="cog-learn">💡 Cada pregunta trae una técnica para resolverla mejor, y cada respuesta, su explicación.</p>
         <div class="actions">
@@ -368,11 +395,11 @@ dialog::backdrop{background:rgba(10,14,18,.45)}
     </section>
     <section class="ninja-max" aria-labelledby="maxTitle">
       <div class="nm-copy">
-        <span class="eyebrow">DESAFÍO DE 3 MINUTOS</span>
+        <span class="eyebrow">DESAFÍO DE 5 MINUTOS</span>
         <h2 id="maxTitle">¿Cuánto da tu IQ ninja?</h2>
-        <p>Adiviná todas las secuencias que puedas en 3 minutos. Cada acierto sube la dificultad. Al final calculamos tu puntaje según cuántas respondiste y qué tan bien, y estimamos tu IQ. Es un juego, no un test de IQ real.</p>
+        <p>Resolvé todas las que puedas en 5 minutos: figuras, números e inglés, mezclados. Cada 3 aciertos sube la dificultad. Al final calculamos tu puntaje según cuántas respondiste y qué tan bien, y estimamos tu IQ. Es un juego, no un test de IQ real.</p>
         <div class="actions">
-          <button class="btn primary" id="maxBtn">Empezar el desafío <small>3 min</small></button>
+          <button class="btn primary" id="maxBtn">Empezar el desafío <small>5 min</small></button>
           <button class="btn" id="maxInvite">Desafiar a un amigo</button>
         </div>
         <p class="nm-best" id="maxBest"></p>
@@ -396,6 +423,7 @@ dialog::backdrop{background:rgba(10,14,18,.45)}
       <div class="section-heading"><div><span class="eyebrow">TU CAMINO</span><h2 id="cogPathTitle">De chimpancé a premio Nobel.</h2></div><span>15 sesiones · 1 simulacro</span></div>
       <div class="path" id="cogPath"></div>
     </section>
+    </section>
   </main>
 
   <main id="quiz" class="lesson" hidden>
@@ -413,12 +441,12 @@ dialog::backdrop{background:rgba(10,14,18,.45)}
     <div class="progress"><i id="qBar"></i></div>
     <div class="stage" id="qStage">
       <div class="q-intro" id="qIntro" hidden>
-        <span class="eyebrow">DESAFÍO DE 3 MINUTOS</span>
-        <h3>Adiviná todas las secuencias que puedas</h3>
+        <span class="eyebrow">DESAFÍO DE 5 MINUTOS</span>
+        <h3>Resolvé todas las que puedas</h3>
         <button class="btn primary" id="qGo">Empezar: el reloj arranca ya <small>Enter</small></button>
         <ol>
-          <li>Mirá la serie y elegí la figura que sigue (con el mouse o con las teclas 1 a 5).</li>
-          <li>Al contestar aparece enseguida la próxima serie. Cada 3 aciertos, la dificultad sube.</li>
+          <li>Se alternan figuras, números e inglés. Elegí con el mouse o con las teclas 1 a 5.</li>
+          <li>Al contestar aparece enseguida la próxima pregunta. Cada 3 aciertos, la dificultad sube y cada acierto vale más.</li>
           <li>Cuando se termina el reloj (o si tocás <b>Terminar ahora</b>) ves tus puntos, tu IQ ninja y a quién te parecés.</li>
         </ol>
       </div>
@@ -825,6 +853,8 @@ function renderHome() {
   $('hDone').textContent = `${LESSONS.filter(l => S.lessons[l.id]?.stars >= 1).length}/${LESSONS.length}`;
   const bestTest = Math.max(0, S.test?.ppm || 0, ...S.tests.map(t => t.ppm));
   $('hBest').textContent = bestTest || '—';
+  $('scLessons').textContent = `${LESSONS.filter(l => S.lessons[l.id]?.stars >= 1).length}/${LESSONS.length}`;
+  $('scPpm').textContent = bestTest || '—';
   renderEvo();
   $('path').replaceChildren(...GROUPS.map((g, gi) => {
     const sec = document.createElement('section'); sec.className = 'group';
@@ -843,6 +873,7 @@ function renderHome() {
     sec.append(cards);
     return sec;
   }), Object.assign(document.createElement('section'), { className: 'group final', innerHTML: `<div class="group-head"><div><h2>La cima</h2><p>Después de los textos, el último salto de la evolución.</p></div>${evoCard(FINAL)}</div>` }));
+  renderCog();
 }
 
 /* ---------- Speed by method: cards, chart and table ---------- */
@@ -954,7 +985,7 @@ const fmt = ms => { const s = Math.max(0, Math.round(ms / 1000)); return Math.fl
 
 function show(view) {
   document.body.dataset.view = view;
-  for (const v of ['home', 'lesson', 'cog', 'quiz']) $(v).hidden = view !== v;
+  for (const v of ['home', 'lesson', 'quiz']) $(v).hidden = view !== v;
   scrollTo({ top: 0 });
 }
 let testMethod = 'ciegas';
@@ -1309,7 +1340,7 @@ async function loadAccount() {
   merge(data.progress); save();
   history = data.history;
   if (JSON.stringify(progress()) !== before) await api('data', { type: 'progress', progress: progress() });
-  $('layout').value = S.layout; applyLayout(); applyKbMode(); applyAccentMode(); renderHome(); if (mode === 'cog') renderCog();
+  $('layout').value = S.layout; applyLayout(); applyKbMode(); applyAccentMode(); renderHome();
 }
 let pushTimer = 0;
 function pushProgress() {
@@ -1350,7 +1381,7 @@ function signedOut(msg) {
   try { localStorage.removeItem(TOKEN); } catch {}
   S.lessons = {}; S.test = null; S.tests = []; S.cog = {}; S.sims = []; S.ninja = { best: null, runs: [] }; save();
   Object.assign(billing, { premium: false, plays: 0, gift: false, subscription: null });
-  renderAccountBtn(); renderHome(); renderPlanNote(); loadRanking(); if (mode === 'cog') renderCog();
+  renderAccountBtn(); renderHome(); renderPlanNote(); loadRanking();
   if (msg) toast(msg);
 }
 let authMode = 'login';
@@ -1502,7 +1533,7 @@ function renderCog() {
   const T = TRACKS[cogTrack], all = SESSIONS[cogTrack], nx = nextSession(), anyDone = all.some(x => S.cog[x.id]);
   document.querySelectorAll('#cogTracks button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === cogTrack)));
   document.querySelectorAll('#cogTracks button small').forEach(el => { const ss = SESSIONS[el.parentElement.dataset.v]; el.textContent = `${ss.filter(x => S.cog[x.id]?.stars >= 1).length}/${ss.length} sesiones`; });
-  $('cogTitle').innerHTML = `Pensá rápido.<br><em>${T.title}</em>`;
+  $('cogTitle').innerHTML = `${T.icon} ${T.name}`;
   $('cogBlurb').textContent = T.blurb;
   $('cogContinue').innerHTML = `${anyDone ? 'Seguir' : 'Empezar'}: sesión ${nx.n} <small>${nx.name} · nivel ${tierShort(nx.g)}</small>`;
   $('simBtn').innerHTML = `Simulacro de entrevista <small>${T.sim.n} preguntas · ${T.sim.min} min</small>`;
@@ -1531,6 +1562,9 @@ function renderCog() {
     return sec;
   }), Object.assign(document.createElement('section'), { className: 'group final', innerHTML: `<div class="group-head"><div><h2>La cima</h2><p>El simulacro de entrevista: ${T.sim.n} preguntas mezcladas en ${T.sim.min} minutos, sin ayuda hasta el final. Te dice a quién te parecés y repasa tus errores con sus técnicas.</p></div>${cogCard(FINAL)}</div><div class="cards"><button class="lc" id="simCard"><span class="meta"><span>Simulacro</span></span><span class="caps"><span class="name">Simulacro de entrevista</span></span><span class="best">${best < 0 ? 'Sin intentos' : `Mejor: ${best}% · ${sims.length} ${sims.length === 1 ? 'intento' : 'intentos'}`}</span></button></div>` }));
   $('simCard').onclick = () => startQuiz('sim');
+  const allSessions = Object.values(SESSIONS).flat();
+  $('scSessions').textContent = `${allSessions.filter(x => S.cog[x.id]?.stars >= 1).length}/${allSessions.length}`;
+  $('scIq').textContent = S.ninja.best ? S.ninja.best.iq : '—';
   renderNinjaMax();
 }
 function setTrack(tr) {
@@ -1539,16 +1573,20 @@ function setTrack(tr) {
   renderCog();
 }
 document.querySelectorAll('#cogTracks button').forEach(b => b.onclick = () => setTrack(b.dataset.v));
+// Ninja mental is the second section of the home page: going there is going home and scrolling to it.
 function goCog() {
-  mode = 'cog'; running = false; clearInterval(timer);
+  goHome();
   if (location.hash !== '#ninja') window.history.replaceState(null, '', location.pathname + location.search + '#ninja');
-  show('cog'); renderCog();
+  $('cog').scrollIntoView({ block: 'start' });
 }
 
 let quiz = null;
-/* Desafío de 3 minutos: series one after another, one level harder every 3 right answers.
-   Score = points of the right answers (their difficulty) × accuracy; the IQ is a playful estimate from the score. */
-const NINJA_MS = 3 * 60000;
+/* Desafío de 5 minutos: questions from the three tracks in turn (figures, numbers, English), one level harder every 3
+   right answers. Score = points of the right answers (their difficulty) × accuracy; the IQ is a playful estimate. */
+const NINJA_MS = 5 * 60000;
+const NINJA_KINDS = ['serie', 'tabla', 'lectura', 'matriz', 'porcentaje', 'conectores', 'distinta', 'grafico', 'orden'];
+const genOf = kind => Object.values(TRACKS).find(t => t.kinds.some(k => k.id === kind)).gen;
+function ninjaQ() { const kind = NINJA_KINDS[quiz.qs.length % NINJA_KINDS.length]; return genOf(kind).make[kind](quiz.level, quiz.used); }
 const iqFor = score => Math.max(70, Math.min(160, Math.round(85 + 22 * Math.log(1 + (Number(score) || 0) / 4))));
 const iqTier = iq => [0, 115, 125, 130, 135, 140, 150].filter(v => iq >= v).length - 1;
 const IQ_JOKES = [
@@ -1584,9 +1622,10 @@ function setQuizLabels(ninja) {
 function startNinja() {
   if (!mayStart()) return;
   clearInterval(timer);
-  quiz = { ninja: true, qs: [Figures.make.serie(1)], i: 0, ok: 0, picks: [], points: 0, level: 1, limit: NINJA_MS, t0: 0 };
+  quiz = { ninja: true, qs: [], used: new Set(), i: 0, ok: 0, picks: [], points: 0, level: 1, limit: NINJA_MS, t0: 0 };
+  quiz.qs.push(ninjaQ());
   mode = 'nready'; counted = false; setQuizLabels(true);
-  $('qName').textContent = 'Desafío de 3 minutos'; $('qGroup').textContent = 'Ninja mental · dificultad 1 de 5';
+  $('qName').textContent = 'Desafío de 5 minutos'; $('qGroup').textContent = 'Ninja mental · dificultad 1 de 5';
   $('qNum').textContent = '0'; $('qOk').textContent = '0'; $('qTime').textContent = fmt(NINJA_MS); $('qBar').style.width = '0%';
   $('qTime').parentElement.classList.remove('low');
   $('qIntro').hidden = false; $('qPlay').hidden = true; $('qResult').hidden = true;
@@ -1596,7 +1635,7 @@ function beginNinja() {
   if (mode !== 'nready') return;
   mode = 'quiz'; quiz.t0 = performance.now();
   $('qIntro').hidden = true; $('qPlay').hidden = false;
-  $('qFlash').textContent = 'Elegí la figura que sigue.'; $('qFlash').className = 'q-flash';
+  $('qFlash').textContent = 'Figuras, números e inglés, mezclados. ¡Vamos!'; $('qFlash').className = 'q-flash';
   renderQ();
   timer = setInterval(qTick, 250); qTick();
 }
@@ -1620,7 +1659,7 @@ function renderQ() {
   $('qPrompt').textContent = q.prompt;
   const fig = qFigure(q);
   $('qFig').innerHTML = fig; $('qFig').hidden = !fig;
-  // The technique for this question, except in the mock test and the 3-minute run (as in a real test)
+  // The technique for this question, except in the mock test and the 5-minute run (as in a real test)
   $('qTip').hidden = !q.tip || quiz.sim || quiz.ninja;
   $('qTip').innerHTML = q.tip ? `💡 <b>Técnica:</b> ${escHtml(q.tip)}` : '';
   $('qOpts').className = 'q-opts' + (q.text ? ' txt' : q.kind === 'distinta' ? ' big' : '');
@@ -1646,15 +1685,15 @@ function answerQ(k) {
     if (right) quiz.points += pts;
     const before = quiz.level;
     quiz.level = Math.min(5, 1 + Math.floor(quiz.ok / 3));
-    $('qFlash').textContent = (right ? `✓ ¡Bien! +${pts} ${pts === 1 ? 'punto' : 'puntos'}` : `✗ Era la ${'ABCDE'[q.answer]}`) + (quiz.level > before ? ` · ¡Sube la dificultad a ${quiz.level}!` : ' · Va la siguiente serie');
+    $('qFlash').textContent = (right ? `✓ ¡Bien! +${pts} ${pts === 1 ? 'punto' : 'puntos'}` : `✗ Era la ${'ABCDE'[q.answer]}`) + (quiz.level > before ? ` · ¡Sube la dificultad a ${quiz.level}!` : ' · Va la siguiente');
     $('qFlash').className = 'q-flash ' + (right ? 'ok' : 'bad');
     $('qNum').textContent = quiz.i + 1; $('qOk').textContent = quiz.points;
     quiz.lock = true;
     setTimeout(() => {
       quiz.lock = false;
       if (mode !== 'quiz') return;
-      quiz.qs.push(Figures.make.serie(quiz.level)); quiz.i++; renderQ();
-    }, right ? 250 : 650);
+      quiz.qs.push(ninjaQ()); quiz.i++; renderQ();
+    }, right ? 300 : q.text ? 1100 : 700);
     return;
   }
   if (quiz.sim) { nextQ(); return; }
@@ -1728,10 +1767,10 @@ function finishNinja() {
   if (record) S.ninja.best = run;
   S.ninja.runs.push(run); S.ninja.runs = S.ninja.runs.slice(-50);
   save();
-  recordSession({ lesson: 'cog', name: 'Ninja · desafío de 3 minutos', stars: 0, ppm: 0, acc: Math.round(100 * acc), ms: NINJA_MS })
+  recordSession({ lesson: 'cog', name: 'Ninja · desafío de 5 minutos', stars: 0, ppm: 0, acc: Math.round(100 * acc), ms: NINJA_MS })
     .then(saved => saved && loadRanking()).then(() => ninjaRankLine(score));
   $('qBar').style.width = '100%'; $('qTime').textContent = '0:00';
-  $('qResult').innerHTML = `<h3>Desafío de 3 minutos</h3>
+  $('qResult').innerHTML = `<h3>Desafío de 5 minutos</h3>
     <div class="house-result">${Typists.typist(ti)}<div class="house-copy"><span class="eyebrow">Tu IQ ninja estimado</span><h4 class="iq">IQ ${iq}</h4>
       <p class="joke">${rnd(IQ_JOKES[ti])}</p>
       <p>Pensás como ${TIERS[ti].name}. ${record && S.ninja.runs.length > 1 ? '¡Nuevo récord personal! ' : ''}Es una estimación lúdica según tu puntaje, no un test de IQ real.</p>
@@ -1761,14 +1800,16 @@ $('qNext').onclick = nextQ;
 $('qBack').onclick = leaveQuiz;
 $('qEnd').onclick = () => { if (mode === 'quiz') finishQuiz(); };
 $('qGo').onclick = beginNinja;
-// Leaving the 3-minute run halfway shows its result (if something was answered) instead of losing it.
+// Leaving the 5-minute run halfway shows its result (if something was answered) instead of losing it.
 function leaveQuiz() { if (mode === 'quiz' && quiz?.ninja && quiz.picks.some(x => x != null)) finishQuiz(); else goCog(); }
 $('cogContinue').onclick = () => startQuiz(nextSession());
+$('scNinja').onclick = goCog;
+$('scMax').onclick = () => startQuiz('ninja');
 $('simBtn').onclick = () => startQuiz('sim');
 $('cogCta').onclick = e => { e.preventDefault(); goCog(); };
 
 /* ---------- Ranking of every account: lesson progress and best speed ---------- */
-let RANK = null, rankView = 'progress';
+let RANK = null, rankView = 'general';
 async function loadRanking() {
   try { RANK = await api('ranking'); }
   catch (err) { RANK = { error: err.status === 0 || err.status === 404 ? 'El ranking funciona en la versión publicada, con la base de datos conectada.' : err.message }; }
@@ -1778,7 +1819,14 @@ function rankRow(r, rank, view = rankView) {
   const li = document.createElement('li'), isMe = r.name === RANK.user;
   if (isMe) li.className = 'me';
   let val, sub, pct;
-  if (view === 'ninja') {
+  if (view === 'general') {
+    pct = Math.min(100, Math.round(100 * r.score / 400));
+    val = `${r.score} pts`; sub = 'estrellas + velocidad + desafío';
+  } else if (view === 'cog') {
+    const done = Math.floor(r.score / 1000), stars = r.score % 1000, total = Object.values(SESSIONS).flat().length;
+    pct = Math.round(100 * done / total);
+    val = pct + '%'; sub = `${done}/${total} sesiones · ${stars} ★`;
+  } else if (view === 'ninja') {
     const iq = iqFor(r.score);
     pct = Math.round(100 * (iq - 70) / 90);
     val = 'IQ ' + iq; sub = `${r.score} puntos · nivel ${tierShort(iqTier(iq))}`;
@@ -1810,14 +1858,14 @@ function renderRankInto(list, note, view, limit = 50) {
     list.append(sep, rankRow(b.me, b.me.rank, view));
   }
   const who = b.total === 1 ? '1 persona' : b.total + ' personas';
-  const empty = { progress: 'Todavía no hay nadie. Aprobá una lección con tu cuenta y estrená el ranking.', speed: 'Todavía no hay mediciones. Medí tu velocidad con tu cuenta y estrená el ranking.', ninja: 'Todavía nadie hizo el desafío de 3 minutos con su cuenta. ¡Estrenalo!' }[view];
-  const join = { progress: ' Aprobá una lección para aparecer.', speed: ' Medí tu velocidad para aparecer.', ninja: ' Hacé el desafío de 3 minutos para aparecer.' }[view];
+  const empty = { general: 'Todavía no hay nadie. Practicá con tu cuenta y estrená el ranking.', progress: 'Todavía no hay nadie. Aprobá una lección con tu cuenta y estrená el ranking.', speed: 'Todavía no hay mediciones. Medí tu velocidad con tu cuenta y estrená el ranking.', cog: 'Todavía nadie aprobó una sesión de Ninja mental. ¡Estrenalo!', ninja: 'Todavía nadie hizo el desafío de 5 minutos con su cuenta. ¡Estrenalo!' }[view];
+  const join = { general: ' Aprobá una lección o una sesión para aparecer.', progress: ' Aprobá una lección para aparecer.', speed: ' Medí tu velocidad para aparecer.', cog: ' Aprobá una sesión de Ninja mental para aparecer.', ninja: ' Hacé el desafío de 5 minutos para aparecer.' }[view];
   note.textContent = !b.total ? empty : `${who} en este ranking.` + (RANK.user ? (b.me ? '' : join) : ' Entrá con tu cuenta para aparecer.');
 }
 function renderRanking() {
   document.querySelectorAll('#rankView button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === rankView)));
   renderRankInto($('rankList'), $('rankNote'), rankView);
-  if (mode === 'cog') renderRankInto($('ninjaRank'), $('ninjaRankNote'), 'ninja', 10);
+  renderRankInto($('ninjaRank'), $('ninjaRankNote'), 'ninja', 10);
 }
 function rankLine(ppm) {
   const el = $('rankLine'), me = RANK?.speed?.me;
@@ -1913,7 +1961,7 @@ function renderChallenge() {
   if (!challenge) return;
   if (challenge.kind === 'ninja') {
     $('challengeTitle').textContent = challenge.score ? `${challenge.from} te desafía en Ninja mental: IQ ${iqFor(challenge.score)} (${challenge.score} puntos)` : `${challenge.from} te invita a Ninja mental`;
-    $('challengeText').textContent = challenge.score ? 'Tenés 3 minutos para adivinar más secuencias. ¿Le ganás?' : 'Adiviná todas las secuencias que puedas en 3 minutos y compará tu IQ ninja.';
+    $('challengeText').textContent = challenge.score ? 'Tenés 5 minutos de figuras, números e inglés para superarlo. ¿Le ganás?' : 'Resolvé todo lo que puedas en 5 minutos y compará tu IQ ninja.';
     return;
   }
   const m = METHODS.find(x => x.id === challenge.method);
@@ -1940,8 +1988,8 @@ function shareLink() {
 }
 function shareMessage() {
   if (isNinjaShare()) return (shareScore.score
-    ? `¡Te desafío en Ninja mental! Saqué ${shareScore.score} puntos en el desafío de 3 minutos (IQ ninja ${iqFor(shareScore.score)}). ¿Me ganás?`
-    : 'Probá el desafío de 3 minutos de Ninja mental: adiviná secuencias de figuras y compará tu IQ ninja con el mío.') + ' ' + shareLink();
+    ? `¡Te desafío en Ninja mental! Saqué ${shareScore.score} puntos en el desafío de 5 minutos (IQ ninja ${iqFor(shareScore.score)}). ¿Me ganás?`
+    : 'Probá el desafío de 5 minutos de Ninja mental (figuras, números e inglés) y compará tu IQ ninja con el mío.') + ' ' + shareLink();
   const m = shareScore && METHODS.find(x => x.id === shareScore.method);
   return (shareScore
     ? `¡Te desafío en Teclado Ciego! Escribí ${shareScore.ppm} palabras por minuto ${m.as} (nivel ${tierShort(tierFor(shareScore.ppm))}). ¿Me ganás?`
@@ -1959,7 +2007,7 @@ function openChallenge(score) {
   $('chName').value = saved; $('chNameLabel').hidden = !!auth.name;
   const m = score && METHODS.find(x => x.id === score.method);
   $('chLead').textContent = score?.kind === 'ninja'
-    ? (score.score ? `Mandale tu marca: ${score.score} puntos (IQ ninja ${iqFor(score.score)}). Con el enlace puede aceptar el desafío y ver si te gana.` : 'Invitalo al desafío de 3 minutos y comparen el IQ ninja.')
+    ? (score.score ? `Mandale tu marca: ${score.score} puntos (IQ ninja ${iqFor(score.score)}). Con el enlace puede aceptar el desafío y ver si te gana.` : 'Invitalo al desafío de 5 minutos y comparen el IQ ninja.')
     : score
     ? `Mandale tu marca: ${score.ppm} palabras por minuto ${m.as}. Con el enlace puede aceptar el desafío y ver si te gana.`
     : 'Mandale una invitación para medir su velocidad y comparar.';
@@ -2004,7 +2052,7 @@ if (matchMedia('(hover: none) and (pointer: coarse)').matches) $('touchNote').hi
 applyLayout(); applyKbMode(); renderHome(); renderAccountBtn();
 // Accounts need the server (Vercel functions). Without it (a local file or a static copy), hide the button.
 if (NINJA_HASH.test(location.hash) || challenge?.kind === 'ninja') goCog();
-addEventListener('hashchange', () => { if (NINJA_HASH.test(location.hash) && mode !== 'cog' && mode !== 'quiz') goCog(); });
+addEventListener('hashchange', () => { if (NINJA_HASH.test(location.hash) && mode !== 'quiz' && mode !== 'typing') goCog(); });
 renderRanking();
 api('auth').then(r => signedIn(auth.token, r.user.name)).catch(err => {
   if (err.status === 401) { if (auth.token) signedOut(); return; }

@@ -165,3 +165,47 @@ body[data-view="quiz"]::before {background:linear-gradient(#f7f8f3b5,#f7f8f3a6),
 .legal {display:flex;flex-wrap:wrap;justify-content:center;gap:6px 18px;font-size:.78rem;margin-top:-12px}
 .legal a {color:var(--muted)}
 .plan-legal {font-size:.78rem!important}
+
+/* Home: one page for both sections. General hero, a big card per section, the rankings, then each section in full. */
+.sections-cta {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;scroll-margin-top:24px}
+.sc-card {display:grid;gap:14px;align-content:start;border-radius:24px;padding:28px;border:1px solid var(--line);box-shadow:0 12px 34px #364b3712}
+.sc-type {background:linear-gradient(140deg,#fffefa,#e9f2e6)}
+.sc-ninja {background:linear-gradient(140deg,#1f2a2e,#2e3f47);color:#f3f5ef;border-color:#1f2a2e}
+.sc-ninja .eyebrow {color:#9fe3c9}
+.sc-card.sc-ninja p,.sc-card.sc-ninja .sc-stats span {color:#c9d4d0}
+.sc-ninja .btn:not(.primary) {background:transparent;color:#f3f5ef;border-color:#ffffff55}
+.sc-ninja .sc-more {color:#9fe3c9}
+.sc-top {display:flex;align-items:center;gap:14px}
+.sc-top .eyebrow {margin:0}
+.sc-top h2 {margin:2px 0 0;font-family:var(--display);font-weight:600;font-size:2rem;letter-spacing:-.04em;line-height:1.1}
+.sc-icon {display:grid;place-items:center;width:58px;height:58px;border-radius:18px;background:#ffffff26;border:1px solid #ffffff40;font-size:1.9rem;flex:none}
+.sc-type .sc-icon {background:#fff;border-color:var(--line)}
+.sc-card p {margin:0;line-height:1.65;color:var(--muted)}
+.sc-stats {display:flex;gap:28px}
+.sc-stats b {display:block;font-family:var(--display);font-weight:600;font-size:1.7rem;letter-spacing:-.04em}
+.sc-stats span {font-size:.75rem;color:var(--muted)}
+.btn.big {padding:15px 26px;font-size:1rem;font-weight:700}
+.sc-more {font-size:.85rem;font-weight:700;color:var(--accent);text-decoration:none}
+.rank-tabs {display:flex;flex-wrap:wrap;align-items:center;gap:6px;background:#e9eee5;border-radius:18px;padding:6px}
+.rank-tabs button {border:0;background:none;border-radius:99px;padding:7px 12px;font-size:.78rem;color:var(--muted)}
+.rank-tabs button[aria-pressed="true"] {background:var(--card);color:var(--ink);box-shadow:0 1px 4px #283c3710}
+.rt-group {font-size:.68rem;font-weight:700;color:var(--muted);margin-left:8px;text-transform:uppercase;letter-spacing:.06em}
+.block {display:grid;gap:30px;scroll-margin-top:16px;padding-top:28px;border-top:2px solid var(--line)}
+.block-head {display:flex;align-items:center;gap:18px}
+.block-head h2 {margin:0;font-family:var(--display);font-weight:600;font-size:clamp(1.8rem,3.6vw,2.6rem);letter-spacing:-.045em;line-height:1.1}
+.block-head h2 em {font-family:Georgia,serif;font-weight:400;color:#467259}
+.block-head p {margin:6px 0 0;color:var(--muted)}
+.block-head .eyebrow {margin-bottom:6px}
+.block-head .sc-icon {background:var(--card);border-color:var(--line);width:64px;height:64px}
+.cog-title {font-family:var(--display);font-size:clamp(2rem,3.6vw,2.8rem);font-weight:600;line-height:1.08;letter-spacing:-.05em;margin:0 0 18px}
+.cog-title em {font-family:Georgia,serif;font-weight:400;color:#467259}
+@media(max-width:900px) {.sections-cta {grid-template-columns:1fr}}
+@media(max-width:700px) {
+  .sc-card {padding:22px 18px;border-radius:20px}
+  .sc-top h2 {font-size:1.6rem}
+  .sc-icon {width:48px;height:48px;font-size:1.5rem}
+  .block-head {align-items:flex-start}
+  .block-head .sc-icon {width:48px;height:48px}
+  .rank-tabs {border-radius:14px}
+}
+a.btn {text-decoration:none}

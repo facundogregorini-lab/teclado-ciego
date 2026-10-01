@@ -1,4 +1,4 @@
-// GET: public rankings (top 50 of progress, of speed and of the Ninja mental run) and, with a session, where the user stands.
+// GET: public rankings (top 50): general, lesson progress, speed, Ninja mental progress and the Ninja mental challenge and, with a session, where the user stands.
 const { redis, HttpError, tokenKey, bearer, handler } = require('./_lib');
 
 const TOP = 50;
@@ -20,6 +20,7 @@ module.exports = handler(async req => {
   if (req.method !== 'GET') throw new HttpError(405, 'Método no permitido.');
   const token = bearer(req);
   const name = token ? await redis('GET', tokenKey(token)) : null;
-  const [progress, speed, ninja] = await Promise.all([board('rank:progress', name), board('rank:speed', name), board('rank:ninja', name)]);
-  return { user: name || null, progress, speed, ninja };
+  const boards = ['general', 'progress', 'speed', 'cog', 'ninja'];
+  const all = await Promise.all(boards.map(b => board('rank:' + b, name)));
+  return { user: name || null, ...Object.fromEntries(boards.map((b, i) => [b, all[i]])) };
 });
