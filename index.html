@@ -222,6 +222,7 @@ dialog::backdrop{background:rgba(10,14,18,.45)}
 <link rel="stylesheet" href="scenery.css">
 <link rel="stylesheet" href="typists.css">
 <link rel="stylesheet" href="cognitive.css">
+<script src="analytics.js"></script>
 <script src="scenery.js" defer></script>
 <link rel="stylesheet" href="dojo.css">
 </head>
@@ -1192,6 +1193,7 @@ function finish() {
     if (!prev || st > prev.stars || (st === prev.stars && ppm > prev.ppm)) { S.lessons[cur.id] = { stars: st, ppm, acc }; better = !!prev; }
   }
   save();
+  tn.capture('practice_completed', { ...practiceInfo(false), wpm: ppm, accuracy: acc, stars: isTest ? null : st ?? null, duration_ms: Math.round(ms) });
   recordSession({ lesson: isTest ? 'test' : cur.id, name: isTest ? `Medición ${tm.as}` : `Lección ${cur.n} · ${cur.name}`, method: isTest ? testMethod : undefined, stars: st, ppm, acc, ms })
     .then(saved => saved && loadRanking()).then(() => { if (isTest && auth.name) rankLine(ppm); });
   const weak = Object.entries(errBy).sort((a, b) => b[1] - a[1]).slice(0, 4);
@@ -1385,6 +1387,7 @@ function renderAccountBtn() {
 }
 async function signedIn(token, name) {
   auth = { token, name };
+  tn.identify(name); // the username is the account id (no email is ever asked for)
   try { localStorage.setItem(TOKEN, token); } catch {}
   renderAccountBtn();
   try { await loadAccount(); } catch (err) { toast(err.message); }
@@ -1392,6 +1395,9 @@ async function signedIn(token, name) {
   await loadBilling(back === 'ok');
   if (back) {
     window.history.replaceState(null, '', location.pathname + location.hash);
+    // A successful payment is reported by the server (payment_succeeded), which also sees the ones that only arrive by webhook.
+    if (back !== 'ok') tn.capture('payment_failed', { status: back });
+    else if (!billing.premium) tn.capture('payment_pending');
     if (back === 'ok') trackPurchase();
     toast(back !== 'ok' ? 'El pago no se completó. Podés intentarlo de nuevo cuando quieras.'
       : billing.premium ? '¡Gracias por tu aporte! Los monjes ninja te lo agradecen 🙏 Ya tenés acceso ilimitado ✦'
@@ -1400,6 +1406,7 @@ async function signedIn(token, name) {
   if (planAfterLogin) { planAfterLogin = false; if (limited()) showPlan('upgrade'); }
 }
 function signedOut(msg) {
+  if (auth.name) tn.reset();
   auth = { token: null, name: null }; history = [];
   try { localStorage.removeItem(TOKEN); } catch {}
   S.lessons = {}; S.test = null; S.tests = []; S.cog = {}; S.sims = []; S.ninja = { best: null, runs: [] }; save();
@@ -1461,6 +1468,7 @@ $('authForm').onsubmit = async e => {
     await signedIn(r.token, r.user.name);
     loadRanking();
     if (authMode === 'register') track('CompleteRegistration', { content_name: 'Cuenta Templo Ninja' });
+    tn.capture(authMode === 'register' ? 'signed_up' : 'logged_in');
     toast(authMode === 'register' ? `Cuenta creada. Tu progreso se guarda en ${r.user.name}.` : `Hola, ${r.user.name}. Seguimos donde dejaste.`);
   } catch (err) { $('authErr').textContent = err.message; }
   $('authSubmit').disabled = false;
@@ -1806,6 +1814,7 @@ function finishQuiz() {
       <p>${msg}</p><div class="result-evo">${evoArt(gi, st2, fresh)}<div><b>${title}</b><p>${txt}</p></div></div>`;
   }
   save();
+  tn.capture('practice_completed', { ...practiceInfo(true), accuracy: pct, correct: ok, questions: n, stars: quiz.sim ? null : S.cog[sess.id]?.stars || 0, duration_ms: Math.round(ms) });
   recordSession({ lesson: 'cog', name: quiz.sim ? `Ninja · simulacro de ${TRACKS[quiz.tr].short}` : `Ninja · ${TRACKS[quiz.tr].short} · ${sess.name} (sesión ${sess.n})`, stars: quiz.sim ? 0 : S.cog[sess.id]?.stars || 0, ppm: 0, acc: pct, ms: Math.round(ms) });
   const nx = !quiz.sim && cogStarsFor(ok, n) > 0 && SESSIONS[quiz.tr][SESSIONS[quiz.tr].indexOf(sess) + 1];
   $('qResult').innerHTML = html + `<div class="actions">
@@ -1842,6 +1851,7 @@ async function finishNinja() {
   if (r.ninja) { S.ninja.best = r.ninja.best; S.ninja.runs = r.ninja.runs; }
   else { if (record) S.ninja.best = mark; S.ninja.runs.push(mark); S.ninja.runs = S.ninja.runs.slice(-50); }
   save();
+  tn.capture('practice_completed', { ...practiceInfo(true), accuracy: r.acc, correct: ok, questions: n, score, iq, flagged: !!flagged, duration_ms: NINJA_MS });
   recordSession({ lesson: 'cog', name: 'Ninja · desafío de 5 minutos' + (flagged ? ' (no cuenta)' : ''), stars: 0, ppm: 0, acc: r.acc, ms: NINJA_MS })
     .then(saved => saved && loadRanking()).then(() => flagged || ninjaRankLine(score));
   const reasons = flagged ? `<div class="flag-note" role="note"><b>⚠️ Esta partida no cuenta para el ranking${r.offline ? '' : ' ni para desafiar a tus amigos'}.</b>
@@ -1962,6 +1972,7 @@ const usedToday = () => auth.name ? billing.plays : guestPlays();
 async function loadBilling(sync) {
   try { Object.assign(billing, await api('billing', sync ? { action: 'sync' } : undefined)); } catch {}
   startPixel(billing.pixel);
+  if (billing.enabled) tn.people({ plan: billing.premium ? 'ilimitado' : 'gratis' });
   renderPlanNote();
 }
 
@@ -1993,6 +2004,7 @@ function mayStart() {
 // A practice counts from its first key, so opening a lesson and leaving does not use one.
 function countPractice() {
   counted = true;
+  tn.capture('practice_started', { ...practiceInfo(mode === 'quiz'), free_left: limited() ? Math.max(0, billing.freePerDay - usedToday() - 1) : null });
   trackCustom('Practica', { seccion: mode === 'quiz' ? 'ninja-mental' : 'teclado-ciego', desafio: Boolean(quiz?.ninja && mode === 'quiz') });
   if (!limited()) return;
   if (auth.name) {
@@ -2011,7 +2023,13 @@ function renderPlanNote() {
   note.innerHTML = `Plan gratis: ${left ? `te ${left === 1 ? 'queda 1 práctica' : `quedan ${left} prácticas`} de ${billing.freePerDay} hoy` : 'ya usaste tus prácticas de hoy'} · <button type="button">Acceso ilimitado</button>`;
   note.querySelector('button').onclick = () => showPlan('upgrade');
 }
+// What a practice is, for the analytics events (no personal data).
+function practiceInfo(ninja) {
+  if (ninja) return { section: 'ninja-mental', kind: quiz?.ninja ? 'desafio-5-min' : quiz?.sim ? 'simulacro' : 'sesion', track: quiz?.ninja ? 'mixto' : quiz?.tr, difficulty: quiz?.sess?.d ?? null, guided: !!quiz?.guided };
+  return { section: 'teclado-ciego', kind: cur === 'test' ? 'medicion' : cur?.review ? 'repaso' : 'leccion', lesson: cur === 'test' ? null : cur?.id ?? null, method: cur === 'test' ? testMethod : null };
+}
 function showPlan(reason) {
+  tn.capture('pricing_viewed', { reason, payments_on: billing.enabled, premium: billing.premium, logged_in: !!auth.name, used_today: usedToday() });
   // Also opened from the header CTA: without payments configured, or with the plan already active, it only informs.
   const canBuy = billing.enabled && !billing.premium;
   $('planReason').textContent = !billing.enabled ? 'El acceso ilimitado está en camino. Mientras tanto, todo es gratis y sin límites: aprovechalo.'
@@ -2038,11 +2056,12 @@ $('upgradeCta').onclick = () => showPlan('upgrade');
 $('planClose').onclick = () => $('planDlg').close();
 $('planForm').onsubmit = async e => {
   e.preventDefault();
+  tn.capture('checkout_clicked', { logged_in: !!auth.name, price: billing.amount ?? null, currency: billing.currency ?? null });
   if (!auth.name) { planAfterLogin = true; $('planDlg').close(); openAuth(); setAuthMode('register'); return; }
   $('planSubmit').disabled = true; $('planErr').textContent = '';
   track('InitiateCheckout', { value: billing.amount, currency: billing.currency, content_name: 'Templo Ninja · acceso ilimitado' });
-  try { location.href = (await api('billing', { action: 'buy', track: { fbp: cookie('_fbp'), fbc: cookie('_fbc') } })).url; }
-  catch (err) { $('planErr').textContent = err.message; $('planSubmit').disabled = false; }
+  try { const { url } = await api('billing', { action: 'buy', track: { fbp: cookie('_fbp'), fbc: cookie('_fbc') } }); tn.capture('checkout_started', { provider: 'mercadopago' }); location.href = url; }
+  catch (err) { tn.capture('checkout_error', { status: err.status ?? null }); $('planErr').textContent = err.message; $('planSubmit').disabled = false; }
 };
 
 /* ---------- Challenges: invite friends by WhatsApp or email with a link ---------- */
@@ -2142,7 +2161,10 @@ $('chCopy').onclick = async () => {
 };
 $('chClose').onclick = () => $('challengeDlg').close();
 $('inviteBtn').onclick = () => openChallenge(bestScore());
-$('challengeAccept').onclick = () => { if (challenge.kind === 'ninja') startNinja(); else { S.tildes = challenge.accents || 'strict'; applyAccentMode(); start('test', challenge.method, challenge.seed); } };
+$('challengeAccept').onclick = () => {
+  tn.capture('challenge_accepted', { kind: challenge.kind, has_score: !!(challenge.score || challenge.ppm) });
+  if (challenge.kind === 'ninja') startNinja(); else { S.tildes = challenge.accents || 'strict'; applyAccentMode(); start('test', challenge.method, challenge.seed); }
+};
 $('challengeDismiss').onclick = () => { challenge = null; renderChallenge(); };
 renderChallenge();
 

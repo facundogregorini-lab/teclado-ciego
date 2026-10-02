@@ -147,6 +147,7 @@ function typeText(page) {
     check('Measurements hide the on-screen keyboard', await a.isHidden('#guide') && (await a.textContent('#lName')) === 'A ciegas');
     await typeText(a); await a.waitForSelector('#result:not([hidden])');
     check('The result names the method', (await a.textContent('#result h3')).includes('a ciegas'));
+    check('Finishing is a practice_completed event with words per minute and accuracy', await a.evaluate(() => window.tnEvents.some(([e, p]) => e === 'practice_completed' && p.kind === 'medicion' && p.method === 'ciegas' && p.wpm >= 0 && p.accuracy >= 0)));
     check('The result shows who types like you', await a.isVisible('.house-result .typist-art') && (await a.textContent('.house-copy')).includes('mediana'));
     check('Measurements are not limited without payments configured', await a.isHidden('#planNote'));
     await a.waitForFunction(() => document.querySelector('#rankLine')?.textContent);

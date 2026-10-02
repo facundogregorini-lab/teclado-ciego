@@ -64,6 +64,27 @@ La app carga el Píxel de Meta **Templo Ninja Web** (`2167285730522630`, el ID l
 
 Con `META_CAPI_TOKEN` (token de la API de conversiones, en el Administrador de eventos → el píxel → Configuración), el servidor también informa cada `Purchase` la primera vez que ve el pago aprobado (webhook o vuelta del pago). Usa el mismo `event_id` que el navegador (`pay_<id del pago>`), así Meta lo cuenta una sola vez, y le pasa el monto, las cookies `_fbp`/`_fbc` (viajan en la metadata del pago), el navegador y el usuario cifrado con SHA-256. Opcional: `META_GRAPH_VERSION` (por defecto `v23.0`).
 
+### Analítica de producto (PostHog y Vercel)
+
+`analytics.js` (en `index.html` y `precios.html`) carga **Vercel Web Analytics y Speed Insights** (los scripts los sirve Vercel en `/_vercel/…` cuando están activados en el proyecto) y **PostHog** (proyecto 642163, región US) con páginas vistas automáticas, autocapture y grabación de sesiones con todos los campos de texto ocultos. PostHog va por `/ingest`, un rewrite de `vercel.json` hacia `us.i.posthog.com`, para que no lo frenen los bloqueadores de anuncios. La Project API key es pública y está en el código. En copias locales (`localhost`, `127.0.0.1`) no se carga nada: los eventos quedan en `window.tnEvents` para los tests.
+
+| Evento | Dónde se dispara | Propiedades |
+| --- | --- | --- |
+| `$pageview`, `$autocapture`, grabación | Automáticos de PostHog. | UTM de la visita, dispositivo, etc. |
+| `practice_started` | `countPractice()`: primera tecla o primera respuesta de una práctica (lo mismo que cuenta para el límite). | `section`, `kind` (`leccion`, `repaso`, `medicion`, `sesion`, `simulacro`, `desafio-5-min`), `lesson`, `method`, `track`, `difficulty`, `guided`, `free_left`. |
+| `practice_completed` | `finish()`, `finishQuiz()` y `finishNinja()`. | Las de arriba más `wpm` y `accuracy` (teclado), `correct`, `questions`, `stars`, `score`, `iq`, `flagged`, `duration_ms`. |
+| `pricing_viewed` | `showPlan()`: botón ✦ del header, nota del plan gratis, límite diario o botón del plan diario. | `reason` (`upgrade` o `limit`), `payments_on`, `premium`, `logged_in`, `used_today`. |
+| `checkout_clicked` | Botón de pagar del diálogo del plan (también sin cuenta, antes de pedirla). | `logged_in`, `price`, `currency`. |
+| `checkout_started` / `checkout_error` | Al recibir el link de Mercado Pago, justo antes de ir / si falla. | `provider` / `status`. |
+| `payment_succeeded` | **Servidor** (`api/_billing.js`), la primera vez que ve un pago aprobado (vuelta del pago o webhook). | `value`, `currency`, `provider`, `source: server`. |
+| `payment_pending` / `payment_failed` | Al volver de Mercado Pago sin pago aprobado (`?aporte=ok` todavía sin confirmar / `?aporte=error`). | `status`. |
+| `signed_up` / `logged_in` | Al crear la cuenta / entrar. | — |
+| `challenge_accepted` | Botón *Aceptar* de un desafío recibido. | `kind`, `has_score`. |
+
+Con cuenta, `posthog.identify()` usa el nombre de usuario (es el id de la cuenta; la app no pide email) y la propiedad `plan` (`gratis` o `ilimitado`). Al salir, `posthog.reset()`. Nunca se mandan contraseñas, emails ni datos de pago.
+
+**Leer métricas:** `node scripts/posthog-query.cjs funnel` (también `events`, `sources` o cualquier consulta HogQL entre comillas; `DAYS=30` cambia el período). Usa `POSTHOG_PERSONAL_API_KEY`, `POSTHOG_PROJECT_ID` y `POSTHOG_HOST` del entorno, con `api/_posthog.js`; la personal key nunca llega a la página. Variables en `.env.example`. Para las grabaciones, en PostHog tiene que estar activado *Settings → Session replay → Record user sessions*.
+
 ### Configurar Mercado Pago en Vercel
 
 1. En [Mercado Pago Developers](https://www.mercadopago.com.ar/developers/panel/app) creá una aplicación (producto: *Checkout Pro*) y copiá el **Access Token de producción**. Para probar sin cobrar, usá primero el de prueba con usuarios de prueba.

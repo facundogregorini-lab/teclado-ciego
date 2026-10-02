@@ -4,13 +4,14 @@ const http = require('node:http'), fs = require('node:fs'), path = require('node
 const root = path.resolve(__dirname, '..');
 process.env.TECLADO_MEMORY_DB ??= '1';
 process.env.META_PIXEL_ID ??= 'off'; // local copies don't send visits to the real Meta Pixel
+process.env.POSTHOG_KEY ??= 'off'; // nor events to PostHog
 
 function createServer() {
   return http.createServer(async (req, res) => {
     const url = new URL(req.url, 'http://localhost');
     const match = /^\/api\/([a-z]+)$/.exec(url.pathname);
     if (!match) {
-      const publicFiles = new Set(['/dojo.css', '/dojo.js', '/scenery.css', '/scenery.js', '/typists.css', '/typists.js', '/cognitive.css', '/figures.js', '/numeric.js', '/english.js', '/legal.css', '/precios.html', '/terminos.html', '/privacidad.html', '/reembolsos.html', '/demo/teclado-ciego-demo.mp4', ...['beach', 'mountains', 'forest'].flatMap(name => ['/assets/' + name + '.jpg', '/assets/' + name + '-thumb.jpg'])]);
+      const publicFiles = new Set(['/analytics.js', '/dojo.css', '/dojo.js', '/scenery.css', '/scenery.js', '/typists.css', '/typists.js', '/cognitive.css', '/figures.js', '/numeric.js', '/english.js', '/legal.css', '/precios.html', '/terminos.html', '/privacidad.html', '/reembolsos.html', '/demo/teclado-ciego-demo.mp4', ...['beach', 'mountains', 'forest'].flatMap(name => ['/assets/' + name + '.jpg', '/assets/' + name + '-thumb.jpg'])]);
       const pathname = url.pathname === '/' ? '/index.html' : url.pathname;
       if (pathname !== '/index.html' && !publicFiles.has(pathname)) { res.statusCode = 404; return res.end('Not found'); }
       const types = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.jpg': 'image/jpeg', '.mp4': 'video/mp4' };

@@ -3,17 +3,20 @@ const http = require('node:http'), assert = require('node:assert/strict');
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
 const SITE = 'http://127.0.0.1:4193', MP = 'http://127.0.0.1:4194';
 Object.assign(process.env, { MP_ACCESS_TOKEN: 'TEST-token', MP_PRICE: '4900', MP_API_BASE: MP, APP_URL: SITE, TECLADO_PREMIUM_USERS: 'regalo',
-  META_PIXEL_ID: '123456789012345', META_CAPI_TOKEN: 'capi-token', META_GRAPH_BASE: MP + '/graph' });
+  META_PIXEL_ID: '123456789012345', META_CAPI_TOKEN: 'capi-token', META_GRAPH_BASE: MP + '/graph',
+  POSTHOG_KEY: 'phc_test', POSTHOG_INGEST_HOST: MP + '/ph' });
 const { createServer } = require('./server.cjs');
 
 // Fake Mercado Pago. Checkout: creating a preference is as if the user paid right away (an approved payment
 // with the same reference and metadata). Old monthly subscriptions can still be read back.
-const subs = new Map(), payments = new Map(), capi = [];
+const subs = new Map(), payments = new Map(), capi = [], ph = [];
 const fakeMP = http.createServer(async (req, res) => {
   let raw = ''; for await (const c of req) raw += c;
   const url = new URL(req.url, MP), send = d => { res.setHeader('Content-Type', 'application/json'); res.end(JSON.stringify(d)); };
   // Fake Meta Conversions API
   if (req.method === 'POST' && url.pathname === '/graph/123456789012345/events' && url.searchParams.get('access_token') === 'capi-token') { capi.push(...JSON.parse(raw).data); return send({ events_received: 1 }); }
+  // Fake PostHog ingestion
+  if (req.method === 'POST' && url.pathname === '/ph/i/v0/e/') { const e = JSON.parse(raw); if (e.api_key === 'phc_test') ph.push(e); return send({ status: 1 }); }
   if (req.headers.authorization !== 'Bearer TEST-token') { res.statusCode = 401; return send({ message: 'bad token' }); }
   if (req.method === 'POST' && url.pathname === '/checkout/preferences') {
     const body = JSON.parse(raw), id = 'pay_' + (payments.size + 1);
@@ -43,11 +46,15 @@ const check = (name, ok) => { assert.ok(ok, name); console.log('PASS', name); };
   const open = async () => {
     const ctx = await browser.newContext();
     await ctx.route('https://connect.facebook.net/**', r => r.fulfill({ contentType: 'text/javascript', body: PIXEL }));
-    const p = await ctx.newPage(); p.px = [];
-    p.on('pageerror', e => errors.push(e.message)); p.on('console', m => m.text().startsWith('PX ') && p.px.push(JSON.parse(m.text().slice(3))));
+    // Analytics events (analytics.js keeps them in window.tnEvents on local copies), also kept across navigations.
+    await ctx.addInitScript(() => { window.tnEvents = { push: e => console.log('TN ' + JSON.stringify(e)) }; });
+    const p = await ctx.newPage(); p.px = []; p.tn = [];
+    p.on('pageerror', e => errors.push(e.message));
+    p.on('console', m => { const t = m.text(); if (t.startsWith('PX ')) p.px.push(JSON.parse(t.slice(3))); if (t.startsWith('TN ')) p.tn.push(JSON.parse(t.slice(3))); });
     await p.goto(SITE); await p.waitForSelector('#planNote:not([hidden])'); return p;
   };
   const fired = (p, name) => p.px.filter(a => a[1] === name);
+  const events = (p, name) => p.tn.filter(e => e[0] === name).map(e => e[1]);
   // One practice: start the next lesson and type its first key.
   const practice = async p => {
     await p.click('#continue');
@@ -70,9 +77,12 @@ const check = (name, ok) => { assert.ok(ok, name); console.log('PASS', name); };
     check('Opening a lesson without typing does not use a practice', (await guest.textContent('#planNote')).includes('quedan 3'));
     for (let i = 0; i < 3; i++) check(`Free practice ${i + 1} of 3`, await practice(guest));
     check('Each practice is a pixel event with its section', fired(guest, 'Practica').length === 3 && fired(guest, 'Practica')[0][2].seccion === 'teclado-ciego');
+    check('Each practice is a practice_started event with its lesson and the free practices left', events(guest, 'practice_started').length === 3
+      && events(guest, 'practice_started')[0].section === 'teclado-ciego' && events(guest, 'practice_started')[0].kind === 'leccion' && events(guest, 'practice_started')[0].lesson && events(guest, 'practice_started').map(e => e.free_left).join() === '2,1,0');
     check('The fourth practice shows the plan', !(await practice(guest)) && await guest.isVisible('#planDlg') && (await guest.textContent('#planReason')).includes('3 prácticas'));
     check('The plan is a one-time contribution to the temple', (await guest.textContent('#planPrice')) === '$ 4.900 · pago único' && (await guest.textContent('#planDlg')).includes('Los monjes ninja te lo agradecerán') && (await guest.textContent('#planDlg')).includes('sin suscripción'));
     check('Guests are asked to sign in to pay', (await guest.textContent('#planSubmit')).includes('Crear cuenta'));
+    check('Hitting the limit is a pricing_viewed event with its reason', events(guest, 'pricing_viewed').some(e => e.reason === 'limit' && e.payments_on && !e.logged_in));
     await guest.click('#planClose'); await guest.reload(); await guest.waitForSelector('#planNote:not([hidden])');
     check('Reloading does not reset the daily limit', (await guest.textContent('#planNote')).includes('ya usaste'));
     check('Without free practices left, the daily plan offers unlimited access instead of a rest', await guest.isVisible('#dojoUnlock') && (await guest.textContent('#dojoCount')).includes('acceso ilimitado') && !(await guest.textContent('#dojo')).includes('descanso'));
@@ -86,6 +96,7 @@ const check = (name, ok) => { assert.ok(ok, name); console.log('PASS', name); };
     // Account: the limit is counted on the server
     const ana = await open(); await register(ana, 'ana');
     check('Creating an account is a CompleteRegistration', fired(ana, 'CompleteRegistration').length === 1);
+    check('Creating an account is a signed_up event, identified by the username only', events(ana, 'signed_up').length === 1 && events(ana, '$identify').some(e => e.id === 'ana'));
     for (let i = 0; i < 3; i++) await practice(ana);
     await ana.waitForTimeout(300);
     const ana2 = await open();
@@ -98,6 +109,9 @@ const check = (name, ok) => { assert.ok(ok, name); console.log('PASS', name); };
     for (let i = 0; i < 50 && !fired(ana2, 'Purchase').length; i++) await ana2.waitForTimeout(100); // the pixel script loads after the page
     const checkout = fired(ana2, 'InitiateCheckout')[0], buy = fired(ana2, 'Purchase');
     check('Going to pay is an InitiateCheckout with the price', checkout && checkout[2].value === 4900 && checkout[2].currency === 'ARS');
+    check('Going to pay is checkout_clicked and checkout_started', events(ana2, 'checkout_clicked').some(e => e.logged_in && e.price === 4900) && events(ana2, 'checkout_started').length === 1);
+    check('The server reports the payment to PostHog once, for the account', ph.filter(e => e.event === 'payment_succeeded').length === 1 && ph[0].distinct_id === 'ana' && ph[0].properties.value === 4900 && ph[0].properties.source === 'server');
+    check('No analytics event carries a password', ![...ana.tn, ...ana2.tn, ...ph].some(e => JSON.stringify(e).includes('secreto1')));
     check('Coming back paid is one Purchase, with the payment as event id', buy.length === 1 && buy[0][2].value === 4900 && buy[0][3].eventID === 'pay_pay_1');
     check('The server reports the same Purchase once to the Conversions API', capi.length === 1 && capi[0].event_name === 'Purchase' && capi[0].event_id === 'pay_pay_1' && capi[0].custom_data.value === 4900
       && capi[0].user_data.fbp === 'fb.1.1700000000000.42' && /^[0-9a-f]{64}$/.test(capi[0].user_data.external_id[0]) && capi[0].user_data.client_user_agent);
@@ -125,6 +139,7 @@ const check = (name, ok) => { assert.ok(ok, name); console.log('PASS', name); };
     check('The webhook of an approved payment unlocks for good', (await hook({ type: 'payment', data: { id: 'pay_90' } })).status === 200 && (await planOf(token)).premium && (await planOf(token)).lifetime);
     await hook({ type: 'payment', data: { id: 'pay_90' } });
     check('A purchase that only arrives by webhook is reported from the server, once', capi.length === 2 && capi[1].event_id === 'pay_pay_90');
+    check('It also reaches PostHog once', ph.filter(e => e.event === 'payment_succeeded').map(e => e.distinct_id).join() === 'ana,bobo');
     // A charge of an old monthly subscription is not the one-time payment
     payments.set('pay_91', { id: 'pay_91', status: 'approved', transaction_amount: 5000, external_reference: 'carla' });
     await hook({ type: 'payment', data: { id: 'pay_91' } });
