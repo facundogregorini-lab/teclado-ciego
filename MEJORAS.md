@@ -17,17 +17,27 @@ No existe una clasificación objetiva que permita declarar un producto «el mejo
 
 ## Cambios por recorrido
 
-**Inicio.** Nuevo plan con tres acciones: aprender, reforzar y superarse. Cuatro áreas y tres puntos de partida. La recomendación busca dos estrellas, no solo completar una sesión. Meta de tres prácticas y racha diaria sin castigos ni mensajes de culpa. Se usan fechas de Argentina, igual que el límite diario existente.
+**Inicio.** Debajo de las tarjetas de cada sección, un plan con tres acciones: aprender, reforzar y superarse. Cuatro áreas y tres puntos de partida. La recomendación busca dos estrellas, no solo completar una sesión. Meta de tres prácticas y racha diaria sin castigos ni mensajes de culpa. Si el plan gratis ya no tiene prácticas, el plan lo dice y ofrece el acceso ilimitado. Se usan fechas de Argentina, igual que el límite diario existente.
 
 **Mecanografía.** Resultados con devolución según precisión, comparación de precisión anterior y un botón de repaso de teclas falladas. El repaso utiliza palabras compatibles con la base seleccionada cuando están disponibles. Al fallar una lección, repetir toma prioridad sobre saltar a la siguiente. El reto diario usa una semilla compartida para conservar el texto.
 
 **Figuras, números e inglés.** Sesiones guiadas sin reloj activadas por defecto. Se puede volver al modo cronometrado desde el plan; los simulacros y el desafío de cinco minutos siempre mantienen sus límites. En sesiones cronometradas, leer la devolución pausa el reloj. Los resultados reúnen las explicaciones de los errores y ofrecen reforzar un tipo de ejercicio con preguntas nuevas. El siguiente nivel deja de ser la acción principal cuando no se aprobó.
 
-**Humor.** Devoluciones lúdicas que dependen de la precisión y pueden desactivarse. Las bromas hablan del teclado, las neuronas, el mate y la revancha. Se retira de la interfaz el nivel «indigente» y se reemplaza por «ninja del mate», manteniendo los identificadores de progreso. El índice ninja se identifica como una escala de juego, no una medición de inteligencia. Se elimina la afirmación de un percentil poblacional inventado.
+**Humor.** Devoluciones lúdicas que dependen de la precisión y pueden desactivarse. Las bromas hablan del teclado, las neuronas, el mate y la revancha. Se retira de la interfaz el nivel «indigente» y se reemplaza por «ninja del mate», manteniendo los identificadores de progreso. El IQ ninja y la comparación con la mediana se mantienen como estaban (ver más abajo).
 
 **Amigos y colegas.** Los enlaces nuevos de velocidad incluyen la semilla del texto, precisión y regla de tildes. La aceptación replica esas condiciones. Para proclamar ganador, ambas marcas con precisión conocida deben llegar al 90%. Los enlaces anteriores siguen funcionando, indicando que la comparación usa textos aleatorios. Las marcas de velocidad se identifican como autodeclaradas; los desafíos Ninja conservan la corrección en servidor. Compartir abre WhatsApp, correo o copia el mensaje: nunca se envía automáticamente.
 
 **Usabilidad.** Preferencias plegadas en la primera pantalla móvil; encabezado adaptable también en tablet; controles principales de al menos 44 px; foco visible; enlace para saltar al plan; descripciones de las figuras para lectores de pantalla; foco en la nueva pregunta; botón para pausar paisajes; respeto por movimiento reducido. En celular se orienta hacia Ninja mental y se explica el uso de teclado físico para mecanografía.
+
+## Qué quedó para después
+
+Los anuncios de Meta publicados el 1 de octubre prometen "Desarrollá tus habilidades", "¿Cuánto da tu IQ ninja?" y "La mediana escribe 40 palabras por minuto". Para no romper la coherencia entre anuncio y página ni mezclar efectos en la primera semana de campaña, esta entrega conserva:
+
+- el título y el botón de la portada, y las tarjetas de sección inmediatamente debajo (el plan diario va después);
+- el IQ ninja, sus chistes y la comparación con la mediana y el porcentaje de gente más lenta;
+- el título "Pensá rápido. Ganá la entrevista." de Ninja mental.
+
+La portada nueva ("Un poquito de práctica. Un montón de revancha."), el plan arriba de las tarjetas y el cambio a "índice ninja" quedan como hipótesis para un experimento o para cambiar junto con los anuncios.
 
 ## Verificación
 
