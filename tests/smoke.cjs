@@ -48,7 +48,7 @@ function typeText(page) {
     await a.waitForFunction(s => document.documentElement.dataset.heroScene !== s, firstScene, { timeout: 10000 });
     check('The hero changes landscape by itself', await a.locator('.hero-slides .slide.on').count() === 1);
     const levels = await a.$$eval('#learning .evo-card b', els => els.map(e => e.textContent));
-    check('Each group is its own level, with the final one at the end', levels.join() === 'Nivel chimpancé,Nivel bebé,Nivel niño,Nivel indigente,Nivel intelectual,Nivel premio Nobel');
+    check('Each group is its own level, with the final one at the end', levels.join() === 'Nivel chimpancé,Nivel bebé,Nivel niño,Nivel ninja del mate,Nivel intelectual,Nivel premio Nobel');
     check('Each level shows its own typist', new Set(await a.$$eval('#learning .evo-card svg', els => els.map(e => e.innerHTML))).size === 6);
     check('Levels not started look locked', await a.locator('#learning .evo-art.locked').count() === 6);
     await a.click('#continue');
@@ -147,6 +147,7 @@ function typeText(page) {
     check('Measurements hide the on-screen keyboard', await a.isHidden('#guide') && (await a.textContent('#lName')) === 'A ciegas');
     await typeText(a); await a.waitForSelector('#result:not([hidden])');
     check('The result names the method', (await a.textContent('#result h3')).includes('a ciegas'));
+    check('Finishing is a practice_completed event with words per minute and accuracy', await a.evaluate(() => window.tnEvents.some(([e, p]) => e === 'practice_completed' && p.kind === 'medicion' && p.method === 'ciegas' && p.wpm >= 0 && p.accuracy >= 0)));
     check('The result shows who types like you', await a.isVisible('.house-result .typist-art') && (await a.textContent('.house-copy')).includes('mediana'));
     check('Measurements are not limited without payments configured', await a.isHidden('#planNote'));
     await a.waitForFunction(() => document.querySelector('#rankLine')?.textContent);
@@ -178,7 +179,7 @@ function typeText(page) {
     await a.click('#cogCta');
     check('The header CTA takes you to Ninja mental, on the same page', await a.isVisible('#cog') && await a.isVisible('#home') && a.url().endsWith('#ninja'));
     const cogLevels = await a.$$eval('#cogPath .evo-card b', els => els.map(e => e.textContent));
-    check('Each training level has its own typist', cogLevels.join() === 'Nivel chimpancé,Nivel bebé,Nivel niño,Nivel indigente,Nivel intelectual,Nivel premio Nobel');
+    check('Each training level has its own typist', cogLevels.join() === 'Nivel chimpancé,Nivel bebé,Nivel niño,Nivel ninja del mate,Nivel intelectual,Nivel premio Nobel');
     check('There are 15 sessions and the mock test', await a.locator('#cogPath .lc').count() === 16);
     await a.click('#cogContinue');
     check('A session starts with a series of figures', await a.isVisible('#quiz') && (await a.textContent('#qPrompt')).includes('sigue') && await a.locator('#qFig .fig').count() === 5 && await a.locator('#qOpts .opt').count() === 4);

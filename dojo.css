@@ -1,0 +1,46 @@
+/* Learning dashboard: keep the original landscape identity, with clearer hierarchy. */
+.skip-link{position:absolute;top:-100px;left:16px;z-index:100;background:var(--card);padding:14px;border:2px solid var(--accent)}
+.skip-link:focus{top:12px}
+:focus-visible{outline:3px solid var(--accent);outline-offset:4px}
+[hidden]{display:none!important}
+.dojo{background:var(--card);border:1px solid var(--line);border-radius:24px;padding:30px;scroll-margin-top:24px}
+.dojo-heading{display:flex;justify-content:space-between;gap:20px;align-items:flex-start}
+.dojo h2{font-size:clamp(1.6rem,3vw,2.2rem);letter-spacing:-.04em;margin:0 0 10px}
+.dojo p{color:var(--muted);line-height:1.65;margin:8px 0 18px}
+.dojo-streak{flex-shrink:0;background:var(--accent-soft);padding:12px 16px;border-radius:16px;text-align:center}
+.dojo-streak b{display:block;font-size:1.6rem;color:var(--accent)}
+.dojo-streak small{font-size:.75rem}
+.dojo-controls{display:flex;flex-wrap:wrap;gap:18px;margin:22px 0}
+.dojo-controls label{display:grid;gap:7px;font-size:.82rem;flex:1;min-width:180px}
+.dojo-controls select{width:100%;min-height:46px;padding:10px;border:1px solid var(--line);background:var(--card);border-radius:10px;color:var(--ink);font:inherit}
+.dojo-plan{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.mission{display:flex;flex-direction:column;align-items:flex-start;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:20px;min-width:0}
+.mission:first-child{background:var(--accent-soft);border-color:var(--accent)}
+.mission .eyebrow{margin-bottom:14px}.mission h3{font-size:1.1rem;margin:0}.mission p{font-size:.85rem;flex:1}
+.mission .btn{width:100%;min-height:44px}
+.dojo-meter{display:flex;align-items:center;gap:14px;margin:22px 0 12px;font-size:.82rem}
+.dojo-meter progress{accent-color:var(--accent);height:10px;flex:1;min-width:40px}
+.dojo-options{display:flex;gap:20px;flex-wrap:wrap;font-size:.82rem;margin-top:18px}.dojo-options label{display:flex;align-items:center;gap:8px;min-height:44px}
+.dojo-options input{width:18px;height:18px;accent-color:var(--accent)}
+.coach{border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:12px;background:var(--accent-soft);padding:16px 20px;margin:18px 0;text-align:left}
+.coach p{margin:6px 0;line-height:1.6}.coach .btn{margin-top:12px}
+.mobile-route{display:none}.dojo-fine{font-size:.75rem!important}.review details{border-top:1px solid var(--line);padding:14px 0}.review summary{cursor:pointer;line-height:1.6}.review p{line-height:1.6}
+button,a.btn,.track-tabs button,.seg button,.scene-picker button{min-height:44px}
+.main-nav a{display:inline-flex;align-items:center;min-height:44px}
+.q-tip,.q-feedback{line-height:1.7}.opt:focus-visible{outline:3px solid var(--accent)}
+.opt.wrong{outline:3px dashed var(--bad,#a32d2d)}
+.opt.right{outline:3px solid var(--accent)}
+.preference-panel>summary{display:none;cursor:pointer;min-height:44px;align-items:center;color:var(--muted);font-size:.85rem}
+.preference-panel .preferences{margin:0}
+.wrap>*{min-width:0}.scene-pause{border:1px solid #ffffff90;border-radius:99px;background:#163e32;color:white;padding:6px 10px;font:inherit}
+.btn:not(.primary){color:var(--ink)}
+@media(max-width:1100px){.top{flex-wrap:wrap}.main-nav{order:3;width:100%;margin-left:0}.dojo-plan{grid-template-columns:1fr}.keyboard-intro{grid-template-columns:1fr}.sections-cta{grid-template-columns:1fr}.preferences{flex-wrap:wrap}}
+.joke{display:none!important} /* One contextual coach per result replaces repeated personal comparisons. */
+.hero{min-height:380px}.hero-copy{max-width:650px}.hero h1{font-size:clamp(2.6rem,4.4vw,4rem)}
+@media(max-width:700px){
+ .preference-panel>summary{display:flex}.preference-panel:not([open]) .preferences{display:none}
+ .dojo{padding:22px 16px}.dojo-heading{gap:10px}.dojo-streak{padding:10px}.dojo-plan{grid-template-columns:1fr}.mission{padding:18px}.mission p{margin-bottom:14px}.dojo-controls{gap:12px}.dojo-controls label{min-width:130px}.hero{min-height:420px;padding-bottom:100px}.hero .eyebrow{line-height:1.8}.top{gap:8px}.main-nav{justify-content:space-between;gap:12px}.dojo-meter{flex-wrap:wrap}.dojo-options{gap:8px 20px}
+ .q-opts{gap:10px}.opt{min-height:56px}.nums{flex-wrap:wrap}.actions{flex-wrap:wrap}.actions .btn{white-space:normal}.house-result{min-width:0}.q-text,.q-fig{max-width:100%;overflow-x:auto}
+}
+@media(pointer:coarse){.mobile-route{display:block;padding:12px;background:var(--panel);border-radius:10px;font-size:.85rem}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}

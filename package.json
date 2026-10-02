@@ -5,8 +5,9 @@
   "description": "Templo Ninja: Teclado Ciego (escribir sin mirar) y Ninja mental (tests de entrevistas), con cuentas, ranking y desafíos",
   "scripts": {
     "dev": "node tests/server.cjs",
-    "test": "node tests/smoke.cjs && node tests/billing.cjs",
-    "test:billing": "node tests/billing.cjs"
+    "test": "node tests/dojo.cjs && node tests/smoke.cjs && node tests/billing.cjs",
+    "test:billing": "node tests/billing.cjs",
+    "test:dojo": "node tests/dojo.cjs"
   },
   "dependencies": {
     "redis": "^4.7.1"
