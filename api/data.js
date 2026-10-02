@@ -22,7 +22,7 @@ function cleanProgress(p) {
     tests: (Array.isArray(p.tests) ? p.tests : [])
       .filter(t => t && METHODS.includes(t.method) && Number(t.date) > 0)
       .slice(-MAX_TESTS)
-      .map(t => ({ method: t.method, ppm: num(t.ppm, 400), acc: num(t.acc, 100), date: Math.round(Number(t.date)) })),
+      .map(t => ({ method: t.method, ppm: num(t.ppm, 400), acc: num(t.acc, 100), date: Math.round(Number(t.date)), ...(/^[a-zA-Z0-9-]{1,48}$/.test(t.seed || '') ? { seed: t.seed, accents: t.accents === 'loose' ? 'loose' : 'strict' } : {}) })),
     layout: p.layout === 'es' ? 'es' : 'la',
     kb: ['always', 'error', 'hidden'].includes(p.kb) ? p.kb : 'always',
     tildes: p.tildes === 'loose' ? 'loose' : 'strict',

@@ -39,6 +39,10 @@ globalThis.Figures = (() => {
     }
     return '';
   }
+  function describe(t) {
+    const positions = ['arriba a la izquierda', 'arriba', 'arriba a la derecha', 'a la derecha', 'abajo a la derecha', 'abajo', 'abajo a la izquierda', 'a la izquierda'];
+    return `${t.count} figura(s): ${SHAPE_NAME[t.shape]}, relleno ${FILL_NAME[t.fill]}, rotación ${t.rot} grados${t.pos >= 0 ? ', punto ' + positions[t.pos] : ', sin punto'}`;
+  }
   let uid = 0;
   function draw(t, cls = 'fig') {
     const id = 'hatch' + (++uid);
@@ -47,7 +51,7 @@ globalThis.Figures = (() => {
     const items = LAYOUT[t.count].map(([x, y]) => `<g transform="translate(${x} ${y}) rotate(${t.rot})" fill="${fill}" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round">${shapePath(t.shape, r)}</g>`).join('');
     const dot = t.pos >= 0 ? `<circle cx="${DOTS[t.pos][0]}" cy="${DOTS[t.pos][1]}" r="5" fill="currentColor"/>` : '';
     const defs = t.fill === 'stripes' ? `<defs><pattern id="${id}" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="5" height="5" fill="var(--card,#fff)"/><rect width="2.2" height="5" fill="currentColor"/></pattern></defs>` : '';
-    return `<svg viewBox="0 0 100 100" class="${cls}" aria-hidden="true" focusable="false">${defs}<rect x="2" y="2" width="96" height="96" rx="10" fill="var(--card,#fff)" stroke="var(--line,#ccc)" stroke-width="2"/>${items}${dot}</svg>`;
+    return `<svg viewBox="0 0 100 100" class="${cls}" role="img" aria-label="${describe(t)}" focusable="false">${defs}<rect x="2" y="2" width="96" height="96" rx="10" fill="var(--card,#fff)" stroke="var(--line,#ccc)" stroke-width="2"/>${items}${dot}</svg>`;
   }
 
   /* ---------- Rules that change one attribute step by step ---------- */
@@ -204,5 +208,5 @@ globalThis.Figures = (() => {
 
   // Every puzzle remembers its difficulty (the 3-minute run scores right answers by it).
   const make = Object.fromEntries(Object.entries({ serie, matriz, distinta }).map(([k, fn]) => [k, d => ({ ...fn(d), d })]));
-  return { make, draw, KINDS: Object.keys(make), TIPS };
+  return { make, draw, describe, KINDS: Object.keys(make), TIPS };
 })();

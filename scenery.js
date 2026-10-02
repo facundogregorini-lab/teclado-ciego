@@ -6,7 +6,14 @@
   const dots = document.querySelectorAll('.hero-dots i');
   const still = matchMedia('(prefers-reduced-motion: reduce)');
   const ROTATE_MS = 7000;
-  let heroScene = 'beach', timer = 0;
+  let heroScene = 'beach', timer = 0, paused = false;
+  try { paused = localStorage.getItem('templo-pause-scene') === 'true'; } catch {}
+  const pause = document.createElement('button');
+  pause.type = 'button'; pause.className = 'scene-pause';
+  document.querySelector('.landscape-note').append(pause);
+  const labelPause = () => { pause.textContent = paused ? '▶ Paisaje' : 'Ⅱ Pausar'; pause.setAttribute('aria-label', paused ? 'Reanudar paisajes' : 'Pausar paisajes'); pause.setAttribute('aria-pressed', String(paused)); };
+  labelPause();
+  pause.onclick = () => { paused = !paused; try { localStorage.setItem('templo-pause-scene', String(paused)); } catch {} labelPause(); rotate(); };
 
   // The photo of a slide is requested the first time it is shown, or right before, as the next one.
   const load = slide => { const f = slide?.querySelector('.frame'); if (f && !f.style.backgroundImage) f.style.backgroundImage = `url('assets/${slide.dataset.scene}.jpg')`; };
@@ -22,7 +29,7 @@
   // The hero goes through beach, mountains and forest by itself (not with reduced motion).
   function rotate() {
     clearInterval(timer);
-    if (still.matches) return;
+    if (still.matches || paused) return;
     timer = setInterval(() => { if (!document.hidden) showHero(after(heroScene)); }, ROTATE_MS);
   }
 

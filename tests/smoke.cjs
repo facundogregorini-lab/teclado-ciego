@@ -48,7 +48,7 @@ function typeText(page) {
     await a.waitForFunction(s => document.documentElement.dataset.heroScene !== s, firstScene, { timeout: 10000 });
     check('The hero changes landscape by itself', await a.locator('.hero-slides .slide.on').count() === 1);
     const levels = await a.$$eval('#learning .evo-card b', els => els.map(e => e.textContent));
-    check('Each group is its own level, with the final one at the end', levels.join() === 'Nivel chimpancé,Nivel bebé,Nivel niño,Nivel indigente,Nivel intelectual,Nivel premio Nobel');
+    check('Each group is its own level, with the final one at the end', levels.join() === 'Nivel chimpancé,Nivel bebé,Nivel niño,Nivel ninja del mate,Nivel intelectual,Nivel premio Nobel');
     check('Each level shows its own typist', new Set(await a.$$eval('#learning .evo-card svg', els => els.map(e => e.innerHTML))).size === 6);
     check('Levels not started look locked', await a.locator('#learning .evo-art.locked').count() === 6);
     await a.click('#continue');
@@ -61,7 +61,7 @@ function typeText(page) {
     check('The home has a general hero, a big card per section and the rankings before the sections', await a.evaluate(() => {
       const order = ['heroTitle', 'sections', 'ranking', 'teclado', 'cog'].map(id => document.getElementById(id));
       return order.every((el, i) => !i || order[i - 1].compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING);
-    }) && (await a.textContent('#heroTitle')).includes('Desarrollá tus habilidades') && await a.locator('.sc-card').count() === 2);
+    }) && (await a.textContent('#heroTitle')).includes('Un poquito de práctica') && await a.locator('.sc-card').count() === 2);
     check('The ranking has a general board and one per section', (await a.textContent('#rankView')).includes('General') && await a.locator('#rankView button').count() === 5);
     check('With META_PIXEL_ID=off the Meta Pixel is not loaded', !(await a.evaluate(() => 'fbq' in window)) && !(await a.evaluate(() => [...document.scripts].some(x => x.src.includes('facebook')))));
     check('The app is called Templo Ninja', (await a.title()) === 'Templo Ninja' && (await a.textContent('#homeBtn')).includes('Templo Ninja'));
@@ -147,7 +147,7 @@ function typeText(page) {
     check('Measurements hide the on-screen keyboard', await a.isHidden('#guide') && (await a.textContent('#lName')) === 'A ciegas');
     await typeText(a); await a.waitForSelector('#result:not([hidden])');
     check('The result names the method', (await a.textContent('#result h3')).includes('a ciegas'));
-    check('The result shows who types like you', await a.isVisible('.house-result .typist-art') && (await a.textContent('.house-copy')).includes('mediana'));
+    check('The result shows who types like you', await a.isVisible('.house-result .typist-art') && (await a.textContent('.house-copy')).includes('referencia'));
     check('Measurements are not limited without payments configured', await a.isHidden('#planNote'));
     await a.waitForFunction(() => document.querySelector('#rankLine')?.textContent);
     check('Impossible speeds stay out of the ranking', (await a.textContent('#rankLine')).includes('no entra al ranking'));
@@ -178,7 +178,7 @@ function typeText(page) {
     await a.click('#cogCta');
     check('The header CTA takes you to Ninja mental, on the same page', await a.isVisible('#cog') && await a.isVisible('#home') && a.url().endsWith('#ninja'));
     const cogLevels = await a.$$eval('#cogPath .evo-card b', els => els.map(e => e.textContent));
-    check('Each training level has its own typist', cogLevels.join() === 'Nivel chimpancé,Nivel bebé,Nivel niño,Nivel indigente,Nivel intelectual,Nivel premio Nobel');
+    check('Each training level has its own typist', cogLevels.join() === 'Nivel chimpancé,Nivel bebé,Nivel niño,Nivel ninja del mate,Nivel intelectual,Nivel premio Nobel');
     check('There are 15 sessions and the mock test', await a.locator('#cogPath .lc').count() === 16);
     await a.click('#cogContinue');
     check('A session starts with a series of figures', await a.isVisible('#quiz') && (await a.textContent('#qPrompt')).includes('sigue') && await a.locator('#qFig .fig').count() === 5 && await a.locator('#qOpts .opt').count() === 4);
@@ -204,7 +204,7 @@ function typeText(page) {
     check('The mock test says who you solve like', (await a.textContent('#qResult .house-copy h4')).length > 0 && await a.isVisible('#qResult .typist-art'));
     await a.click('#qrHome');
     check('The best mock test is shown', (await a.textContent('#cBest')).endsWith('%'));
-    // 5-minute run: figures, numbers and English in turn, harder with every 3 right answers, then score and IQ
+    // 5-minute run: figures, numbers and English in turn, harder with every 3 right answers, then score and Índice
     await a.click('#maxBtn');
     check('The 5-minute run first explains how it works', await a.isVisible('#qIntro') && await a.isHidden('#qPlay') && (await a.textContent('#qTime')) === '5:00');
     await a.waitForTimeout(1200);
@@ -222,7 +222,7 @@ function typeText(page) {
     check('Each answer says what happened', (await a.textContent('#qFlash')).startsWith('✗ Era la'));
     await a.evaluate(() => { const now = performance.now.bind(performance); performance.now = () => now() + 301000; });
     await a.waitForSelector('#qResult:not([hidden]) .iq');
-    check('The run ends with a score and a playful IQ', /^IQ \d+$/.test(await a.textContent('#qResult .iq')) && (await a.textContent('#qResult .nums')).includes('efectividad') && (await a.textContent('#qResult')).includes('no un test de IQ real'));
+    check('The run ends with a score and a playful Índice', /^Índice \d+$/.test(await a.textContent('#qResult .iq')) && (await a.textContent('#qResult .nums')).includes('efectividad') && (await a.textContent('#qResult')).includes('no mide inteligencia'));
     check('The server computes the score: 4 right answers at levels 1, 1, 1 and 2, 80% right', (await a.textContent('#qResult .nums b')) === '4' && !(await a.isVisible('.flag-note')));
     await a.waitForFunction(() => document.querySelector('#ninjaRankLine')?.textContent.includes('#1'));
     check('The run gives the place in the ninja ranking', true);
@@ -242,7 +242,7 @@ function typeText(page) {
     const nwa = decodeURIComponent(await a.getAttribute('#chWhatsapp', 'href'));
     check('A run can be sent as a challenge, pointing to the run kept by the server', nwa.includes('Ninja mental') && /reto=[\w-]{22}/.test(nwa) && !/ninja=\d/.test(nwa) && nwa.includes('#ninja'));
     await a.click('#chClose'); await a.click('#qrHome');
-    check('The ninja ranking in the section lists the user', (await a.textContent('#ninjaRank li.me')).includes('ana') && (await a.textContent('#maxBest')).includes('IQ 100 · 4 puntos'));
+    check('The ninja ranking in the section lists the user', (await a.textContent('#ninjaRank li.me')).includes('ana') && (await a.textContent('#maxBest')).includes('Índice 100 · 4 puntos'));
     await a.click('#maxInvite');
     const ninjaLink = /http:\/\/127\S+/.exec(decodeURIComponent(await a.getAttribute('#chWhatsapp', 'href')))[0];
     check('The challenge of the best mark says its score', (await a.textContent('#chLead')).includes('4 puntos'));
@@ -318,7 +318,7 @@ function typeText(page) {
     await a.click('.main-nav a[href="#learning"]');
     check('Lessons are one click away', await a.isVisible('#home') && !a.url().includes('#ninja'));
     await a.click('#rankView [data-v="ninja"]');
-    check('The main ranking has a Ninja tab', (await a.textContent('#rankList li.me')).includes('IQ'));
+    check('The main ranking has a Ninja tab', (await a.textContent('#rankList li.me')).includes('Índice'));
     await a.click('#rankView [data-v="cog"]');
     check('The Ninja mental progress ranking lists the user or says how to join', (await a.locator('#rankList li.me').count()) ? (await a.textContent('#rankList li.me')).includes('sesiones') : /Aprobá una sesión|Estrenalo/.test(await a.textContent('#rankNote')));
     await a.click('#rankView [data-v="general"]');
@@ -360,7 +360,7 @@ function typeText(page) {
     check('An old link with a score in it is only an invitation', (await nf.textContent('#challengeTitle')) === 'pepe te invita a Ninja mental');
     await nf.goto(ninjaLink);
     await nf.waitForFunction(() => document.querySelector('#challengeTitle').textContent.includes('verificados'));
-    check('A ninja challenge opens Ninja mental with the banner and the score from the server', await nf.isVisible('#cog') && (await nf.textContent('#challengeTitle')).includes('ana te desafía en Ninja mental: IQ') && (await nf.textContent('#challengeTitle')).includes('(4 puntos'));
+    check('A ninja challenge opens Ninja mental with the banner and the score from the server', await nf.isVisible('#cog') && (await nf.textContent('#challengeTitle')).includes('ana te desafía en Ninja mental: Índice') && (await nf.textContent('#challengeTitle')).includes('(4 puntos'));
     await nf.click('#challengeAccept');
     check('Accepting starts the 5-minute run', (await nf.textContent('#qName')) === 'Desafío de 5 minutos');
     await nf.click('#qGo'); await nf.waitForSelector('#qFig .fig');

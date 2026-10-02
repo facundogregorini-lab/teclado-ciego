@@ -223,8 +223,10 @@ dialog::backdrop{background:rgba(10,14,18,.45)}
 <link rel="stylesheet" href="typists.css">
 <link rel="stylesheet" href="cognitive.css">
 <script src="scenery.js" defer></script>
+<link rel="stylesheet" href="dojo.css">
 </head>
 <body>
+<a class="skip-link" href="#dojo">Saltar al plan de práctica</a>
 <div class="wrap">
   <header class="top">
     <button class="brand" id="homeBtn" aria-label="Templo Ninja: ir al inicio"><kbd>⛩</kbd>Templo Ninja</button>
@@ -234,7 +236,7 @@ dialog::backdrop{background:rgba(10,14,18,.45)}
     <button class="upgrade-cta" id="upgradeCta">✦ <span id="upgradeLabel">Apoyá <span class="cta-long">el templo</span></span></button>
     <button class="acct out" id="acctBtn">Entrar</button>
   </header>
-  <div class="preferences">
+  <details class="preference-panel" id="preferencePanel" open><summary>⚙ Tu teclado, las ayudas y el paisaje</summary><div class="preferences">
     <div class="settings">
       <label for="layout">Distribución
         <select id="layout"><option value="la">Latinoamericano</option><option value="es">España</option></select>
@@ -257,6 +259,7 @@ dialog::backdrop{background:rgba(10,14,18,.45)}
     </div>
   </div>
 
+  </details>
   <section class="challenge-banner" id="challengeBanner" hidden aria-live="polite">
     <span class="cb-flag" aria-hidden="true">🏁</span>
     <div><b id="challengeTitle"></b><span id="challengeText"></span></div>
@@ -272,15 +275,24 @@ dialog::backdrop{background:rgba(10,14,18,.45)}
       </div>
       <div class="hero-copy">
         <span class="eyebrow"><span class="sun-mark" aria-hidden="true">⛩</span> TEMPLO NINJA · TECLADO CIEGO Y NINJA MENTAL</span>
-        <h1 id="heroTitle">Desarrollá tus habilidades.<br><em>Divirtiéndote.</em></h1>
-        <p>Escribí sin mirar el teclado, entrená para los tests de las entrevistas y desafiá a tus amigos. Unos minutos por día, con personajes que evolucionan con vos: de chimpancé a alien.</p>
+        <h1 id="heroTitle">Un poquito de práctica.<br><em>Un montón de revancha.</em></h1>
+        <p>Entrená tus dedos y tus neuronas con desafíos cortos. Aprendé de cada error, superá tu marca y retá a ese colega que dice “yo escribo rapidísimo”.</p>
         <div class="actions">
-          <a class="btn primary" href="#sections">Elegí por dónde empezar <span aria-hidden="true">↓</span></a>
+          <a class="btn primary" href="#dojo">Armá tu entrenamiento <span aria-hidden="true">↓</span></a>
           <a class="btn" href="#ranking">Ver el ranking</a>
         </div>
         <span class="plan-note" id="planNote" hidden></span>
       </div>
       <div class="landscape-note"><span id="sceneCaption">Un respiro junto al mar</span><span class="hero-dots" aria-hidden="true"><i></i><i></i><i></i></span></div>
+    </section>
+    <section class="dojo" id="dojo" aria-labelledby="dojoTitle" tabindex="-1">
+      <div class="dojo-heading"><div><span class="eyebrow">TU PLAN DE HOY · SIN CUENTA PARA EMPEZAR</span><h2 id="dojoTitle">Una ronda. Una mejora. Otra sonrisa.</h2><p>Elegí tu punto de partida. Podés cambiarlo cuando quieras.</p></div><div class="dojo-streak"><b id="dojoDays">0</b><small>días de racha</small></div></div>
+      <div class="dojo-controls"><label>Quiero entrenar<select id="dojoTrack"><option value="typing">⌨️ Escribir sin mirar</option><option value="fig">🔷 Figuras y patrones</option><option value="num">📊 Números y porcentajes</option><option value="eng">🇬🇧 Inglés para el trabajo</option></select></label><label>Mi punto de partida<select id="dojoLevel"><option value="beginner">Principiante · paso a paso</option><option value="intermediate">Intermedio · afianzar</option><option value="advanced">Avanzado · pulir y competir</option></select></label></div>
+      <div class="mobile-route">📱 En el celular, probá figuras, números o inglés. Para aprender mecanografía con diez dedos, conectá un teclado físico.</div>
+      <div class="dojo-plan"><article class="mission"><span class="eyebrow">01 · APRENDÉ</span><h3 id="missionTitle"></h3><p id="missionDesc"></p><button class="btn primary" id="dojoStart">Empezar mi práctica →</button></article><article class="mission"><span class="eyebrow">02 · AFIANZÁ</span><h3>Rescatá un error</h3><p id="reviewDesc"></p><button class="btn" id="dojoReview">Una ronda de refuerzo</button></article><article class="mission"><span class="eyebrow">03 · SUPERATE</span><h3>Que hable el marcador</h3><p>Probá lo aprendido sin ayuda. Después compartí tu marca: el derecho a presumir se gana practicando.</p><button class="btn" id="dojoChallenge">Reto de hoy · 60 s</button></article></div>
+      <div class="dojo-meter"><progress id="dojoProgress" max="3" value="0" aria-label="Prácticas completadas hoy"></progress><span id="dojoCount" role="status"></span></div>
+      <div class="dojo-options"><label><input type="checkbox" id="dojoGuided" checked> Ninja mental sin reloj en las sesiones</label><label><input type="checkbox" id="dojoHumor" checked> Chistes del entrenador</label><button class="btn" id="dojoInvite">Invitar a mi grupo ↗</button></div>
+      <p class="dojo-fine">El plan y la racha se guardan en este navegador. Si ayer no pudiste, hoy empezás de nuevo: sin culpa. Los simulacros y desafíos siempre tienen tiempo.</p>
     </section>
     <section class="sections-cta" id="sections" aria-label="Secciones">
       <article class="sc-card sc-type">
@@ -296,7 +308,7 @@ dialog::backdrop{background:rgba(10,14,18,.45)}
       <article class="sc-card sc-ninja">
         <div class="sc-top"><span class="sc-icon" aria-hidden="true">🥷</span><div><span class="eyebrow">SECCIÓN 2</span><h2>Ninja mental</h2></div></div>
         <p>Entrená para los tests de las entrevistas laborales: figuras abstractas, razonamiento numérico e inglés para el trabajo, con técnicas en cada ejercicio.</p>
-        <div class="sc-stats"><div><b id="scSessions">0/45</b><span>sesiones</span></div><div><b id="scIq">—</b><span>mejor IQ ninja</span></div></div>
+        <div class="sc-stats"><div><b id="scSessions">0/45</b><span>sesiones</span></div><div><b id="scIq">—</b><span>mejor índice ninja</span></div></div>
         <div class="actions">
           <button class="btn primary big" id="scNinja">Entrenar</button>
           <button class="btn" id="scMax">Desafío de 5 minutos <span aria-hidden="true">⚡</span></button>
@@ -375,7 +387,7 @@ dialog::backdrop{background:rgba(10,14,18,.45)}
     </section>
     </section>
     <section class="block" id="cog" aria-labelledby="cogBlockTitle">
-      <div class="block-head"><span class="sc-icon" aria-hidden="true">🥷</span><div><span class="eyebrow">SECCIÓN 2 · NINJA MENTAL</span><h2 id="cogBlockTitle">Pensá rápido. <em>Ganá la entrevista.</em></h2><p>Los tests que usan las empresas para elegir candidatos, en tres pistas con niveles, técnicas y simulacros.</p></div></div>
+      <div class="block-head"><span class="sc-icon" aria-hidden="true">🥷</span><div><span class="eyebrow">SECCIÓN 2 · NINJA MENTAL</span><h2 id="cogBlockTitle">Encontrá la regla. <em>Ganale al desafío.</em></h2><p>Los tests que usan las empresas para elegir candidatos, en tres pistas con niveles, técnicas y simulacros.</p></div></div>
     <nav class="track-tabs" id="cogTracks" aria-label="Pistas de Ninja mental">
       <button data-v="fig" aria-pressed="true"><span class="ti">🔷</span><b>Figuras abstractas</b><small></small></button>
       <button data-v="num" aria-pressed="false"><span class="ti">📊</span><b>Razonamiento numérico</b><small></small></button>
@@ -397,8 +409,8 @@ dialog::backdrop{background:rgba(10,14,18,.45)}
     <section class="ninja-max" aria-labelledby="maxTitle">
       <div class="nm-copy">
         <span class="eyebrow">DESAFÍO DE 5 MINUTOS</span>
-        <h2 id="maxTitle">¿Cuánto da tu IQ ninja?</h2>
-        <p>Resolvé todas las que puedas en 5 minutos: figuras, números e inglés, mezclados. Cada 3 aciertos sube la dificultad. Al final calculamos tu puntaje según cuántas respondiste y qué tan bien, y estimamos tu IQ. Es un juego, no un test de IQ real.</p>
+        <h2 id="maxTitle">¿Cuánto da tu índice ninja?</h2>
+        <p>Resolvé todas las que puedas en 5 minutos: figuras, números e inglés, mezclados. Cada 3 aciertos sube la dificultad. Tu puntaje combina dificultad y precisión. El índice ninja es una escala del juego: no mide inteligencia ni predice una contratación.</p>
         <div class="actions">
           <button class="btn primary" id="maxBtn">Empezar el desafío <small>5 min</small></button>
           <button class="btn" id="maxInvite">Desafiar a un amigo</button>
@@ -448,13 +460,13 @@ dialog::backdrop{background:rgba(10,14,18,.45)}
         <ol>
           <li>Se alternan figuras, números e inglés. Elegí con el mouse o con las teclas 1 a 5.</li>
           <li>Al contestar aparece enseguida la próxima pregunta. Cada 3 aciertos, la dificultad sube y cada acierto vale más.</li>
-          <li>Cuando se termina el reloj (o si tocás <b>Terminar ahora</b>) ves tus puntos, tu IQ ninja y a quién te parecés.</li>
+          <li>Cuando se termina el reloj (o si tocás <b>Terminar ahora</b>) ves tus puntos, tu índice ninja y a quién te parecés.</li>
           <li>Jugá vos: las partidas se corrigen en el servidor y las que parecen hechas por un programa o una IA no cuentan para el ranking.</li>
         </ol>
       </div>
       <div id="qPlay">
         <div class="q-run" id="qRun" hidden><span class="q-flash" id="qFlash" aria-live="polite">Elegí la figura que sigue.</span><button class="btn" id="qEnd" type="button">Terminar ahora</button></div>
-        <p class="q-prompt" id="qPrompt"></p>
+        <p class="q-prompt" id="qPrompt" tabindex="-1"></p>
         <div class="q-fig" id="qFig"></div>
         <p class="q-tip" id="qTip" hidden></p>
         <div class="q-opts" id="qOpts" role="group" aria-label="Opciones"></div>
@@ -586,6 +598,7 @@ dialog::backdrop{background:rgba(10,14,18,.45)}
 
 <div class="toast" id="toast" role="status" hidden></div>
 
+<script src="dojo.js"></script>
 <script src="typists.js"></script>
 <script src="figures.js"></script>
 <script src="numeric.js"></script>
@@ -727,7 +740,7 @@ function genLesson(l) {
 }
 
 /* ---------- Each group is a level with its own typist (drawings in typists.js) ---------- */
-// Fila guía = chimpancé, fila superior = bebé, fila inferior = niño, mayúsculas y tildes = indigente, textos = intelectual.
+// Fila guía = chimpancé, fila superior = bebé, fila inferior = niño, mayúsculas y tildes = ninja del mate, textos = intelectual.
 // Passing all 26 lessons makes you a premio Nobel; all of them with 3 stars, an alien.
 const cap1 = str => str[0].toUpperCase() + str.slice(1);
 const GROUP_SKY = ['linear-gradient(#fde6c8,#c4e6e7)', 'linear-gradient(#e3efe1,#bcd8c3)', 'linear-gradient(#d5e7f6,#eef4f8)', 'linear-gradient(#f4e6f0,#d3e5f3)', 'linear-gradient(#ffd8a8,#f4b3a8 55%,#c7b6e4)', 'linear-gradient(#1d2140,#4b3f8a 60%,#c7b6e4)'];
@@ -769,7 +782,7 @@ const TIERS = [
     'Escribís como en primer grado: con ganas y sacando la lengua.',
     'Nivel niño: rapidísimo para los emojis, lento para todo lo demás.',
     'Ya podés chatear sin que te dejen en visto por aburrimiento.'] },
-  { min: 35, name: 'un indigente', jokes: [
+  { min: 35, name: 'un ninja del mate', jokes: [
     'Justo en la mediana: tipeás bien, pero todavía a monedas.',
     'Máquina de escribir, caja de cartón y cero apuro. Estilo propio, eso sí.',
     'Escribís como una persona normal. Felicitaciones por la normalidad.'] },
@@ -796,12 +809,10 @@ function percentile(ppm) {
 }
 function speedScale(ppm) {
   const pos = v => Math.min(92, Math.max(6, v / 120 * 100));
-  return `<div class="speed-scale" aria-hidden="true"><div class="track"></div><span class="mk med" style="left:${pos(MEDIAN)}%">mediana ${MEDIAN}</span><span class="mk you" style="left:${pos(ppm)}%">vos ${ppm}</span></div>`;
+  return `<div class="speed-scale" aria-hidden="true"><div class="track"></div><span class="mk med" style="left:${pos(MEDIAN)}%">referencia ${MEDIAN}</span><span class="mk you" style="left:${pos(ppm)}%">vos ${ppm}</span></div>`;
 }
 function medianText(ppm) {
-  const d = ppm - MEDIAN;
-  return d === 0 ? `Justo en la mediana: ${MEDIAN} palabras por minuto.`
-    : `${Math.abs(d)} palabras por minuto ${d < 0 ? 'por debajo' : 'por encima'} de la mediana (${MEDIAN}). Más rápido que el ${percentile(ppm)}% de la gente, más o menos.`;
+  return 'Tu mejor comparación sos vos: repetí el mismo método y priorizá la precisión. La escala de 40 ppm es una referencia del juego, no un percentil de población.';
 }
 let liveTier = -1;
 function updateLive(ppm, started) {
@@ -990,13 +1001,15 @@ function show(view) {
   for (const v of ['home', 'lesson', 'quiz']) $(v).hidden = view !== v;
   scrollTo({ top: 0 });
 }
-let testMethod = 'ciegas';
-function start(l, method) {
+let testMethod = 'ciegas', testSeed = '';
+const SHARED_TEXTS = [...TEXTS, ...REFRANES]; // v1: keep this corpus stable for shared links
+function start(l, method, seed) {
   if (!mayStart()) return;
   cur = l; mode = 'typing'; counted = false;
   if (l === 'test' && method) testMethod = method;
   const tm = METHODS.find(m => m.id === testMethod);
-  text = l === 'test' ? shuffle([...TEXTS, ...REFRANES]).join(' ') : genLesson(l);
+  if (l === 'test') testSeed = /^[a-zA-Z0-9-]{1,48}$/.test(seed || '') ? seed : 'v1-' + Date.now().toString(36);
+  text = l === 'test' ? Dojo.seededText(testSeed, SHARED_TEXTS) : l.practiceText || genLesson(l);
   idx = 0; errors = 0; errBy = {}; missed = new Set(); deadPending = false; hintOn = false; holdIdx = -1; pendingMark = ''; $('accentHelp').hidden = true;
   running = false; accMs = 0; clearInterval(timer); timer = setInterval(tick, 200);
   const g = l === 'test' ? null : GROUPS[l.g];
@@ -1167,11 +1180,11 @@ function finish() {
   const evoBefore = isTest ? null : evoState(cur.g), finalBefore = isTest ? null : evoState(FINAL), prevStars = isTest ? 0 : S.lessons[cur.id]?.stars || 0;
   if (isTest) {
     prevSame = [...S.tests].reverse().find(t => t.method === testMethod) || null;
-    S.tests.push({ method: testMethod, ppm, acc, date: Date.now() });
+    S.tests.push({ method: testMethod, ppm, acc, seed: testSeed, accents: S.tildes, date: Date.now() });
     if (S.tests.length > 300) S.tests.splice(0, S.tests.length - 300);
     if (!S.test || ppm > S.test.ppm) { S.test = { ppm, acc }; better = true; }
   }
-  else {
+  else if (!cur.review) {
     st = acc < 90 ? 0 : acc < 95 ? 1 : ppm >= goal ? 3 : 2;
     const prev = S.lessons[cur.id];
     if (!prev || st > prev.stars || (st === prev.stars && ppm > prev.ppm)) { S.lessons[cur.id] = { stars: st, ppm, acc }; better = !!prev; }
@@ -1189,11 +1202,12 @@ function finish() {
       : `Primera medición ${tm.as}. Repetila en unos días para ver cómo evoluciona.`)
       + (acc < 90 ? ' Hubo muchos errores: la precisión viene primero.' : '');
   }
+  else if (cur.review) msg = 'Repaso completo. Esta ronda refuerza tus teclas sin cambiar las estrellas de las lecciones. Buscá 95% de precisión antes de acelerar.';
   else if (st === 0) msg = 'La precisión quedó debajo del 90%. Repetila más despacio, sin mirar el teclado: la velocidad llega sola.';
   else if (st < 3 && acc < 95) msg = 'Aprobada. Con 95% de precisión o más ganás la segunda estrella.';
   else if (st < 3) msg = `Muy preciso. Llegá a ${goal} palabras por minuto para la tercera estrella.`;
   else msg = 'Excelente: precisa y a buen ritmo.';
-  const idxL = isTest ? -1 : LESSONS.indexOf(cur), next = LESSONS[idxL + 1];
+  const idxL = isTest ? -1 : LESSONS.indexOf(cur), next = !isTest && !cur.review && st > 0 ? LESSONS[idxL + 1] : null;
   let extra = '';
   if (isTest) {
     const ti = tierFor(ppm);
@@ -1237,8 +1251,9 @@ function finish() {
     </div>`;
   $('typing').hidden = true; r.hidden = false; $('liveHouse').hidden = true;
   $('rNext') && ($('rNext').onclick = () => start(next));
-  $('rAgain').onclick = () => start(cur, testMethod);
-  $('rChallenge') && ($('rChallenge').onclick = () => openChallenge({ ppm, method: testMethod }));
+  $('rAgain').onclick = () => start(cur, testMethod, testSeed);
+  $('rChallenge') && ($('rChallenge').onclick = () => openChallenge({ ppm, acc, method: testMethod, seed: testSeed, accents: S.tildes }));
+  coachTyping(ppm, acc, weak);
   $('rHome').onclick = isTest ? () => { goHome(); $('evo').scrollIntoView(); } : goHome;
   highlight(); $('bar').style.width = '100%';
   (($('rNext') || $('rAgain'))).focus({ preventScroll: true });
@@ -1351,6 +1366,7 @@ function pushProgress() {
   pushTimer = setTimeout(() => api('data', { type: 'progress', progress: progress() }).catch(() => {}), 800);
 }
 async function recordSession(entry) {
+  logDojo(entry);
   if (!auth.name) return false;
   try {
     const r = await api('data', { type: 'finish', entry, progress: progress() });
@@ -1598,11 +1614,11 @@ function ninjaQ() { const kind = NINJA_KINDS[quiz.qs.length % NINJA_KINDS.length
 const iqFor = score => Math.max(70, Math.min(160, Math.round(85 + 22 * Math.log(1 + (Number(score) || 0) / 4))));
 const iqTier = iq => [0, 115, 125, 130, 135, 140, 150].filter(v => iq >= v).length - 1;
 const IQ_JOKES = [
-  ['IQ similar al de un chimpancé. Que nunca se enteren en el trabajo.', 'Tranqui: tu secreto está a salvo con nosotros. Con tu jefe, no tanto.', 'El chimpancé también tardó en entender la flecha que gira. Él no tenía reunión a las 9, eso sí.'],
-  ['IQ de bebé prodigio: ya distinguís un círculo de un cuadrado. Casi siempre.', 'Nivel bebé: mucho potencial, poca paciencia. No lo pongas en el CV todavía.'],
+  ['Puntaje similar al de un chimpancé. Que nunca se enteren en el trabajo.', 'Tranqui: tu secreto está a salvo con nosotros. Con tu jefe, no tanto.', 'El chimpancé también tardó en entender la flecha que gira. Él no tenía reunión a las 9, eso sí.'],
+  ['Puntaje de bebé prodigio: ya distinguís un círculo de un cuadrado. Casi siempre.', 'Nivel bebé: mucho potencial, poca paciencia. No lo pongas en el CV todavía.'],
   ['Nivel niño genio: te va bien en el cole, pero la matriz te hizo transpirar.', 'Pensás rápido. Ahora falta pensar bien.'],
   ['Genio incomprendido: pensás como filósofo y cobrás como filósofo.', 'La cabeza está. Falta que te llamen de la entrevista.'],
-  ['Nivel intelectual: ya podés decir "en mi test de IQ…" en las reuniones.', 'Anteojos, café y secuencias resueltas. Te falta la boina.'],
+  ['Nivel intelectual: ya podés decir "en mi test de razonamiento…" en las reuniones.', 'Anteojos, café y secuencias resueltas. Te falta la boina.'],
   ['Nivel premio Nobel: andá preparando el discurso de agradecimiento.', 'Tus neuronas piden un aumento de sueldo.'],
   ['Nivel alien: la NASA quiere hablar con vos. O con tu planeta.', '¿Sos una persona o una inteligencia extraterrestre disfrazada?'],
 ];
@@ -1614,6 +1630,7 @@ function startQuiz(sess) {
     ? shuffle(Array.from({ length: T.sim.n }, (_, i) => T.gen.make[T.kinds[i % 3].id](3 + (i % 3 + Math.floor(i / 3)) % 3, used)))
     : Array.from({ length: sess.size }, () => T.gen.make[sess.kind](sess.d, used));
   quiz = { sess, sim, tr, qs, i: 0, ok: 0, picks: [], limit: sim ? T.sim.min * 60000 : sess.size * T.levels[sess.d - 1].perQ * 1000, t0: performance.now() };
+  quiz.guided = !sim && dojo.guided;
   mode = 'quiz'; counted = false; setQuizLabels(false); $('qIntro').hidden = true;
   $('qGroup').textContent = sim ? `${T.icon} ${T.short} · simulacro de ${T.sim.n} preguntas en ${T.sim.min} minutos` : `${T.icon} ${T.short} · sesión ${sess.n} · nivel ${tierShort(sess.g)} · dificultad ${sess.d}`;
   $('qName').textContent = sim ? 'Simulacro de entrevista' : sess.name;
@@ -1622,7 +1639,7 @@ function startQuiz(sess) {
   clearInterval(timer); timer = setInterval(qTick, 250); qTick();
 }
 function setQuizLabels(ninja) {
-  $('qRun').hidden = !ninja;
+  $('qRun').hidden = !ninja; $('qTime').nextElementSibling.textContent = 'restante';
   $('qNumLbl').textContent = ninja ? 'respondidas' : 'pregunta'; $('qOkLbl').textContent = ninja ? 'puntos' : 'correctas';
   $('qHint').textContent = ninja ? 'Rápido: elegí con las teclas 1 a 5 (o A a E) · Esc para salir' : 'Elegí con el mouse o con las teclas 1 a 5 (o A a E) · Esc para salir';
 }
@@ -1654,6 +1671,8 @@ async function beginNinja() {
 }
 function qTick() {
   if (mode !== 'quiz') return;
+  if (quiz.feedbackAt && !quiz.ninja && !quiz.sim) return;
+  if (quiz.guided) { $('qTime').textContent = '∞'; $('qTime').parentElement.classList.remove('low'); $('qTime').nextElementSibling.textContent = 'sin reloj'; return; }
   const left = quiz.limit - (performance.now() - quiz.t0);
   $('qTime').textContent = fmt(left);
   if (quiz.ninja) $('qBar').style.width = (100 * (1 - left / quiz.limit)) + '%';
@@ -1678,12 +1697,13 @@ function renderQ() {
   $('qOpts').className = 'q-opts' + (q.text ? ' txt' : q.kind === 'distinta' ? ' big' : '');
   $('qOpts').replaceChildren(...q.options.map((t, i) => {
     const b = document.createElement('button'); b.className = 'opt'; b.type = 'button';
-    b.innerHTML = `<b>${'ABCDE'[i]}</b>${optHtml(q, t)}`; b.setAttribute('aria-label', 'Opción ' + 'ABCDE'[i] + (q.text ? ': ' + t : ''));
+    b.innerHTML = `<b>${'ABCDE'[i]}</b>${optHtml(q, t)}`; b.setAttribute('aria-label', 'Opción ' + 'ABCDE'[i] + ': ' + (q.text ? t : Figures.describe(t)));
     b.onclick = e => answerQ(i, e);
     return b;
   }));
   $('qFeedback').hidden = true;
   watchPointer();
+  $('qPrompt').focus({ preventScroll: true });
 }
 function answerQ(k, ev) {
   const q = quiz.qs[quiz.i];
@@ -1693,12 +1713,14 @@ function answerQ(k, ev) {
   const right = k === q.answer;
   quiz.picks[quiz.i] = k; if (right) quiz.ok++;
   if (quiz.sim) { nextQ(); return; }
+  quiz.feedbackAt = performance.now();
   const btns = $('qOpts').children;
   btns[q.answer].classList.add('right'); if (!right) btns[k].classList.add('wrong');
   $('qOk').textContent = quiz.ok;
   $('qExplain').innerHTML = `<b>${right ? '✓ ¡Correcto!' : `✗ Era la ${'ABCDE'[q.answer]}.`}</b> `; $('qExplain').append(q.explain);
   const next = q.after && q.after !== q.tip ? q.after : !right ? q.tip : '';
   if (next) $('qExplain').insertAdjacentHTML('beforeend', `<span class="q-next">💡 <b>Para la próxima:</b> ${escHtml(next)}</span>`);
+  if (dojo.humor) { const joke = document.createElement('span'); joke.className = 'q-next'; joke.textContent = Dojo.feedback(right ? 100 : 70, quiz.i % 2); $('qExplain').append(joke); }
   $('qFeedback').hidden = false; $('qNext').focus({ preventScroll: true });
 }
 /* How each answer of the 5-minute run was given, for the server to tell people from programs: keyboard or pointer,
@@ -1743,6 +1765,7 @@ async function answerNinja(k, ev) {
 }
 function nextQ() {
   if (mode !== 'quiz') return;
+  if (quiz.feedbackAt) { quiz.t0 += performance.now() - quiz.feedbackAt; quiz.feedbackAt = 0; }
   quiz.i++;
   if (quiz.i >= quiz.qs.length) finishQuiz(); else renderQ();
 }
@@ -1750,9 +1773,9 @@ function finishQuiz() {
   if (mode !== 'quiz') return;
   if (quiz.ninja) return finishNinja();
   clearInterval(timer); mode = 'qdone'; doneAt = performance.now();
-  const ms = Math.min(quiz.limit, performance.now() - quiz.t0), n = quiz.qs.length, ok = quiz.ok, pct = Math.round(100 * ok / n);
-  const timedOut = quiz.i < n, sess = quiz.sess;
-  $('qBar').style.width = '100%'; $('qTime').textContent = fmt(quiz.limit - ms);
+  const ms = Math.min(quiz.guided ? Infinity : quiz.limit, performance.now() - quiz.t0), n = quiz.qs.length, ok = quiz.ok, pct = Math.round(100 * ok / n);
+  const timedOut = !quiz.guided && quiz.i < n, sess = quiz.sess;
+  $('qBar').style.width = '100%'; $('qTime').textContent = quiz.guided ? '∞' : fmt(quiz.limit - ms);
   let html;
   if (quiz.sim) {
     const ti = tierForPct(pct), T = TRACKS[quiz.tr];
@@ -1782,7 +1805,7 @@ function finishQuiz() {
   }
   save();
   recordSession({ lesson: 'cog', name: quiz.sim ? `Ninja · simulacro de ${TRACKS[quiz.tr].short}` : `Ninja · ${TRACKS[quiz.tr].short} · ${sess.name} (sesión ${sess.n})`, stars: quiz.sim ? 0 : S.cog[sess.id]?.stars || 0, ppm: 0, acc: pct, ms: Math.round(ms) });
-  const nx = !quiz.sim && SESSIONS[quiz.tr][SESSIONS[quiz.tr].indexOf(sess) + 1];
+  const nx = !quiz.sim && cogStarsFor(ok, n) > 0 && SESSIONS[quiz.tr][SESSIONS[quiz.tr].indexOf(sess) + 1];
   $('qResult').innerHTML = html + `<div class="actions">
       ${nx ? `<button class="btn primary" id="qrNext">Siguiente: sesión ${nx.n} <small>Enter</small></button>` : ''}
       <button class="btn${nx ? '' : ' primary'}" id="qrAgain">${quiz.sim ? 'Otro simulacro' : 'Repetir'}${nx ? '' : ' <small>Enter</small>'}</button>
@@ -1792,6 +1815,7 @@ function finishQuiz() {
   const tr = quiz.tr;
   $('qrAgain').onclick = () => { if (quiz.sim) cogTrack = tr; startQuiz(sess); };
   $('qrHome').onclick = goCog;
+  coachQuiz();
   (($('qrNext') || $('qrAgain'))).focus({ preventScroll: true });
 }
 async function finishNinja() {
@@ -1822,13 +1846,14 @@ async function finishNinja() {
       <ul>${r.reasons.map(x => `<li>${escHtml(x)}</li>`).join('')}</ul>
       ${r.offline ? '' : '<p>Si fuiste vos, jugá como siempre con tu mouse, tu dedo o el teclado, en esta pestaña y sin extensiones que hagan clics por vos.</p>'}</div>` : '';
   $('qResult').innerHTML = `<h3>Desafío de 5 minutos</h3>${reasons}
-    <div class="house-result">${Typists.typist(ti)}<div class="house-copy"><span class="eyebrow">Tu IQ ninja estimado</span><h4 class="iq">IQ ${iq}</h4>
+    <div class="house-result">${Typists.typist(ti)}<div class="house-copy"><span class="eyebrow">Tu índice del juego</span><h4 class="iq">Índice ${iq}</h4>
       <p class="joke">${rnd(IQ_JOKES[ti])}</p>
-      <p>Pensás como ${TIERS[ti].name}. ${record && S.ninja.runs.length > 1 ? '¡Nuevo récord personal! ' : ''}Es una estimación lúdica según tu puntaje, no un test de IQ real.</p>
+      <p>Pensás como ${TIERS[ti].name}. ${record && S.ninja.runs.length > 1 ? '¡Nuevo récord personal! ' : ''}Es un índice del juego: no mide inteligencia ni predice el desempeño laboral.</p>
       ${flagged ? '' : ninjaChallengeResult(score)}<p id="ninjaRankLine">${flagged ? '' : auth.name ? '' : 'Entrá con tu cuenta para aparecer en el ranking ninja.'}</p></div></div>
     <div class="nums"><div><b>${score}</b><span>puntos</span></div><div><b>${ok}/${n}</b><span>correctas</span></div><div><b>${r.acc}%</b><span>efectividad</span></div><div><b>${r.maxLevel}</b><span>dificultad máxima</span></div></div>
     <p>Cada acierto suma su dificultad (de 1 a 5) y el total se multiplica por tu efectividad: ${r.points} × ${r.acc}% = ${score} puntos.</p>
     <div class="actions"><button class="btn primary" id="qrAgain">Otra vez <small>Enter</small></button><button class="btn" id="qrChallenge">${flagged ? 'Invitar a un amigo' : 'Desafiar a un amigo'}</button><button class="btn" id="qrHome">Ninja mental</button></div>`;
+  const coach = document.createElement('aside'); coach.className = 'coach'; coach.textContent = Dojo.feedback(r.acc, n % 2, dojo.humor) + (r.acc < 85 ? ' Volvé a las sesiones guiadas y priorizá entender cada regla.' : ' Buen control. Tu próximo rival es tu mejor marca.'); $('qResult').querySelector('.actions').before(coach);
   $('qrAgain').onclick = startNinja;
   $('qrChallenge').onclick = () => openChallenge(flagged ? { kind: 'ninja', score: 0 } : { kind: 'ninja', score, run: r.id });
   $('qrHome').onclick = goCog;
@@ -1837,11 +1862,11 @@ async function finishNinja() {
 function ninjaRankLine(score) {
   const el = $('ninjaRankLine'), me = RANK?.ninja?.me;
   if (el && !me && auth.name && !score) el.textContent = 'Con 0 puntos todavía no entrás al ranking ninja: con un acierto ya aparecés.';
-  else if (el && me) el.textContent = `Con tu mejor marca (IQ ${iqFor(me.score)}, ${me.score} puntos) estás #${me.rank} de ${RANK.ninja.total} en el ranking ninja.`;
+  else if (el && me) el.textContent = `Con tu mejor marca (Índice ${iqFor(me.score)}, ${me.score} puntos) estás #${me.rank} de ${RANK.ninja.total} en el ranking ninja.`;
 }
 function renderNinjaMax() {
   const b = S.ninja.best;
-  $('maxBest').textContent = b ? `Tu mejor marca: IQ ${b.iq} · ${b.score} puntos (${b.ok} de ${b.n} correctas). ${S.ninja.runs.length} ${S.ninja.runs.length === 1 ? 'intento' : 'intentos'}.` : 'Todavía no lo intentaste.';
+  $('maxBest').textContent = b ? `Tu mejor marca: Índice ${b.iq} · ${b.score} puntos (${b.ok} de ${b.n} correctas). ${S.ninja.runs.length} ${S.ninja.runs.length === 1 ? 'intento' : 'intentos'}.` : 'Todavía no lo intentaste.';
   renderRankInto($('ninjaRank'), $('ninjaRankNote'), 'ninja', 10);
 }
 $('maxBtn').onclick = startNinja;
@@ -1880,7 +1905,7 @@ function rankRow(r, rank, view = rankView) {
   } else if (view === 'ninja') {
     const iq = iqFor(r.score);
     pct = Math.round(100 * (iq - 70) / 90);
-    val = 'IQ ' + iq; sub = `${r.score} puntos · nivel ${tierShort(iqTier(iq))}`;
+    val = 'Índice ' + iq; sub = `${r.score} puntos · nivel ${tierShort(iqTier(iq))}`;
   } else if (view === 'progress') {
     const done = Math.floor(r.score / 100), stars = r.score % 100;
     pct = Math.round(100 * done / LESSONS.length);
@@ -2037,23 +2062,26 @@ const NAME_KEY = 'teclado-ciego-nombre';
     }).catch(() => {});
   }
   else if (from) challenge = { from, kind: 'speed', ppm: method && ppm > 0 && ppm <= 250 ? ppm : 0, method: method?.id || 'ciegas' };
-  for (const k of ['de', 'ppm', 'metodo', 'ninja', 'reto']) q.delete(k);
+  if (challenge?.kind === 'speed') { challenge.seed = /^[a-zA-Z0-9-]{1,48}$/.test(q.get('texto') || '') ? q.get('texto') : null; challenge.acc = q.has('precision') ? Math.max(0, Math.min(100, Number(q.get('precision')) || 0)) : null; challenge.accents = q.get('tildes') === 'loose' ? 'loose' : 'strict'; }
+  for (const k of ['de', 'ppm', 'metodo', 'ninja', 'reto', 'texto', 'precision', 'tildes']) q.delete(k);
   window.history.replaceState(null, '', location.pathname + (q.toString() ? '?' + q : '') + location.hash);
 })();
 function renderChallenge() {
   $('challengeBanner').hidden = !challenge;
   if (!challenge) return;
   if (challenge.kind === 'ninja') {
-    $('challengeTitle').textContent = challenge.score ? `${challenge.from} te desafía en Ninja mental: IQ ${iqFor(challenge.score)} (${challenge.score} puntos ✓ verificados)` : `${challenge.from} te invita a Ninja mental`;
-    $('challengeText').textContent = challenge.score ? 'Tenés 5 minutos de figuras, números e inglés para superarlo. ¿Le ganás?' : 'Resolvé todo lo que puedas en 5 minutos y compará tu IQ ninja.';
+    $('challengeTitle').textContent = challenge.score ? `${challenge.from} te desafía en Ninja mental: Índice ${iqFor(challenge.score)} (${challenge.score} puntos ✓ verificados)` : `${challenge.from} te invita a Ninja mental`;
+    $('challengeText').textContent = challenge.score ? 'Tenés 5 minutos de figuras, números e inglés para superarlo. ¿Le ganás?' : 'Resolvé todo lo que puedas en 5 minutos y compará tu índice ninja.';
     return;
   }
   const m = METHODS.find(x => x.id === challenge.method);
   $('challengeTitle').textContent = challenge.ppm ? `${challenge.from} te desafía: ${challenge.ppm} palabras por minuto ${m.as}` : `${challenge.from} te invita a escribir sin mirar`;
-  $('challengeText').textContent = challenge.ppm ? `Nivel ${tierShort(tierFor(challenge.ppm))}. Tenés un minuto para ganarle.` : 'Medí tu velocidad en un minuto y mandale tu resultado.';
+  $('challengeText').textContent = challenge.ppm ? `Tenés un minuto. ${challenge.seed ? 'Mismo texto y mismas reglas.' : 'Texto aleatorio: comparación orientativa.'} ${challenge.acc != null ? challenge.acc + '% de precisión. ' : ''}Marca compartida, no verificada por el servidor.` : 'Medí tu velocidad en un minuto y mandale tu resultado.';
 }
 function challengeResult(ppm) {
   if (challenge?.kind !== 'speed' || !challenge.ppm || testMethod !== challenge.method) return '';
+  if (challenge.seed && challenge.seed !== testSeed) return '<p class="challenge-result">Elegí Aceptar el desafío para competir con el mismo texto.</p>';
+  if (challenge.acc != null && (challenge.acc < 90 || Math.round(100 * idx / Math.max(1, idx + errors)) < 90)) return '<p class="challenge-result">Para declarar ganador, ambos necesitan al menos 90% de precisión. ¡Revancha con menos teclas rebeldes!</p>';
   const d = ppm - challenge.ppm, who = challenge.from.replace(/[<>&"]/g, '');
   return `<p class="challenge-result">${d > 0 ? `🏆 ¡Le ganaste a ${who} por ${d} palabras por minuto! Mandale la revancha.` : d < 0 ? `Te faltaron ${-d} palabras por minuto para ganarle a ${who}. ¿Otra vez?` : `¡Empate con ${who}! Desempaten con otra medición.`}</p>`;
 }
@@ -2068,12 +2096,13 @@ function shareLink() {
   u.searchParams.set('de', auth.name || $('chName').value.trim().slice(0, 24) || 'Un amigo');
   if (isNinjaShare()) { if (shareScore.run) u.searchParams.set('reto', shareScore.run); u.hash = 'ninja'; }
   else if (shareScore) { u.searchParams.set('ppm', shareScore.ppm); u.searchParams.set('metodo', shareScore.method); }
+  if (shareScore && !isNinjaShare()) { if (shareScore.seed) u.searchParams.set('texto', shareScore.seed); if (Number.isFinite(shareScore.acc)) u.searchParams.set('precision', shareScore.acc); u.searchParams.set('tildes', shareScore.accents === 'loose' ? 'loose' : 'strict'); }
   return u.href;
 }
 function shareMessage() {
   if (isNinjaShare()) return (shareScore.score && shareScore.run
-    ? `¡Te desafío en Ninja mental! Saqué ${shareScore.score} puntos en el desafío de 5 minutos (IQ ninja ${iqFor(shareScore.score)}). ¿Me ganás?`
-    : 'Probá el desafío de 5 minutos de Ninja mental (figuras, números e inglés) y compará tu IQ ninja con el mío.') + ' ' + shareLink();
+    ? `¡Te desafío en Ninja mental! Saqué ${shareScore.score} puntos en el desafío de 5 minutos (índice ninja ${iqFor(shareScore.score)}). ¿Me ganás?`
+    : 'Probá el desafío de 5 minutos de Ninja mental (figuras, números e inglés) y compará tu índice ninja con el mío.') + ' ' + shareLink();
   const m = shareScore && METHODS.find(x => x.id === shareScore.method);
   return (shareScore
     ? `¡Te desafío en Templo Ninja! Escribí ${shareScore.ppm} palabras por minuto ${m.as} (nivel ${tierShort(tierFor(shareScore.ppm))}). ¿Me ganás?`
@@ -2091,15 +2120,16 @@ function openChallenge(score) {
   $('chName').value = saved; $('chNameLabel').hidden = !!auth.name;
   const m = score && METHODS.find(x => x.id === score.method);
   $('chLead').textContent = score?.kind === 'ninja'
-    ? (score.score ? `Mandale tu marca: ${score.score} puntos (IQ ninja ${iqFor(score.score)}). Con el enlace puede aceptar el desafío y ver si te gana.` : 'Invitalo al desafío de 5 minutos y comparen el IQ ninja.')
+    ? (score.score ? `Mandale tu marca: ${score.score} puntos (índice ninja ${iqFor(score.score)}). Con el enlace puede aceptar el desafío y ver si te gana.` : 'Invitalo al desafío de 5 minutos y comparen el índice ninja.')
     : score
     ? `Mandale tu marca: ${score.ppm} palabras por minuto ${m.as}. Con el enlace puede aceptar el desafío y ver si te gana.`
     : 'Mandale una invitación para medir su velocidad y comparar.';
+  if (score && !isNinjaShare()) $('chLead').textContent += ' Las marcas de velocidad son autodeclaradas. Usen el mismo dispositivo y al menos 90% de precisión.';
   updateShare(); $('challengeDlg').showModal();
 }
 function bestScore() {
   const best = S.tests.reduce((b, t) => !b || t.ppm > b.ppm ? t : b, null);
-  return best && { ppm: best.ppm, method: best.method };
+  return best && { ppm: best.ppm, acc: best.acc, method: best.method, seed: best.seed, accents: best.accents };
 }
 $('chName').oninput = () => { try { localStorage.setItem(NAME_KEY, $('chName').value.trim()); } catch {} updateShare(); };
 $('chEmail').oninput = updateShare;
@@ -2109,9 +2139,100 @@ $('chCopy').onclick = async () => {
 };
 $('chClose').onclick = () => $('challengeDlg').close();
 $('inviteBtn').onclick = () => openChallenge(bestScore());
-$('challengeAccept').onclick = () => challenge.kind === 'ninja' ? startNinja() : start('test', challenge.method);
+$('challengeAccept').onclick = () => { if (challenge.kind === 'ninja') startNinja(); else { S.tildes = challenge.accents || 'strict'; applyAccentMode(); start('test', challenge.method, challenge.seed); } };
 $('challengeDismiss').onclick = () => { challenge = null; renderChallenge(); };
 renderChallenge();
+
+/* ---------- Personal learning plan (browser-local, separate from ranked progress) ---------- */
+if (matchMedia('(max-width: 700px)').matches) $('preferencePanel').open = false;
+const DOJO_KEY = 'templo-dojo-v1';
+let dojo = { level: 'beginner', track: 'typing', humor: true, guided: true, days: {}, weak: [], lastTyping: null };
+try {
+  const v = JSON.parse(localStorage.getItem(DOJO_KEY));
+  if (v && typeof v === 'object') dojo = { ...dojo, ...v,
+    days: v.days && typeof v.days === 'object' && !Array.isArray(v.days) ? v.days : {},
+    weak: Array.isArray(v.weak) ? v.weak.filter(k => typeof k === 'string' && k.length === 1).slice(0, 4) : [] };
+} catch {}
+if (!['beginner', 'intermediate', 'advanced'].includes(dojo.level)) dojo.level = 'beginner';
+if (!['typing', 'fig', 'num', 'eng'].includes(dojo.track)) dojo.track = 'typing';
+function saveDojo() { try { localStorage.setItem(DOJO_KEY, JSON.stringify(dojo)); } catch {} }
+function logDojo(entry) {
+  if (!counted || !entry.ms || entry.ms < 1000) return;
+  const today = Dojo.day(), count = Number(dojo.days[today]) || 0;
+  dojo.days[today] = Math.min(999, count + 1);
+  dojo.days = Object.fromEntries(Object.entries(dojo.days).sort().slice(-366));
+  saveDojo(); renderDojo();
+}
+function recommendedLesson() {
+  const floor = dojo.level === 'advanced' ? 18 : dojo.level === 'intermediate' ? 6 : 0;
+  return LESSONS.slice(floor).find(l => !(S.lessons[l.id]?.stars >= 2)) || LESSONS[floor];
+}
+function recommendedSession() {
+  const floor = dojo.level === 'advanced' ? 4 : dojo.level === 'intermediate' ? 3 : 1;
+  return SESSIONS[dojo.track].find(s => s.d >= floor && !(S.cog[s.id]?.stars >= 2)) || SESSIONS[dojo.track].find(s => s.d === floor);
+}
+function renderDojo() {
+  if (!$('dojo')) return;
+  $('dojoLevel').value = dojo.level; $('dojoTrack').value = dojo.track;
+  $('dojoHumor').checked = dojo.humor; $('dojoGuided').checked = dojo.guided;
+  const n = Number(dojo.days[Dojo.day()]) || 0;
+  $('dojoDays').textContent = Dojo.streak(Object.keys(dojo.days));
+  $('dojoProgress').value = Math.min(3, n);
+  $('dojoCount').textContent = n >= 3 ? 'Meta de hoy completa. ¡El descanso también entrena!' : `${n}/3 prácticas hoy · una ya es un buen comienzo`;
+  const typing = dojo.track === 'typing';
+  $('missionTitle').textContent = typing ? recommendedLesson().name : recommendedSession().name;
+  $('missionDesc').textContent = typing ? 'Buscá 95% de precisión. La velocidad viene después; el teclado no se va a escapar.' : `${TRACKS[dojo.track].name} · dificultad ${recommendedSession().d}/5. Leé la técnica y explicá la regla antes de responder.`;
+  $('reviewDesc').textContent = typing && dojo.weak.length ? `Tu última práctica dejó estas teclas para reforzar: ${dojo.weak.map(k => k === ' ' ? 'espacio' : k).join(', ')}.` : typing ? 'Afianzá las teclas de tu nivel con otra ronda corta.' : 'Repetí una habilidad con preguntas nuevas. Buscá entender el porqué de cada respuesta.';
+  $('dojoChallenge').textContent = typing ? 'Reto de hoy · 60 s' : 'Simulacro de entrevista';
+}
+function trainDojo() { if (dojo.track === 'typing') start(recommendedLesson()); else { cogTrack = dojo.track; startQuiz(recommendedSession()); } }
+function startDrill(keys = dojo.weak) {
+  const base = recommendedLesson();
+  const allowed = allowedFor(LESSONS.indexOf(base));
+  const pool = WORDS.filter(w => [...w].every(c => allowed.has(c)));
+  const practiceText = Dojo.drill(keys.length ? keys : [...base.keys].filter(isLetter), pool);
+  if (!practiceText) { start(base); return; }
+  start({ ...base, id: 'repaso', name: 'Rescate de teclas rebeldes', review: true, practiceText });
+}
+function coachTyping(ppm, acc, weak) {
+  dojo.weak = weak.map(([key]) => key);
+  const previous = dojo.lastTyping;
+  dojo.lastTyping = { acc, ppm }; saveDojo(); renderDojo();
+  const box = document.createElement('aside'); box.className = 'coach'; box.setAttribute('aria-label', 'Tu próximo paso');
+  const title = document.createElement('b'); title.textContent = Dojo.feedback(acc, S.tests.length % 2, dojo.humor);
+  const p = document.createElement('p');
+  p.textContent = weak.length ? 'Misión siguiente: practicá tus teclas rebeldes despacio. Apuntá a 95% de precisión antes de acelerar.' : acc >= 95 ? 'Precisión en zona verde. Probá el siguiente desafío sin perder este control.' : 'Bajá un cambio y repetí: primero precisión, después velocidad.';
+  box.append(title, p);
+  if (previous && Number.isFinite(previous.acc)) { const trend = document.createElement('small'); trend.textContent = `Precisión anterior: ${previous.acc}%. Actual: ${acc}%. Compará ejercicios de dificultad similar.`; box.append(trend); }
+  if (weak.length) { const btn = document.createElement('button'); btn.className = 'btn primary'; btn.id = 'rDrill'; btn.textContent = 'Practicar mis errores'; btn.onclick = () => startDrill(weak.map(([k]) => k)); box.append(btn); }
+  $('result').querySelector('.actions').before(box);
+  if (cur?.review) { $('result').querySelector('h3').textContent = 'Repaso completo'; $('result').querySelector('.bigstars')?.remove(); $('result').querySelector('.result-evo')?.remove(); }
+}
+function coachQuiz() {
+  const pct = Math.round(100 * quiz.ok / quiz.qs.length), box = document.createElement('aside');
+  box.className = 'coach';
+  const title = document.createElement('b'); title.textContent = Dojo.feedback(pct, quiz.ok % 2, dojo.humor); box.append(title);
+  const wrong = quiz.qs.filter((q, i) => quiz.picks[i] !== q.answer);
+  const p = document.createElement('p'); p.textContent = wrong.length ? 'Antes de repetir, contá con tus palabras por qué esa respuesta es correcta. Después probá con un ejercicio nuevo.' : 'Todas correctas. Subí la dificultad o probá un simulacro para transferir lo aprendido.'; box.append(p);
+  if (wrong.length) {
+    const target = wrong[0], session = SESSIONS[quiz.tr].find(s => s.kind === target.kind && s.d === (target.d || quiz.sess.d || 3));
+    if (session) { const btn = document.createElement('button'); btn.className = 'btn primary'; btn.id = 'qrDrill'; btn.textContent = `Reforzar ${kindInfo(target.kind).name.toLowerCase()}`; btn.onclick = () => startQuiz(session); box.append(btn); }
+    if (!quiz.sim) {
+      const review = document.createElement('div'); review.className = 'review';
+      wrong.forEach(q => { const details = document.createElement('details'), summary = document.createElement('summary'), explanation = document.createElement('p'); summary.textContent = q.prompt; explanation.textContent = `${q.explain} ${q.after || q.tip || ''}`; details.append(summary, explanation); if (!q.text) { const fig = document.createElement('div'); fig.innerHTML = Figures.draw(q.options[q.answer], 'fig small'); details.append(fig); } review.append(details); }); box.append(review);
+    }
+  }
+  $('qResult').querySelector('.actions').before(box);
+}
+$('dojoLevel').onchange = e => { dojo.level = e.target.value; saveDojo(); renderDojo(); };
+$('dojoTrack').onchange = e => { dojo.track = e.target.value; saveDojo(); renderDojo(); };
+$('dojoHumor').onchange = e => { dojo.humor = e.target.checked; saveDojo(); };
+$('dojoGuided').onchange = e => { dojo.guided = e.target.checked; saveDojo(); };
+$('dojoStart').onclick = trainDojo;
+$('dojoReview').onclick = () => dojo.track === 'typing' ? startDrill() : trainDojo();
+$('dojoChallenge').onclick = () => { if (dojo.track === 'typing') start('test', 'ciegas', 'daily-' + Dojo.day()); else { cogTrack = dojo.track; startQuiz('sim'); } };
+$('dojoInvite').onclick = () => openChallenge(bestScore());
+renderDojo();
 
 /* ---------- Settings ---------- */
 function applyKbMode() {
