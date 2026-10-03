@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080">
+  <rect width="1080" height="1080" fill="#F4EBDD"/>
+  <circle cx="870" cy="170" r="250" fill="#D3EBE8"/>
+  <circle cx="160" cy="950" r="230" fill="#F1D9D0"/>
+  <path d="M0 760 Q270 680 540 760 T1080 760 V1080 H0Z" fill="#0B6E69"/>
+  <g transform="translate(540 345)">
+    <circle r="172" fill="#141A21"/>
+    <path d="M-139-89 Q0-205 139-89 L109-139 Q0-225-109-139Z" fill="#0B6E69"/>
+    <path d="M-128-22 Q0-102 128-22 L104 87 Q0 137-104 87Z" fill="#F4EBDD"/>
+    <path d="M-128-22 Q0-93 128-22 L128 24 Q0-27-128 24Z" fill="#0B6E69"/>
+    <path d="M-73 22 Q-43 2-13 22 Q-43 55-73 22 M13 22 Q43 2 73 22 Q43 55 13 22" fill="#141A21"/>
+    <path d="M-31 83 Q0 105 31 83" fill="none" stroke="#141A21" stroke-width="10" stroke-linecap="round"/>
+  </g>
+  <text x="540" y="595" text-anchor="middle" font-family="Arial, sans-serif" font-size="34" font-weight="700" letter-spacing="8" fill="#0B6E69">BIENVENIDO A</text>
+  <text x="540" y="678" text-anchor="middle" font-family="Arial, sans-serif" font-size="84" font-weight="900" fill="#141A21">TEMPLO NINJA</text>
+  <text x="540" y="817" text-anchor="middle" font-family="Arial, sans-serif" font-size="42" font-weight="700" fill="#FFFFFF">Entrená. Medí. Superate.</text>
+  <rect x="372" y="872" width="336" height="78" rx="39" fill="#E0A126"/>
+  <text x="540" y="924" text-anchor="middle" font-family="Arial, sans-serif" font-size="29" font-weight="800" fill="#141A21">ENTRENÁ GRATIS</text>
+  <text x="540" y="1020" text-anchor="middle" font-family="Arial, sans-serif" font-size="25" font-weight="700" letter-spacing="4" fill="#FFFFFF">TECLADO · MENTE · PROGRESO</text>
+</svg>
