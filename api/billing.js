@@ -1,22 +1,22 @@
 // GET: plan info (public part + the user's plan when logged in)
-// POST { action: 'play' }: counts one of today's free practices · { action: 'buy' }: Mercado Pago checkout for the
+// POST { action: 'play' }: counts one of today's free practices (FREE_ACCOUNT_PER_DAY for accounts) · { action: 'buy' }: Mercado Pago checkout for the
 // one-time payment · { action: 'sync' }: asks Mercado Pago again (coming back from paying)
 const { redis, HttpError, requireUser, bearer, body, handler } = require('./_lib');
-const { FREE_PER_DAY, settings, playsKey, mp, status } = require('./_billing');
+const { FREE_PER_DAY, FREE_ACCOUNT_PER_DAY, settings, playsKey, mp, status } = require('./_billing');
 const { metaSettings, purchaseId } = require('./_meta');
 
 async function userInfo(name, options) {
   const s = settings();
   const { premium, paid, sub, gift } = await status(name, options);
   const plays = Number(await redis('GET', playsKey(name))) || 0;
-  return { premium, plays, gift: Boolean(gift), lifetime: Boolean(paid), subscription: sub && { status: sub.status, paidUntil: sub.paidUntil },
+  return { premium, plays, freePerDay: FREE_ACCOUNT_PER_DAY, gift: Boolean(gift), lifetime: Boolean(paid), subscription: sub && { status: sub.status, paidUntil: sub.paidUntil },
     // For the page's Purchase event: same id as the one the server reports, so Meta counts it once
     purchase: paid ? { id: purchaseId(paid.id), value: paid.amount, currency: paid.currency || s.currency } : null };
 }
 
 module.exports = handler(async req => {
   const s = settings();
-  const base = { enabled: s.enabled, price: s.label, amount: s.price, currency: s.currency, freePerDay: FREE_PER_DAY, pixel: metaSettings().pixel };
+  const base = { enabled: s.enabled, price: s.label, amount: s.price, currency: s.currency, freePerDay: FREE_PER_DAY, guestPerDay: FREE_PER_DAY, accountPerDay: FREE_ACCOUNT_PER_DAY, pixel: metaSettings().pixel };
 
   if (req.method === 'GET') {
     if (!bearer(req)) return base;
@@ -30,7 +30,7 @@ module.exports = handler(async req => {
     if (!s.enabled || (await status(name)).premium) return { ok: true };
     const count = await redis('INCR', playsKey(name));
     if (count === 1) await redis('EXPIRE', playsKey(name), 2 * 86400);
-    if (count > FREE_PER_DAY) throw new HttpError(402, `Ya usaste tus ${FREE_PER_DAY} prácticas gratis de hoy.`);
+    if (count > FREE_ACCOUNT_PER_DAY) throw new HttpError(402, `Ya usaste tus ${FREE_ACCOUNT_PER_DAY} prácticas gratis de hoy.`);
     return { ok: true, plays: count };
   }
 
