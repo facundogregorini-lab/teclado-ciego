@@ -41,6 +41,7 @@ body[data-view="quiz"]::before {background:linear-gradient(#f7f8f3b5,#f7f8f3a6),
 .nm-rank h3 {margin:0;font-family:var(--display);font-weight:600;font-size:1.1rem}
 .nm-rank .rank-list li {background:#ffffff14;border-color:#ffffff22;color:#f3f5ef}
 .nm-rank .rank-list li.me {background:#ffffff26;border-color:#9fe3c9}
+.nm-rank .rank-list li.rival {background:transparent;border-color:#ffffff33}
 .nm-rank .rank-list .val small,.nm-rank .rank-list .who small,.nm-rank .rank-note {color:#c9d4d0}
 .nm-rank .rank-list .bar {background:#ffffff22}
 .nm-rank .rank-list .bar i {background:#9fe3c9}

@@ -78,6 +78,10 @@
 .rank-list {list-style:none;margin:0;padding:0;display:grid;gap:6px}
 .rank-list li {display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:12px;align-items:center;background:#f7f8f2;border:1px solid var(--line);border-radius:12px;padding:9px 14px}
 .rank-list li.me {border:2px solid var(--accent);padding:8px 13px;background:#edf4e9}
+/* Rivales del dojo: practice bots, never dressed as people */
+.rank-list li.rival {background:transparent;border-style:dashed}
+.rank-list li.rival .bar i {opacity:.45}
+.rank-list .who small.bot {font-size:.72rem;white-space:nowrap}
 .rank-list li.sep {background:none;border:0;padding:0;justify-content:center;color:var(--muted);display:flex}
 .rank-list .pos {font-family:var(--display);font-weight:700;font-size:1.1rem;font-variant-numeric:tabular-nums}
 .rank-list .pos.p1::before {content:"🥇 "}.rank-list .pos.p2::before {content:"🥈 "}.rank-list .pos.p3::before {content:"🥉 "}
@@ -106,6 +110,10 @@
 .price {font-family:var(--display);font-weight:700;font-size:1.6rem!important;color:var(--ink)!important}
 .plan-status {color:var(--accent)!important;font-weight:700}
 #upgrade {justify-self:start}
+.alias {display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 10px;align-items:end}
+.alias .alias-hint,.alias .err {grid-column:1/-1;margin:0}
+.alias .alias-hint {color:var(--muted);font-size:.8rem}
+@media(max-width:480px) {.alias {grid-template-columns:1fr}.alias .btn {justify-self:start}}
 @media(max-width:1050px) {.group-head {grid-template-columns:minmax(0,1fr) 330px}.evo-card {grid-template-columns:160px 1fr}}
 @media(max-width:700px) {
   .slide[data-scene] {--px:.64}

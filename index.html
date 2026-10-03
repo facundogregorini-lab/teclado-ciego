@@ -325,7 +325,7 @@ dialog::backdrop{background:rgba(10,14,18,.45)}
         <div>
           <span class="eyebrow">TODOS LOS QUE PRACTICAN</span>
           <h2 id="rankTitle" class="rank-title">Ranking</h2>
-          <p id="rankLead">El general suma todo: estrellas de las lecciones y de Ninja mental, tu mejor velocidad y tu mejor desafío. También hay ranking de cada sección. Aparecés con tu usuario cuando entrás con tu cuenta.</p>
+          <p id="rankLead">El general suma todo: estrellas de las lecciones y de Ninja mental, tu mejor velocidad y tu mejor desafío. También hay ranking de cada sección. Aparecés con tu nombre cuando entrás con tu cuenta (lo cambiás en tu cuenta). Los 🤖 <b>rivales del dojo</b> son bots de práctica, de aprendiz a maestro, para que siempre tengas a quién superar.</p>
         </div>
         <div class="rank-tabs" role="group" aria-label="Tipo de ranking" id="rankView">
           <button data-v="general" aria-pressed="true"><b>🏆 General</b></button>
@@ -558,6 +558,12 @@ dialog::backdrop{background:rgba(10,14,18,.45)}
       <div class="stat"><b id="aBest">—</b><span>mejor prueba (ppm)</span></div>
       <div class="stat"><b id="aCount">0</b><span>sesiones guardadas</span></div>
     </div>
+    <form class="alias" id="aliasForm" novalidate>
+      <label class="field" for="alias">Tu nombre en el ranking<input id="alias" maxlength="24" autocomplete="nickname" spellcheck="false"></label>
+      <button type="submit" class="btn" id="aliasSave">Guardar nombre</button>
+      <p class="alias-hint" id="aliasHint"></p>
+      <p class="err" id="aliasErr" role="alert"></p>
+    </form>
     <p class="plan-status" id="planStatus"></p>
     <button class="btn" id="upgrade" hidden>✦ Apoyar el templo: acceso ilimitado</button>
     <div class="hist" id="hist"></div>
@@ -1316,7 +1322,9 @@ $('cap').addEventListener('focus', checkFocus);
 
 /* ---------- Account: progress and sessions saved on the server ---------- */
 const TOKEN = 'teclado-ciego-token';
-let auth = { token: null, name: null }, history = [], toastTimer = 0;
+let auth = { token: null, name: null, display: null }, history = [], toastTimer = 0;
+// The name others see (ranking, header, challenges); the username is still the one for logging in.
+const shownName = () => auth.display || auth.name;
 try { auth.token = localStorage.getItem(TOKEN); } catch {}
 function toast(msg) {
   const t = $('toast'); t.textContent = msg; t.hidden = false;
@@ -1393,12 +1401,12 @@ async function recordSession(entry) {
 function renderAccountBtn() {
   const b = $('acctBtn');
   b.classList.toggle('out', !auth.name);
-  if (auth.name) { b.innerHTML = '<span class="av"></span><span class="nm"></span>'; b.querySelector('.av').textContent = auth.name[0]; b.querySelector('.nm').textContent = auth.name; b.setAttribute('aria-label', 'Tu cuenta: ' + auth.name); }
+  if (auth.name) { b.innerHTML = '<span class="av"></span><span class="nm"></span>'; b.querySelector('.av').textContent = [...shownName()][0]; b.querySelector('.nm').textContent = shownName(); b.setAttribute('aria-label', 'Tu cuenta: ' + shownName()); }
   else { b.textContent = 'Entrar'; b.removeAttribute('aria-label'); }
-  $('foot').textContent = auth.name ? `Tu progreso se guarda en la cuenta de ${auth.name}.` : 'Tu progreso se guarda en este navegador. Entrá con tu cuenta para guardarlo en cualquier computadora.';
+  $('foot').textContent = auth.name ? `Tu progreso se guarda en la cuenta de ${shownName()}.` : 'Tu progreso se guarda en este navegador. Entrá con tu cuenta para guardarlo en cualquier computadora.';
 }
-async function signedIn(token, name) {
-  auth = { token, name };
+async function signedIn(token, name, display) {
+  auth = { token, name, display: display || name };
   tn.identify(name); // the username is the account id (no email is ever asked for)
   try { localStorage.setItem(TOKEN, token); } catch {}
   renderAccountBtn();
@@ -1419,7 +1427,7 @@ async function signedIn(token, name) {
 }
 function signedOut(msg) {
   if (auth.name) tn.reset();
-  auth = { token: null, name: null }; history = [];
+  auth = { token: null, name: null, display: null }; history = [];
   try { localStorage.removeItem(TOKEN); } catch {}
   S.lessons = {}; S.test = null; S.tests = []; S.cog = {}; S.sims = []; S.ninja = { best: null, runs: [] }; save();
   Object.assign(billing, { premium: false, plays: 0, gift: false, lifetime: false, subscription: null, freePerDay: billing.guestPerDay });
@@ -1441,7 +1449,7 @@ function setAuthMode(m) {
 function openAuth() { setAuthMode('login'); $('pass').value = ''; $('authDlg').showModal(); $('user').focus(); }
 function renderHistory() {
   const total = LESSONS.reduce((s, l) => s + (S.lessons[l.id]?.stars || 0), 0);
-  $('acctTitle').textContent = 'Hola, ' + auth.name;
+  $('acctTitle').textContent = 'Hola, ' + shownName();
   $('aStars').textContent = `${total}/${LESSONS.length * 3}`;
   $('aDone').textContent = `${LESSONS.filter(l => S.lessons[l.id]?.stars >= 1).length}/${LESSONS.length}`;
   $('aBest').textContent = S.test ? S.test.ppm : '—';
@@ -1465,7 +1473,7 @@ function renderHistory() {
 $('acctBtn').onclick = () => {
   if (mode === 'typing') goHome();
   if (!auth.name) { openAuth(); return; }
-  renderHistory(); $('acctDlg').showModal();
+  renderHistory(); renderAlias(); $('acctDlg').showModal();
   api('data').then(d => { history = d.history; renderHistory(); }).catch(() => {});
   loadBilling().then(renderPlan);
 };
@@ -1477,17 +1485,34 @@ $('authForm').onsubmit = async e => {
   try {
     const r = await api('auth', { action: authMode, username: $('user').value, password: $('pass').value });
     $('authDlg').close();
-    await signedIn(r.token, r.user.name);
+    await signedIn(r.token, r.user.name, r.user.display);
     loadRanking();
     if (authMode === 'register') track('CompleteRegistration', { content_name: 'Cuenta Templo Ninja' });
     tn.capture(authMode === 'register' ? 'signed_up' : 'logged_in', { source: signupFrom || 'account' });
     const left = limited() ? Math.max(0, billing.freePerDay - usedToday()) : 0, more = signupFrom && left ? ` Tenés ${left} ${left === 1 ? 'práctica' : 'prácticas'} más hoy: ¡a seguir!` : '';
-    toast((authMode === 'register' ? `Cuenta creada. Tu progreso se guarda en ${r.user.name}.` : `Hola, ${r.user.name}. Seguimos donde dejaste.`) + more);
+    toast((authMode === 'register' ? `Cuenta creada. Tu progreso se guarda en ${r.user.name}.` : `Hola, ${shownName()}. Seguimos donde dejaste.`) + more);
     signupFrom = null;
   } catch (err) { $('authErr').textContent = err.message; }
   $('authSubmit').disabled = false;
 };
 $('acctClose').onclick = () => $('acctDlg').close();
+function renderAlias() {
+  $('alias').value = auth.display && auth.display !== auth.name ? auth.display : '';
+  $('alias').placeholder = auth.name;
+  $('aliasErr').textContent = '';
+  $('aliasHint').textContent = `Así te ven en el ranking y en los desafíos. Para entrar seguís usando tu usuario, ${auth.name}. Vacío, se muestra tu usuario.`;
+}
+$('aliasForm').onsubmit = async e => {
+  e.preventDefault();
+  $('aliasErr').textContent = ''; $('aliasSave').disabled = true;
+  try {
+    const r = await api('auth', { action: 'display', display: $('alias').value });
+    auth.display = r.user.display;
+    renderAccountBtn(); renderHistory(); renderAlias(); loadRanking();
+    toast(`Listo: en el ranking aparecés como ${shownName()}.`);
+  } catch (err) { $('aliasErr').textContent = err.message; }
+  $('aliasSave').disabled = false;
+};
 $('logout').onclick = async () => {
   $('acctDlg').close();
   try { await api('auth', { action: 'logout' }); } catch {}
@@ -1888,7 +1913,7 @@ async function finishNinja() {
 function ninjaRankLine(score) {
   const el = $('ninjaRankLine'), me = RANK?.ninja?.me;
   if (el && !me && auth.name && !score) el.textContent = 'Con 0 puntos todavía no entrás al ranking ninja: con un acierto ya aparecés.';
-  else if (el && me) el.textContent = `Con tu mejor marca (IQ ${iqFor(me.score)}, ${me.score} puntos) estás #${me.rank} de ${RANK.ninja.total} en el ranking ninja.`;
+  else if (el && me) el.textContent = `Con tu mejor marca (IQ ${iqFor(me.score)}, ${me.score} puntos) estás #${me.rank} de ${RANK.ninja.total + (RANK.ninja.rivals || 0)} en el ranking ninja (con los rivales del dojo).`;
 }
 function renderNinjaMax() {
   const b = S.ninja.best;
@@ -1920,6 +1945,7 @@ async function loadRanking() {
 function rankRow(r, rank, view = rankView) {
   const li = document.createElement('li'), isMe = r.name === RANK.user;
   if (isMe) li.className = 'me';
+  if (r.rival) li.className = 'rival';
   let val, sub, pct;
   if (view === 'general') {
     pct = Math.min(100, Math.round(100 * r.score / 400));
@@ -1942,8 +1968,9 @@ function rankRow(r, rank, view = rankView) {
   }
   li.innerHTML = `<span class="pos${rank <= 3 ? ' p' + rank : ''}"></span><span class="who"></span><span class="val"><b></b><small></small></span><span class="bar"><i style="width:${pct}%"></i></span>`;
   li.querySelector('.pos').textContent = '#' + rank;
-  li.querySelector('.who').textContent = r.name;
+  li.querySelector('.who').textContent = r.display || r.name;
   if (isMe) li.querySelector('.who').insertAdjacentHTML('beforeend', '<small>vos</small>');
+  if (r.rival) { li.querySelector('.who').insertAdjacentHTML('beforeend', '<small class="bot">🤖 rival del dojo</small>'); li.title = 'Bot de práctica: no es una persona'; }
   li.querySelector('.val b').textContent = val;
   li.querySelector('.val small').textContent = sub;
   return li;
@@ -1952,7 +1979,7 @@ function renderRankInto(list, note, view, limit = 50) {
   list.replaceChildren();
   if (!RANK) { note.textContent = 'Cargando el ranking…'; return; }
   if (RANK.error) { note.textContent = RANK.error; return; }
-  const b = RANK[view] || { top: [], total: 0, me: null }, top = b.top.slice(0, limit);
+  const b = RANK[view] || { top: [], total: 0, rivals: 0, me: null }, top = b.top.slice(0, limit);
   let rank = 0;
   top.forEach((r, i) => { if (!i || top[i - 1].score !== r.score) rank = i + 1; list.append(rankRow(r, rank, view)); });
   if (b.me && !top.some(r => r.name === b.me.name)) {
@@ -1962,7 +1989,8 @@ function renderRankInto(list, note, view, limit = 50) {
   const who = b.total === 1 ? '1 persona' : b.total + ' personas';
   const empty = { general: 'Todavía no hay nadie. Practicá con tu cuenta y estrená el ranking.', progress: 'Todavía no hay nadie. Aprobá una lección con tu cuenta y estrená el ranking.', speed: 'Todavía no hay mediciones. Medí tu velocidad con tu cuenta y estrená el ranking.', cog: 'Todavía nadie aprobó una sesión de Ninja mental. ¡Estrenalo!', ninja: 'Todavía nadie hizo el desafío de 5 minutos con su cuenta. ¡Estrenalo!' }[view];
   const join = { general: ' Aprobá una lección o una sesión para aparecer.', progress: ' Aprobá una lección para aparecer.', speed: ' Medí tu velocidad para aparecer.', cog: ' Aprobá una sesión de Ninja mental para aparecer.', ninja: ' Hacé el desafío de 5 minutos para aparecer.' }[view];
-  note.textContent = !b.total ? empty : `${who} en este ranking.` + (RANK.user ? (b.me ? '' : join) : ' Entrá con tu cuenta para aparecer.');
+  const bots = b.rivals ? ` Los ${b.rivals} 🤖 rivales del dojo son bots de práctica, no personas.` : '';
+  note.textContent = (!b.total ? empty : `${who} en este ranking.` + (RANK.user ? (b.me ? '' : join) : ' Entrá con tu cuenta para aparecer.')) + bots;
 }
 function renderRanking() {
   document.querySelectorAll('#rankView button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === rankView)));
@@ -1972,7 +2000,7 @@ function renderRanking() {
 function rankLine(ppm) {
   const el = $('rankLine'), me = RANK?.speed?.me;
   if (el && ppm > 250) el.textContent = 'Más de 250 palabras por minuto no entra al ranking: sospechamos de un gato sobre el teclado.';
-  else if (el && me) el.textContent = `Con tu mejor marca (${me.score} ppm) estás #${me.rank} de ${RANK.speed.total} en el ranking de velocidad.`;
+  else if (el && me) el.textContent = `Con tu mejor marca (${me.score} ppm) estás #${me.rank} de ${RANK.speed.total + (RANK.speed.rivals || 0)} en el ranking de velocidad (con los rivales del dojo).`;
 }
 document.querySelectorAll('#rankView button').forEach(b => b.onclick = () => { rankView = b.dataset.v; renderRanking(); });
 
@@ -2146,7 +2174,7 @@ function ninjaChallengeResult(score) {
 const isNinjaShare = () => shareScore?.kind === 'ninja';
 function shareLink() {
   const u = new URL(location.pathname, location.href);
-  u.searchParams.set('de', auth.name || $('chName').value.trim().slice(0, 24) || 'Un amigo');
+  u.searchParams.set('de', shownName()?.slice(0, 24) || $('chName').value.trim().slice(0, 24) || 'Un amigo');
   if (isNinjaShare()) { if (shareScore.run) u.searchParams.set('reto', shareScore.run); u.hash = 'ninja'; }
   else if (shareScore) { u.searchParams.set('ppm', shareScore.ppm); u.searchParams.set('metodo', shareScore.method); }
   if (shareScore && !isNinjaShare()) { if (shareScore.seed) u.searchParams.set('texto', shareScore.seed); if (Number.isFinite(shareScore.acc)) u.searchParams.set('precision', shareScore.acc); u.searchParams.set('tildes', shareScore.accents === 'loose' ? 'loose' : 'strict'); }
@@ -2323,7 +2351,7 @@ if (NINJA_HASH.test(location.hash) || challenge?.kind === 'ninja') goCog();
 addEventListener('hashchange', () => { if (NINJA_HASH.test(location.hash) && mode !== 'quiz' && mode !== 'typing') goCog(); });
 renderRanking();
 // Without a saved session there is nothing to check: guests skip the request (and its 401).
-(auth.token ? api('auth') : Promise.reject(Object.assign(new Error('guest'), { status: 401 }))).then(r => signedIn(auth.token, r.user.name)).catch(err => {
+(auth.token ? api('auth') : Promise.reject(Object.assign(new Error('guest'), { status: 401 }))).then(r => signedIn(auth.token, r.user.name, r.user.display)).catch(err => {
   if (err.status === 401) { if (auth.token) signedOut(); return; }
   if (err.status === 0 || err.status === 404) { $('acctBtn').hidden = true; $('foot').textContent = 'Tu progreso se guarda en este navegador.'; }
 }).finally(() => { loadRanking(); if (!auth.name) loadBilling(); });
