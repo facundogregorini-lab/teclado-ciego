@@ -159,12 +159,14 @@ function typeText(page) {
     check('Blind and looking speeds are compared', (await a.textContent('#insight')).includes('mirando el teclado'));
     check('The progress ranking lists the user', (await a.textContent('#rankList li.me')).includes('ana'));
     await a.click('#rankView [data-v="speed"]');
-    check('Nobody is in the speed ranking with impossible speeds', (await a.locator('#rankList li').count()) === 0);
+    check('Nobody is in the speed ranking with impossible speeds', (await a.locator('#rankList li:not(.rival)').count()) === 0);
+    check('The rivales del dojo are in the ranking, marked as bots', (await a.locator('#rankList li.rival').count()) === 10
+      && (await a.textContent('#rankList li.rival')).includes('🤖 rival del dojo') && (await a.textContent('#rankNote')).includes('bots de práctica, no personas'));
     // A real speed: a slow measurement that ends by time
     await a.click('.mc:nth-child(2) .btn');
     await a.evaluate(() => { const t = [...document.querySelectorAll('#inner .c')].map(s => s.textContent).join('').slice(0, 40); for (const key of t) document.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true })); });
     await a.evaluate(() => { const now = performance.now.bind(performance); performance.now = () => now() + 61000; });
-    await a.waitForFunction(() => document.querySelector('#rankLine')?.textContent.includes('#1'));
+    await a.waitForFunction(() => /estás #\d+ de 11 /.test(document.querySelector('#rankLine')?.textContent));
     check('The result gives the place in the speed ranking', (await a.textContent('.house-copy h4')).length > 0);
     await a.evaluate(() => { delete performance.now; });
     await a.click('#rHome'); await a.click('#rankView [data-v="speed"]');
@@ -251,7 +253,7 @@ function typeText(page) {
     // Cheating: a score sent by the browser, clicks made by a script and a pointer that jumps to the answers
     const forged = await a.evaluate(async () => (await fetch('/api/data', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + localStorage.getItem('teclado-ciego-token') },
       body: JSON.stringify({ type: 'progress', progress: { lessons: {}, ninja: { best: { score: 299, iq: 160, ok: 60, n: 60, date: Date.now() }, runs: [] } } }) })).ok);
-    const ninjaBoard = async () => (await (await fetch(SITE + '/api/ranking')).json()).ninja.top;
+    const ninjaBoard = async () => (await (await fetch(SITE + '/api/ranking')).json()).ninja.top.filter(r => !r.rival);
     check('A score reported by the browser is ignored', forged && (await ninjaBoard())[0].score === 4);
     const scriptRun = async answer => {
       await a.click('#maxBtn'); await a.click('#qGo'); await a.waitForSelector('#qFig .fig');
@@ -353,7 +355,7 @@ function typeText(page) {
     await b.click('#acctBtn'); await b.fill('#user', 'ana'); await b.fill('#pass', 'otra-clave'); await b.click('#authSubmit');
     await b.waitForFunction(() => document.querySelector('#authErr').textContent);
     check('Wrong passwords are rejected', (await b.textContent('#authErr')).includes('incorrectos'));
-    await b.waitForFunction(() => document.querySelectorAll('#rankList li').length === 1);
+    await b.waitForFunction(() => document.querySelectorAll('#rankList li:not(.rival)').length === 1);
     check('Guests see the ranking of everyone', (await b.textContent('#rankList')).includes('ana') && (await b.textContent('#rankNote')).includes('Entrá'));
     // A friend opens a Ninja mental challenge
     const nf = await (await browser.newContext()).newPage(); nf.on('pageerror', e => errors.push(e.message));
@@ -379,6 +381,33 @@ function typeText(page) {
     check('Measurements follow the account too', (await b.locator('#evoTable tbody tr').count()) === 3);
     await b.reload(); await b.waitForSelector('#acctBtn .nm');
     check('The session survives a reload', (await b.textContent('#acctBtn .nm')) === 'ana');
+    // The name shown in the ranking can change; the username to log in stays
+    await b.click('#acctBtn');
+    check('The account shows the username to log in', (await b.textContent('#aliasHint')).includes('ana'));
+    await b.fill('#alias', '  Ana   Ninja '); await b.click('#aliasSave');
+    await b.waitForFunction(() => document.querySelector('#acctBtn .nm').textContent === 'Ana Ninja');
+    check('The new name is in the header and the greeting', (await b.textContent('#acctTitle')) === 'Hola, Ana Ninja');
+    await b.click('#acctClose');
+    await b.waitForFunction(() => document.querySelector('#rankList li.me')?.textContent.includes('Ana Ninja'));
+    check('The ranking shows the new name', true);
+    const ranking = await (await fetch(SITE + '/api/ranking')).json();
+    check('The API marks the rivals and does not count them as people', ranking.speed.total === 1 && ranking.speed.rivals === 10
+      && ranking.speed.top.filter(r => r.rival).length === 10 && ranking.speed.top.every(r => r.rival ? r.name.startsWith('rival:') : r.display === 'Ana Ninja'));
+    const call = async (payload, token) => { const r = await fetch(SITE + '/api/auth', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: 'Bearer ' + token } : {}) }, body: JSON.stringify(payload) }); return { status: r.status, ...(await r.json()) }; };
+    const pepe = await call({ action: 'register', username: 'pepe', password: 'secreto1' });
+    check('Nobody else can take a name in use, with other accents, case or spaces', (await call({ action: 'display', display: 'ána ninja' }, pepe.token)).status === 409);
+    check('Nobody can show someone else\'s username', (await call({ action: 'display', display: 'ANA' }, pepe.token)).status === 409);
+    check('Nobody can pass for a rival', (await call({ action: 'display', display: 'Sensei Mei' }, pepe.token)).status === 409);
+    check('Names with odd characters are rejected', (await call({ action: 'display', display: '<b>yo</b>' }, pepe.token)).status === 400);
+    check('A free name is taken', (await call({ action: 'display', display: 'Pepe Grillo' }, pepe.token)).user?.display === 'Pepe Grillo');
+    check('Changing the name needs a session', (await call({ action: 'display', display: 'Otro' })).status === 401);
+    check('The username still logs in', (await call({ action: 'login', username: 'ana', password: 'secreto1' })).user?.display === 'Ana Ninja');
+    await b.reload(); await b.waitForSelector('#acctBtn .nm');
+    check('The new name survives a reload', (await b.textContent('#acctBtn .nm')) === 'Ana Ninja');
+    await b.click('#acctBtn'); await b.fill('#alias', ''); await b.click('#aliasSave');
+    await b.waitForFunction(() => document.querySelector('#acctBtn .nm').textContent === 'ana');
+    check('An empty name goes back to the username and frees the old one', (await call({ action: 'display', display: 'Ana Ninja' }, pepe.token)).user?.display === 'Ana Ninja');
+    await b.click('#acctClose');
     await b.click('#acctBtn'); await b.click('#logout');
     await b.waitForFunction(() => document.querySelector('#acctBtn').textContent.trim() === 'Entrar');
     check('Logging out clears this browser', (await b.textContent('#hStars')) === '0/78');

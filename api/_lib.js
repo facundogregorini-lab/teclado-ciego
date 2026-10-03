@@ -45,6 +45,7 @@ const memory = new Map();
 function memoryCommand([cmd, key, ...args]) {
   switch (cmd.toUpperCase()) {
     case 'GET': return memory.has(key) ? memory.get(key) : null;
+    case 'MGET': return [key, ...args].map(k => memory.has(k) ? memory.get(k) : null);
     case 'SET': {
       if (args.includes('NX') && memory.has(key)) return null;
       memory.set(key, String(args[0])); return 'OK';
