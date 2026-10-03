@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Pergaminos de los monjes · Templo Ninja</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&display=swap">
+<link rel="stylesheet" href="legal.css">
+<style>
+/* The monks' inbox: every message left with "Ayudanos a mejorar" (monk.js → api/feedback.js). Only with the FEEDBACK_KEY. */
+.wrap {max-width:980px}
+.gate {display:flex;flex-wrap:wrap;gap:10px;align-items:end;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 18px}
+.gate label {display:grid;gap:4px;font-weight:700;font-size:.85rem;flex:1 1 240px}
+input,select {font:inherit;padding:9px 12px;border-radius:10px;border:1px solid var(--line);background:#fff;color:var(--ink)}
+button {font:inherit;font-weight:700;border-radius:99px;border:1px solid var(--accent);background:var(--accent);color:#fff;padding:9px 18px;cursor:pointer}
+button.ghost {background:none;color:var(--accent)}
+.err {color:#b3261e;font-weight:700;min-height:1.4em;margin:8px 0 0}
+.summary {display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:22px 0}
+.summary div {background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.summary b {display:block;font:600 1.6rem var(--display)}
+.summary span {color:var(--muted);font-size:.8rem}
+.filters {display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:14px}
+.filters input {flex:1 1 220px}
+.list {display:grid;gap:10px;margin:0;padding:0;list-style:none}
+.item {background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 16px;display:grid;gap:6px}
+.item header {all:unset;display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;font-size:.82rem;color:var(--muted)}
+.item .mood {font-size:1.4rem}
+.item .kind {background:var(--accent-soft);color:var(--accent);font-weight:700;border-radius:99px;padding:2px 10px}
+.item .who {font-weight:700;color:var(--ink)}
+.item p {margin:0;white-space:pre-wrap;overflow-wrap:anywhere}
+.empty {color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header><a class="brand" href="/"><kbd>⛩</kbd>Templo Ninja</a><nav><a href="/">Volver a la app</a></nav></header>
+<main>
+<h1>📜 Pergaminos de los monjes</h1>
+<p class="lead">Lo que la gente deja en <b>Ayudanos a mejorar</b> (el monje del costado de la app). Para leerlos hace falta la clave <code>FEEDBACK_KEY</code> configurada en Vercel; queda guardada sólo en esta pestaña.</p>
+<form class="gate" id="gate">
+  <label for="key">Clave de los monjes<input id="key" type="password" autocomplete="current-password" required></label>
+  <button type="submit" id="enter">Leer los pergaminos</button>
+  <button type="button" class="ghost" id="logout" hidden>Salir</button>
+</form>
+<p class="err" id="err" role="alert"></p>
+<section id="inbox" hidden>
+  <div class="summary" id="summary"></div>
+  <div class="filters" role="group" aria-label="Filtros">
+    <input id="q" type="search" placeholder="Buscar en los mensajes…" aria-label="Buscar en los mensajes">
+    <select id="fKind" aria-label="Tipo"><option value="">Todos los tipos</option></select>
+    <select id="fMood" aria-label="Ánimo"><option value="">Todos los ánimos</option></select>
+    <button type="button" class="ghost" id="reload">Actualizar</button>
+    <button type="button" class="ghost" id="csv">Descargar CSV</button>
+  </div>
+  <ol class="list" id="list"></ol>
+</section>
+</main>
+</div>
+<script>
+(() => {
+  const $ = id => document.getElementById(id), KEY = 'tn-monjes-key';
+  const MOODS = { 1: ['😖', 'Muy mal'], 2: ['😕', 'Mal'], 3: ['😐', 'Más o menos'], 4: ['🙂', 'Bien'], 5: ['🤩', '¡Genial!'] };
+  const KINDS = { idea: '💡 Idea', bug: '🐞 Algo no anda', love: '❤️ Le gusta', otro: '🗨️ Otra cosa' };
+  const PAGES = { home: 'inicio', lesson: 'en una lección', quiz: 'en Ninja mental' };
+  for (const [v, l] of Object.entries(KINDS)) $('fKind').add(new Option(l, v));
+  for (const [v, [e, l]] of Object.entries(MOODS)) $('fMood').add(new Option(`${e} ${l}`, v));
+  let items = [];
+  const session = { get: () => { try { return sessionStorage.getItem(KEY); } catch { return null; } }, set: v => { try { v ? sessionStorage.setItem(KEY, v) : sessionStorage.removeItem(KEY); } catch {} } };
+  const date = d => new Date(d).toLocaleString('es-AR', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+  async function load(key) {
+    $('err').textContent = ''; $('enter').disabled = true;
+    try {
+      const r = await fetch('/api/feedback', { headers: { 'X-Monjes-Key': key } });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(data.error || (r.status === 404 ? 'Esta página funciona en la versión publicada.' : 'No se pudieron leer los pergaminos.'));
+      session.set(key); items = data.items || [];
+      $('inbox').hidden = false; $('logout').hidden = false; $('key').value = '';
+      render();
+    } catch (error) {
+      $('err').textContent = error.message;
+      if (session.get() === key) session.set(null);
+    }
+    $('enter').disabled = false;
+  }
+  function filtered() {
+    const q = $('q').value.trim().toLowerCase(), kind = $('fKind').value, mood = $('fMood').value;
+    return items.filter(i => (!kind || i.kind === kind) && (!mood || String(i.mood) === mood)
+      && (!q || i.text.toLowerCase().includes(q) || (i.name || '').toLowerCase().includes(q)));
+  }
+  function render() {
+    const moods = items.filter(i => i.mood), avg = moods.length ? moods.reduce((s, i) => s + i.mood, 0) / moods.length : 0;
+    const week = items.filter(i => Date.now() - i.date < 7 * 864e5).length;
+    const stat = (b, s) => { const d = document.createElement('div'); d.innerHTML = '<b></b><span></span>'; d.querySelector('b').textContent = b; d.querySelector('span').textContent = s; return d; };
+    $('summary').replaceChildren(stat(items.length, 'pergaminos en total'), stat(week, 'en los últimos 7 días'),
+      stat(avg ? `${MOODS[Math.round(avg)][0]} ${avg.toFixed(1)}` : '—', 'ánimo promedio (1 a 5)'),
+      ...Object.entries(KINDS).map(([k, l]) => stat(items.filter(i => i.kind === k).length, l)));
+    const list = filtered();
+    $('list').replaceChildren(...list.map(i => {
+      const li = document.createElement('li'); li.className = 'item';
+      li.innerHTML = '<header><span class="mood"></span><span class="kind"></span><span class="who"></span><span class="when"></span></header><p></p>';
+      li.querySelector('.mood').textContent = i.mood ? MOODS[i.mood][0] : '·';
+      if (i.mood) li.querySelector('.mood').title = MOODS[i.mood][1];
+      li.querySelector('.kind').textContent = KINDS[i.kind] || i.kind;
+      li.querySelector('.who').textContent = i.name ? i.name + (i.user && i.user !== i.name ? ` (@${i.user})` : '') : 'Anónimo';
+      li.querySelector('.when').textContent = `${date(i.date)} · ${PAGES[i.page] || i.page}`;
+      li.querySelector('p').textContent = i.text;
+      return li;
+    }));
+    if (!list.length) { const li = document.createElement('li'); li.className = 'empty'; li.textContent = items.length ? 'Ningún pergamino con estos filtros.' : 'Todavía no llegó ningún pergamino. Los monjes esperan con su té 🍵'; $('list').append(li); }
+  }
+  function csv() {
+    const cell = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    const rows = [['fecha', 'animo', 'tipo', 'nombre', 'usuario', 'donde', 'mensaje'], ...filtered().map(i => [new Date(i.date).toISOString(), i.mood ?? '', i.kind, i.name ?? '', i.user ?? '', i.page, i.text])];
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob(['﻿' + rows.map(r => r.map(cell).join(',')).join('\n')], { type: 'text/csv;charset=utf-8' }));
+    a.download = 'pergaminos-templo-ninja.csv'; a.click(); URL.revokeObjectURL(a.href);
+  }
+  $('gate').onsubmit = e => { e.preventDefault(); if ($('key').value) load($('key').value); };
+  $('logout').onclick = () => { session.set(null); items = []; $('inbox').hidden = true; $('logout').hidden = true; };
+  $('reload').onclick = () => session.get() && load(session.get());
+  $('csv').onclick = csv;
+  for (const id of ['q', 'fKind', 'fMood']) $(id).addEventListener('input', render);
+  if (session.get()) load(session.get());
+})();
+</script>
+</body>
+</html>

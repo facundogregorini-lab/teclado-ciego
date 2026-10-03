@@ -43,6 +43,14 @@ Desde **🥷 Ninja mental** en el header, al lado del nombre de la app (o `/#nin
 
 Las figuras y los ejercicios numéricos se generan al azar y cada pregunta tiene una sola respuesta correcta. El avance se guarda en el navegador y en la cuenta (`cog` y `sims` en `api/data.js`). Cada sesión cuenta como una práctica del plan gratis.
 
+## Ayudanos a mejorar (comentarios a los monjes)
+
+Un monje caricaturizado (SVG en `monk.js`, estilos en `monk.css`) asoma desde el borde derecho de la pantalla, medio escondido. Al pasar el mouse o con el foco del teclado sale entero y dice *Ayudanos a mejorar*. Al hacer clic abre un diálogo lúdico: elegís cómo te sentís (😖 a 🤩, y el monje cambia de cara y te responde), sobre qué escribís (💡 idea, 🐞 algo no anda, ❤️ algo que me gusta, 🗨️ otra cosa) y tu mensaje (hasta 1000 caracteres, se envía también con Ctrl/⌘ + Enter). Con cuenta podés firmarlo con tu nombre visible. Al enviar, el pergamino vuela, el monje hace una reverencia y suena el gong.
+
+Para que no moleste: es chico y queda pegado al borde; desaparece durante las lecciones y los ejercicios, y en el celular mientras está abierto el teclado; se puede esconder desde el diálogo (el link *🙏 Ayudanos a mejorar* del pie de página lo sigue abriendo); muestra una sola vez por navegador una burbuja de aviso (a los 25 segundos en el inicio, se va sola); funciona con el teclado (Escape cierra) y respeta *movimiento reducido*.
+
+`api/feedback.js` guarda los mensajes en la lista `feedback` de Redis (los últimos 2000), con un límite de 6 por hora por conexión y un campo trampa para bots. **Para leerlos:** `/comentarios.html` (no se indexa) pide la clave de la variable `FEEDBACK_KEY`, que hay que agregar en Vercel (cualquier texto largo y secreto) y hacer Redeploy. Muestra un resumen (total, última semana, ánimo promedio y cantidad por tipo), filtros, búsqueda y descarga en CSV. PostHog recibe `feedback_opened` y `feedback_sent` (ánimo, tipo y largo, nunca el texto).
+
 ## Aporte al templo (freemium con pago único)
 
 El botón **✦ Apoyá el templo** del header, a la izquierda del usuario, se ve siempre, con o sin cuenta (con acceso ilimitado dice **✦ Ninja ilimitado**). Abre el plan; si los pagos todavía no están configurados, avisa que el acceso ilimitado está en camino y que por ahora todo es gratis.
