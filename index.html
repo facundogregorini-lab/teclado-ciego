@@ -206,6 +206,9 @@ dialog::backdrop{background:rgba(10,14,18,.45)}
 .err{color:var(--bad);font-size:.88rem;min-height:1.3em;margin:0}
 .dlg .actions{justify-content:flex-start}
 .linkbtn{border:0;background:none;color:var(--muted);text-decoration:underline;padding:4px 0}
+.plan-free{display:grid;gap:10px;padding:16px;border-radius:12px;border:1px solid var(--accent);background:var(--panel)}
+.dlg .plan-free-title,.dlg .plan-or{color:var(--ink);font-weight:800}
+.plan-or{border-top:1px solid var(--line);padding-top:14px}
 .hist{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
 .hist table{border-collapse:collapse;width:100%;font-size:.88rem;min-width:480px}
 .hist th,.hist td{padding:8px 12px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
@@ -567,9 +570,18 @@ dialog::backdrop{background:rgba(10,14,18,.45)}
 
 <dialog id="planDlg" aria-labelledby="planTitle">
   <form class="dlg" id="planForm" novalidate>
-    <span class="eyebrow">⛩ APORTE AL TEMPLO</span>
+    <span class="eyebrow" id="planEyebrow">⛩ APORTE AL TEMPLO</span>
     <h2 id="planTitle">Entrená sin límites, para siempre</h2>
     <p id="planReason"></p>
+    <div class="plan-free" id="planFree" hidden>
+      <p class="plan-free-title">Creá tu cuenta gratis y seguí ahora</p>
+      <p id="planFreeText"></p>
+      <div class="actions">
+        <button type="button" class="btn primary" id="planSignup">Crear cuenta gratis</button>
+        <button type="button" class="linkbtn" id="planLogin">Ya tengo cuenta</button>
+      </div>
+    </div>
+    <p class="plan-or" id="planOr" hidden>O entrená sin límites, para siempre</p>
     <ul class="plan-list"><li>Un solo pago: sin suscripción ni débitos automáticos.</li><li>Lecciones, sesiones y desafíos ilimitados, todos los días y para siempre.</li><li>Tu pequeño aporte al templo nos permite mejorar el entrenamiento semana a semana. Los monjes ninja te lo agradecerán 🙏</li></ul>
     <p class="price" id="planPrice"></p>
     <p class="err" id="planErr" role="alert"></p>
@@ -1410,7 +1422,7 @@ function signedOut(msg) {
   auth = { token: null, name: null }; history = [];
   try { localStorage.removeItem(TOKEN); } catch {}
   S.lessons = {}; S.test = null; S.tests = []; S.cog = {}; S.sims = []; S.ninja = { best: null, runs: [] }; save();
-  Object.assign(billing, { premium: false, plays: 0, gift: false, lifetime: false, subscription: null });
+  Object.assign(billing, { premium: false, plays: 0, gift: false, lifetime: false, subscription: null, freePerDay: billing.guestPerDay });
   renderAccountBtn(); renderHome(); renderPlanNote(); loadRanking();
   if (msg) toast(msg);
 }
@@ -1458,7 +1470,7 @@ $('acctBtn').onclick = () => {
   loadBilling().then(renderPlan);
 };
 document.querySelectorAll('#authMode button').forEach(b => b.onclick = () => setAuthMode(b.dataset.v));
-$('authCancel').onclick = () => $('authDlg').close();
+$('authCancel').onclick = () => { signupFrom = null; $('authDlg').close(); };
 $('authForm').onsubmit = async e => {
   e.preventDefault();
   $('authErr').textContent = ''; $('authSubmit').disabled = true;
@@ -1468,8 +1480,10 @@ $('authForm').onsubmit = async e => {
     await signedIn(r.token, r.user.name);
     loadRanking();
     if (authMode === 'register') track('CompleteRegistration', { content_name: 'Cuenta Templo Ninja' });
-    tn.capture(authMode === 'register' ? 'signed_up' : 'logged_in');
-    toast(authMode === 'register' ? `Cuenta creada. Tu progreso se guarda en ${r.user.name}.` : `Hola, ${r.user.name}. Seguimos donde dejaste.`);
+    tn.capture(authMode === 'register' ? 'signed_up' : 'logged_in', { source: signupFrom || 'account' });
+    const left = limited() ? Math.max(0, billing.freePerDay - usedToday()) : 0, more = signupFrom && left ? ` Tenés ${left} ${left === 1 ? 'práctica' : 'prácticas'} más hoy: ¡a seguir!` : '';
+    toast((authMode === 'register' ? `Cuenta creada. Tu progreso se guarda en ${r.user.name}.` : `Hola, ${r.user.name}. Seguimos donde dejaste.`) + more);
+    signupFrom = null;
   } catch (err) { $('authErr').textContent = err.message; }
   $('authSubmit').disabled = false;
 };
@@ -1964,7 +1978,9 @@ document.querySelectorAll('#rankView button').forEach(b => b.onclick = () => { r
 
 /* ---------- Freemium: a few free practices per day, unlimited with a Mercado Pago subscription ---------- */
 // With payments not configured (or no server) nothing is limited. Guests count in this browser; accounts on the server.
-let billing = { enabled: false, premium: false, plays: 0, price: '', freePerDay: 3 }, counted = false, planAfterLogin = false;
+let billing = { enabled: false, premium: false, plays: 0, price: '', freePerDay: 3, guestPerDay: 3, accountPerDay: 3 }, counted = false, planAfterLogin = false, signupFrom = null;
+// Guests: a few practices in this browser. A free account gets more (accountPerDay), so running out offers one first.
+const freeAccountOffer = () => limited() && !auth.name && billing.accountPerDay > billing.guestPerDay;
 const PLAYS_KEY = 'teclado-ciego-plays', arDay = () => new Date(Date.now() - 3 * 36e5).toISOString().slice(0, 10);
 const limited = () => billing.enabled && !billing.premium;
 function guestPlays() { try { const p = JSON.parse(localStorage.getItem(PLAYS_KEY)); return p?.day === arDay() ? p.n : 0; } catch { return 0; } }
@@ -2032,10 +2048,17 @@ function showPlan(reason) {
   tn.capture('pricing_viewed', { reason, payments_on: billing.enabled, premium: billing.premium, logged_in: !!auth.name, used_today: usedToday() });
   // Also opened from the header CTA: without payments configured, or with the plan already active, it only informs.
   const canBuy = billing.enabled && !billing.premium;
+  const offer = freeAccountOffer(), outOfGuest = offer && reason === 'limit';
+  $('planEyebrow').textContent = outOfGuest ? '⛩ PLAN GRATIS' : '⛩ APORTE AL TEMPLO';
+  $('planTitle').textContent = outOfGuest ? 'Seguí entrenando gratis' : 'Entrená sin límites, para siempre';
   $('planReason').textContent = !billing.enabled ? 'El acceso ilimitado está en camino. Mientras tanto, todo es gratis y sin límites: aprovechalo.'
     : billing.premium ? '✦ Ya tenés acceso ilimitado. ¡Gracias por bancar el templo! Los monjes ninja te lo agradecen 🙏'
+    : outOfGuest ? `Ya usaste tus ${billing.freePerDay} prácticas gratis de hoy sin cuenta.`
     : reason === 'limit' ? `Ya usaste tus ${billing.freePerDay} prácticas gratis de hoy. Volvé mañana o hacé tu aporte para seguir ahora.`
-    : `Con el plan gratis tenés ${billing.freePerDay} prácticas por día.`;
+    : `Con el plan gratis tenés ${billing.freePerDay} prácticas por día${offer ? ` (${billing.accountPerDay} con tu cuenta gratis)` : ''}.`;
+  $('planFree').hidden = !offer; $('planOr').hidden = !offer;
+  $('planFreeText').textContent = `Solo usuario y contraseña: tenés ${billing.accountPerDay} prácticas por día, tu progreso guardado en cualquier dispositivo y tu lugar en el ranking.`;
+  $('planSubmit').classList.toggle('primary', !offer);
   $('planPrice').textContent = billing.enabled ? billing.price : '';
   $('planPrice').hidden = !billing.enabled; $('planSubmit').hidden = !canBuy;
   $('planSubmit').textContent = auth.name ? 'Hacer mi aporte con Mercado Pago' : 'Crear cuenta o entrar para hacer mi aporte';
@@ -2054,6 +2077,14 @@ function renderPlan() {
 $('upgrade').onclick = () => { $('acctDlg').close(); showPlan('upgrade'); };
 $('upgradeCta').onclick = () => showPlan('upgrade');
 $('planClose').onclick = () => $('planDlg').close();
+// Free account from the plan: the guest keeps practicing today with the account's practices.
+function signupFromPlan(mode) {
+  signupFrom = 'plan'; tn.capture('signup_prompt_clicked', { mode, used_today: usedToday() });
+  $('planDlg').close(); openAuth(); setAuthMode(mode);
+  if (mode === 'register') $('authLead').textContent = `Elegí un usuario y una contraseña. Con tu cuenta gratis tenés ${billing.accountPerDay} prácticas por día, y lo que ya practicaste en este navegador se suma.`;
+}
+$('planSignup').onclick = () => signupFromPlan('register');
+$('planLogin').onclick = () => signupFromPlan('login');
 $('planForm').onsubmit = async e => {
   e.preventDefault();
   tn.capture('checkout_clicked', { logged_in: !!auth.name, price: billing.amount ?? null, currency: billing.currency ?? null });
@@ -2205,9 +2236,10 @@ function renderDojo() {
   $('dojoProgress').value = Math.min(3, n);
   // When the free practices run out, the plan points to unlimited access instead of saying goodbye.
   const outOfFree = limited() && usedToday() >= billing.freePerDay;
-  $('dojoCount').textContent = outOfFree ? `Usaste tus ${billing.freePerDay} prácticas gratis de hoy. Con el acceso ilimitado seguís ahora mismo.`
+  $('dojoCount').textContent = outOfFree ? `Usaste tus ${billing.freePerDay} prácticas gratis de hoy. ${freeAccountOffer() ? `Con tu cuenta gratis seguís con ${billing.accountPerDay} por día, o con el acceso ilimitado sin límites.` : 'Con el acceso ilimitado seguís ahora mismo.'}`
     : n >= 3 ? 'Meta de hoy completa. Si tenés ganas, seguí: cada ronda suma.' : `${n}/3 prácticas hoy · una ya es un buen comienzo`;
   $('dojoUnlock').hidden = !outOfFree;
+  $('dojoUnlock').textContent = freeAccountOffer() ? 'Seguir gratis' : 'Seguir sin límite';
   $('dojoCount').dataset.ready = '1';
   const typing = dojo.track === 'typing';
   $('missionTitle').textContent = typing ? recommendedLesson().name : recommendedSession().name;

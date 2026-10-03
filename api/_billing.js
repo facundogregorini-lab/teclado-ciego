@@ -1,11 +1,12 @@
 // Freemium rules and Mercado Pago payments.
-// Free plan: FREE_PER_DAY practice sessions per day. Unlimited access: a one-time payment ("aporte al templo",
+// Free plan: FREE_PER_DAY practice sessions per day without an account, FREE_ACCOUNT_PER_DAY with a free account
+// (the reason to create one when the guest practices run out). Unlimited access: a one-time payment ("aporte al templo",
 // Checkout Pro) that never expires. Monthly subscriptions (preapproval API) from before still count until they end.
 const { redis, HttpError } = require('./_lib');
 const { reportPurchase } = require('./_meta');
 const posthog = require('./_posthog');
 
-const DAY_MS = 86400e3, GRACE_MS = 3 * DAY_MS, FREE_PER_DAY = 3;
+const DAY_MS = 86400e3, GRACE_MS = 3 * DAY_MS, FREE_PER_DAY = 3, FREE_ACCOUNT_PER_DAY = 6;
 const env = name => (process.env[name] || '').trim();
 
 function settings() {
@@ -117,4 +118,4 @@ async function isPremium(name) {
   return !settings().enabled || (await status(name)).premium;
 }
 
-module.exports = { FREE_PER_DAY, settings, today, playsKey, mp, storeSubscription, storePayment, status, isPremium };
+module.exports = { FREE_PER_DAY, FREE_ACCOUNT_PER_DAY, settings, today, playsKey, mp, storeSubscription, storePayment, status, isPremium };
