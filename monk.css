@@ -1,0 +1,87 @@
+/* Ayudanos a mejorar (monk.js): the monk at the right edge, his hint bubble and the dialog to write to the monks. */
+.monk-peek {position:fixed;right:0;bottom:calc(96px + env(safe-area-inset-bottom,0px));z-index:9;border:0;background:none;padding:0;cursor:pointer;
+  transform:translateX(24px);transition:transform .25s ease;-webkit-tap-highlight-color:transparent}
+.monk-peek[hidden] {display:none}
+.monk-peek .monk-art {display:block;width:64px;height:76px;filter:drop-shadow(0 4px 8px #00000026)}
+.monk-peek svg,.monk-big svg {display:block;width:100%;height:100%;overflow:visible}
+.monk-peek:hover,.monk-peek:focus-visible {transform:none}
+.monk-peek:focus-visible {outline:none}
+.monk-peek:focus-visible .monk-art {outline:3px solid var(--accent);outline-offset:2px;border-radius:14px}
+.monk-tag {position:absolute;right:100%;top:50%;transform:translate(10px,-50%);opacity:0;pointer-events:none;white-space:nowrap;
+  background:var(--ink);color:var(--card);font:700 .8rem var(--body);padding:6px 11px;border-radius:99px;transition:opacity .2s,transform .2s}
+.monk-peek:hover .monk-tag,.monk-peek:focus-visible .monk-tag {opacity:1;transform:translate(-2px,-50%)}
+.monk-body {transform-origin:60px 134px;animation:monk-breath 4.5s ease-in-out infinite}
+@keyframes monk-breath {50% {transform:scale(1.025,.985)}}
+
+.monk-bubble {position:fixed;right:74px;bottom:calc(128px + env(safe-area-inset-bottom,0px));z-index:9;display:flex;align-items:flex-start;gap:4px;max-width:min(240px,calc(100vw - 100px));
+  background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:14px 14px 4px 14px;box-shadow:0 8px 24px #0000001f;padding:8px 6px 8px 12px;animation:monk-in .3s ease}
+.monk-bubble[hidden] {display:none}
+.monk-bubble button {border:0;background:none;color:inherit;font:inherit;cursor:pointer;padding:0}
+.monk-bubble-open {text-align:left;font-size:.85rem;line-height:1.35}
+.monk-bubble-x {font-size:1.1rem;line-height:1;color:var(--muted)!important;padding:0 4px!important}
+@keyframes monk-in {from {opacity:0;transform:translateY(6px)}}
+
+/* The dialog */
+.monk-dlg {width:min(500px,calc(100vw - 32px))}
+.monk-dlg [hidden] {display:none!important}
+.monk-form {gap:14px}
+.monk-stage {display:grid;grid-template-columns:84px 1fr;gap:12px;align-items:center}
+.monk-big {width:84px;height:98px}
+.monk-big.pop {animation:monk-pop .35s ease}
+@keyframes monk-pop {40% {transform:translateY(-6px) rotate(-3deg)}}
+.monk-say {position:relative;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px 14px;color:var(--ink)!important;font-size:.92rem;min-height:3.2em}
+.monk-say::before {content:"";position:absolute;left:-7px;top:50%;width:12px;height:12px;background:inherit;border-left:1px solid var(--line);border-bottom:1px solid var(--line);transform:translateY(-50%) rotate(45deg)}
+.monk-form fieldset {border:0;margin:0;padding:0;min-width:0}
+.monk-form legend {font-size:.85rem;font-weight:700;padding:0;margin-bottom:6px}
+.monk-form fieldset > div {display:grid;gap:6px}
+.monk-moods > div {grid-template-columns:repeat(5,1fr)}
+.monk-kinds > div {grid-template-columns:repeat(2,1fr)}
+.monk-form fieldset label {position:relative;display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:8px 10px;cursor:pointer;transition:transform .15s,border-color .15s,background .15s}
+.monk-moods label {flex-direction:column;gap:2px;padding:8px 2px;text-align:center}
+.monk-form fieldset input {position:absolute;opacity:0;width:1px;height:1px;margin:0}
+.monk-form .em {font-size:1.25rem;line-height:1}
+.monk-moods .em {font-size:1.7rem;transition:transform .15s}
+.monk-form fieldset small {font-size:.75rem;color:var(--muted);line-height:1.2}
+.monk-kinds small {font-size:.85rem;color:var(--ink)}
+.monk-form fieldset label:hover {border-color:var(--accent)}
+.monk-form fieldset label:has(input:checked) {border:2px solid var(--accent);background:var(--accent-soft);padding:7px 9px}
+.monk-moods label:has(input:checked) {padding:7px 1px}
+.monk-moods label:has(input:checked) .em {transform:scale(1.2)}
+.monk-form fieldset label:has(input:focus-visible) {outline:3px solid var(--accent);outline-offset:2px}
+.monk-form textarea {font:inherit;font-weight:400;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--ink);resize:vertical;min-height:96px}
+.monk-meta {display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:-8px;font-size:.82rem;color:var(--muted)}
+.monk-sign {display:flex;align-items:center;gap:6px;cursor:pointer}
+.monk-sign[hidden] {display:none}
+.monk-count {margin-left:auto;font-variant-numeric:tabular-nums}
+.monk-hp {position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
+.monk-tuck {justify-self:start;font-size:.8rem}
+
+/* Sent: the scroll flies to the monk, who bows while the gong rings */
+.monk-done {position:relative;justify-items:center;text-align:center;overflow:hidden}
+.monk-done .monk-big {width:120px;height:140px}
+.monk-done h2:focus {outline:none}
+.monk-done .actions {justify-content:center}
+.monk-big.bow .monk-body {animation:monk-bow 1.4s ease .5s both}
+@keyframes monk-bow {35%,65% {transform:rotate(14deg) translateY(6px)}}
+.monk-flying {position:absolute;top:150px;left:50%;font-size:2rem;animation:monk-fly .8s ease-in both;pointer-events:none}
+@keyframes monk-fly {from {transform:translate(-50%,120px) rotate(-30deg);opacity:1} to {transform:translate(-50%,-40px) rotate(10deg) scale(.4);opacity:0}}
+.monk-gong {position:absolute;top:30px;left:50%;width:0;height:0}
+.monk-gong i {position:absolute;left:-60px;top:-10px;width:120px;height:120px;border:3px solid var(--gold);border-radius:50%;opacity:0;animation:monk-ring 1.6s ease-out .7s}
+.monk-gong i:nth-child(2) {animation-delay:.95s}.monk-gong i:nth-child(3) {animation-delay:1.2s}
+@keyframes monk-ring {from {transform:scale(.4);opacity:.8} to {transform:scale(1.8);opacity:0}}
+
+@media (max-width:600px) {
+  .monk-peek {bottom:calc(80px + env(safe-area-inset-bottom,0px));transform:translateX(12px)}
+  .monk-peek .monk-art {width:50px;height:60px}
+  .monk-bubble {right:58px;bottom:calc(104px + env(safe-area-inset-bottom,0px))}
+  .monk-moods small {font-size:.65rem}
+  .monk-kinds > div {grid-template-columns:1fr 1fr}
+}
+/* On phones the monk steps aside while the on-screen keyboard is up */
+@media (pointer:coarse) {body:has(input:focus,textarea:focus) .monk-peek,body:has(input:focus,textarea:focus) .monk-bubble {display:none}}
+@media print {.monk-peek,.monk-bubble {display:none}}
+@media (prefers-reduced-motion:reduce) {
+  .monk-peek,.monk-tag {transition:none}
+  .monk-body,.monk-big.pop,.monk-big.bow .monk-body,.monk-flying,.monk-gong i,.monk-bubble {animation:none}
+  .monk-flying,.monk-gong {display:none}
+}

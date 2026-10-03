@@ -228,6 +228,7 @@ dialog::backdrop{background:rgba(10,14,18,.45)}
 <script src="analytics.js"></script>
 <script src="scenery.js" defer></script>
 <link rel="stylesheet" href="dojo.css">
+<link rel="stylesheet" href="monk.css">
 </head>
 <body>
 <a class="skip-link" href="#sections">Saltar a las secciones</a>
@@ -528,7 +529,7 @@ dialog::backdrop{background:rgba(10,14,18,.45)}
   </main>
 
   <p class="foot" id="foot">Tu progreso se guarda en este navegador. Entrá con tu cuenta para guardarlo en cualquier computadora.</p>
-  <nav class="legal" aria-label="Información"><a href="precios.html">Precios</a><a href="terminos.html">Términos y condiciones</a><a href="privacidad.html">Privacidad</a><a href="reembolsos.html">Reembolsos</a></nav>
+  <nav class="legal" aria-label="Información"><a href="precios.html">Precios</a><a href="terminos.html">Términos y condiciones</a><a href="privacidad.html">Privacidad</a><a href="reembolsos.html">Reembolsos</a><a href="#ayudanos" data-monk-open>🙏 Ayudanos a mejorar</a></nav>
 </div>
 
 <dialog id="authDlg" aria-labelledby="authTitle">
@@ -2357,5 +2358,6 @@ renderRanking();
 }).finally(() => { loadRanking(); if (!auth.name) loadBilling(); });
 })();
 </script>
+<script src="monk.js"></script>
 </body>
 </html>
