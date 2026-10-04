@@ -69,6 +69,7 @@ La app carga el Píxel de Meta **Templo Ninja Web** (`2167285730522630`, el ID l
 | `PageView` | Al abrir la app. |
 | `CompleteRegistration` | Al crear una cuenta. |
 | `Practica` (personalizado) | Al empezar una práctica (primera tecla o primera respuesta), con `seccion`: `teclado-ciego` o `ninja-mental`, y `desafio` si es el de 5 minutos. |
+| `ViewContent` | Al ver los precios (ventana del plan), con `content_category`: `limit` si se le terminaron las prácticas gratis del día o `upgrade` si tocó el botón del aporte. No se manda a quien ya tiene acceso ilimitado. |
 | `InitiateCheckout` | Al ir a pagar el aporte, con el precio. |
 | `Purchase` | Al volver de Mercado Pago con el pago aprobado (una vez por navegador). |
 

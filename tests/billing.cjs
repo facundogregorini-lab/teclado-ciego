@@ -85,6 +85,7 @@ const check = (name, ok) => { assert.ok(ok, name); console.log('PASS', name); };
     check('Out of guest practices, a free account comes first', await guest.isVisible('#planFree') && (await guest.textContent('#planTitle')) === 'Seguí entrenando gratis'
       && (await guest.textContent('#planFreeText')).includes('6 prácticas por día') && await guest.isVisible('#planOr') && !(await guest.getAttribute('#planSubmit', 'class')).includes('primary'));
     check('Hitting the limit is a pricing_viewed event with its reason', events(guest, 'pricing_viewed').some(e => e.reason === 'limit' && e.payments_on && !e.logged_in));
+    check('Seeing the prices is a ViewContent pixel event with its reason', fired(guest, 'ViewContent').some(a => a[2].content_category === 'limit'));
     await guest.click('#planClose'); await guest.reload(); await guest.waitForSelector('#planNote:not([hidden])');
     check('Reloading does not reset the daily limit', (await guest.textContent('#planNote')).includes('ya usaste'));
     check('Without free practices left, the daily plan offers the free account and unlimited access instead of a rest', await guest.isVisible('#dojoUnlock') && (await guest.textContent('#dojoUnlock')) === 'Seguir gratis'

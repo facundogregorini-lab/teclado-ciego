@@ -2023,7 +2023,7 @@ async function loadBilling(sync) {
 
 /* ---------- Meta Pixel: only when META_PIXEL_ID is set on the server (see api/_meta.js) ---------- */
 // Events: PageView · CompleteRegistration (new account) · Practica (custom: a practice starts, with its section)
-// · InitiateCheckout (goes to pay) · Purchase (back from paying; the server also reports it, same event id).
+// · ViewContent (sees the prices, with why: limit or upgrade) · InitiateCheckout (goes to pay) · Purchase (back from paying; the server also reports it, same event id).
 let pixelOn = false;
 function startPixel(id) {
   if (pixelOn || !/^\d{6,20}$/.test(id || '')) return;
@@ -2075,6 +2075,7 @@ function practiceInfo(ninja) {
 }
 function showPlan(reason) {
   tn.capture('pricing_viewed', { reason, payments_on: billing.enabled, premium: billing.premium, logged_in: !!auth.name, used_today: usedToday() });
+  if (!billing.premium) track('ViewContent', { content_name: 'Templo Ninja · precios', content_category: reason });
   // Also opened from the header CTA: without payments configured, or with the plan already active, it only informs.
   const canBuy = billing.enabled && !billing.premium;
   const offer = freeAccountOffer(), outOfGuest = offer && reason === 'limit';
