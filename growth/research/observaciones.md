@@ -51,3 +51,10 @@ Tipos: **directa** (lo vimos), **declarado** (lo dice la empresa), **estimación
 
 ### Calidad del proceso
 - Los resúmenes del buscador inventaron cifras (TypeLab "US$74K MRR"; la fuente dice US$10). **Regla nueva: toda cifra de ingresos o tráfico que se use en una oportunidad se verifica en la fuente.**
+
+## 2026-10-05 · ¿Psicotécnicos o solo cognitivos? (relevamiento pedido por Facundo)
+- **Anuncios en Meta (Biblioteca, AR, activos):** 6 anuncios con "psicotécnico", todos de consultoras o servicios para empresas (Alkemy, Psywork, Astro Laboral, ELPRA, CVs Profesionales) y un medio (El Cronista). Ninguno vende preparación a personas. Los que venden tests a personas usan el examen concreto como gancho ("Test de aptitud de la fuerza aérea", "quiz de acceso a enfermería": Daily Brain Spark, SolvedLib) o el IQ ("¿Más listo que 100?", IQ Center). practiceaptitudetests y JobTestPrep no aparecen en Meta con su nombre.
+- **Sitios:** practiceaptitudetests suma 10 cuestionarios de personalidad, solo en Pro ("Questionnaires, no right answer"), y juicio situacional; JobTestPrep tiene personalidad como categoría secundaria. Ninguno cubre tests proyectivos ni de atención.
+- **En español,** "psicotécnico" es sobre todo numérico + verbal + lógico/abstracto ([redopositor](https://redopositor.com/blog/es-test-psicotecnicos-pdf-soluciones-gratis-2026/), [jobrise](https://jobrise.io/es/blog/tests-psicotecnicos-seleccion-como-superarlos-2026/), que suma personalidad). Atención, solo en exámenes específicos (conductores).
+- **Decisión de Facundo:** sección de psicotécnicos en `/profesional` (hecha); no mencionarlos en los anuncios por ahora. Hueco propio: verbal en español (BL-011).
+- **Limitación:** la Biblioteca devuelve títulos y anunciantes, no el texto completo del anuncio.

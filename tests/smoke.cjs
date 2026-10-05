@@ -435,6 +435,8 @@ function typeText(page) {
     await pro.goto(SITE + '/profesional');
     check('/profesional shows the companies and links to their practice', (await pro.textContent('h1')).includes('tests de selección') && await pro.locator('.co').count() >= 5
       && await pro.locator('a[href="/?simulacro=meli"]').count() >= 2 && (await pro.textContent('main')).includes('no está afiliado'));
+    check('/profesional explains the psychotechnical tests and says which ones you practice here', await pro.locator('#psicotecnico + p + .grid .badge.si').count() === 2
+      && (await pro.textContent('main')).includes('Casa-árbol-persona') && (await pro.textContent('main')).includes('No se aprueban ni se entrenan'));
     await pro.goto(SITE + '/?pista=log');
     check('A link with ?pista opens that track', (await pro.textContent('#cogTitle')).includes('Lógica') && pro.url().includes('#ninja'));
     await pro.goto(SITE + '/?pista=toString&simulacro=constructor'); await pro.waitForTimeout(200);
