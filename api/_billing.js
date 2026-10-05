@@ -37,7 +37,7 @@ async function mp(path, options = {}) {
   const json = await response.json().catch(() => ({}));
   if (!response.ok) {
     console.error('Mercado Pago', response.status, JSON.stringify(json));
-    throw new HttpError(502, 'Mercado Pago no respondió bien: ' + (json.message || response.status));
+    throw Object.assign(new HttpError(502, 'Mercado Pago no respondió bien: ' + (json.message || response.status)), { mpStatus: response.status });
   }
   return json;
 }
@@ -45,16 +45,39 @@ async function mp(path, options = {}) {
 const readSub = async name => JSON.parse(await redis('GET', 'sub:' + name) || 'null');
 const readPaid = async name => JSON.parse(await redis('GET', 'paid:' + name) || 'null');
 
+// What Mercado Pago keeps (its fee) and what reaches the account: for the contribution margin, not only the price.
+function money(payment) {
+  const fee = (payment.fee_details || []).reduce((sum, f) => sum + (Number(f.amount) || 0), 0);
+  const net = payment.transaction_details?.net_received_amount;
+  return {
+    ...(net != null ? { net_amount: Number(net) } : {}),
+    ...(payment.fee_details ? { fee: Math.round(fee * 100) / 100 } : {}),
+    ...(payment.payment_method_id ? { payment_method: String(payment.payment_method_id) } : {}),
+    ...(payment.payment_type_id ? { payment_type: String(payment.payment_type_id) } : {}),
+    ...(payment.installments ? { installments: Number(payment.installments) } : {}),
+  };
+}
+
 // Stores an approved one-time payment: from then on, the account is unlimited for good.
 // The first time it is seen (webhook or coming back from paying, whichever is first) it is reported to Meta and PostHog.
+// A refunded or charged back payment takes the access away and is reported to PostHog once, as negative revenue.
 async function storePayment(payment) {
   const name = String(payment.external_reference || '');
-  if (payment.status !== 'approved' || payment.metadata?.templo !== 'ilimitado' || !/^[a-z0-9_.-]{3,20}$/.test(name)) return null;
-  const paid = { id: payment.id, amount: Number(payment.transaction_amount) || 0, currency: payment.currency_id || 'ARS', date: Date.parse(payment.date_approved || '') || Date.now() };
+  if (payment.metadata?.templo !== 'ilimitado' || !/^[a-z0-9_.-]{3,20}$/.test(name)) return null;
+  const amount = Number(payment.transaction_amount) || 0, currency = payment.currency_id || 'ARS';
+  if (payment.status === 'refunded' || payment.status === 'charged_back') {
+    const paid = await readPaid(name);
+    if (paid && String(paid.id) === String(payment.id)) await redis('DEL', 'paid:' + name);
+    if (await redis('SET', 'refund:' + payment.id, String(Date.now()), 'NX') === 'OK')
+      await posthog.capture(name, 'payment_refunded', { value: -amount, currency, reason: payment.status, provider: 'mercadopago', payment_id: String(payment.id) });
+    return null;
+  }
+  if (payment.status !== 'approved') return null;
+  const paid = { id: payment.id, amount, currency, date: Date.parse(payment.date_approved || '') || Date.now() };
   const first = await redis('SET', 'paid:' + name, JSON.stringify(paid), 'NX') === 'OK';
   if (!first) await redis('SET', 'paid:' + name, JSON.stringify(paid));
   if (first) await Promise.all([reportPurchase(name, payment),
-    posthog.capture(name, 'payment_succeeded', { value: paid.amount, currency: paid.currency, provider: 'mercadopago' })]);
+    posthog.capture(name, 'payment_succeeded', { value: amount, currency, provider: 'mercadopago', payment_id: String(payment.id), ...money(payment) })]);
   return paid;
 }
 

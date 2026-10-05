@@ -3,7 +3,7 @@
 // one-time payment · { action: 'sync' }: asks Mercado Pago again (coming back from paying)
 const { redis, HttpError, requireUser, bearer, body, handler } = require('./_lib');
 const { FREE_PER_DAY, FREE_ACCOUNT_PER_DAY, settings, playsKey, mp, status } = require('./_billing');
-const { metaSettings, purchaseId } = require('./_meta');
+const { metaSettings, purchaseId, clientContext, saveContext, sendEvent } = require('./_meta');
 
 async function userInfo(name, options) {
   const s = settings();
@@ -40,10 +40,10 @@ module.exports = handler(async req => {
     if (!s.enabled) throw new HttpError(503, 'Los pagos todavía no están configurados.');
     if ((await status(name)).premium) throw new HttpError(409, 'Ya tenés acceso ilimitado. ¡Gracias por tu aporte!');
     const origin = process.env.APP_URL || 'https://' + req.headers.host;
-    // Meta's browser ids travel with the payment, for the purchase the server reports (api/_meta.js)
-    const track = data.track && typeof data.track === 'object' ? data.track : {};
-    const clean = (v, re) => (typeof v === 'string' && re.test(v) ? v : undefined);
-    const fb = { fbp: clean(track.fbp, /^fb\.\d\.\d+\.\d+$/), fbc: clean(track.fbc, /^fb\.\d\.\d+\.[\w.-]{1,500}$/), ua: String(req.headers['user-agent'] || '').slice(0, 400) || undefined };
+    // Meta's browser ids (and the IP) are kept for the Purchase the server reports later, maybe from the webhook (api/_meta.js)
+    const ctx = clientContext(req, data.track);
+    await saveContext(name, ctx);
+    const fb = { fbp: ctx.fbp, fbc: ctx.fbc, ua: ctx.ua };
     const pref = await mp('/checkout/preferences', {
       method: 'POST',
       body: JSON.stringify({
@@ -60,6 +60,8 @@ module.exports = handler(async req => {
     const isTest = (process.env.MP_ACCESS_TOKEN || '').startsWith('TEST-');
     const url = (isTest && pref.sandbox_init_point) || pref.init_point;
     if (!url) throw new HttpError(502, 'Mercado Pago no devolvió el enlace de pago.');
+    // The same InitiateCheckout as the page (same event id), now that the checkout really exists
+    await sendEvent({ event: 'InitiateCheckout', id: data.track?.event_id, name, ctx, custom: { value: s.price, currency: s.currency, content_name: 'Templo Ninja · acceso ilimitado' } });
     return { url };
   }
 

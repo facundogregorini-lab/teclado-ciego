@@ -3,6 +3,7 @@
 // and each one is claimed in alias:<key>, so two accounts can't show the same name nor someone else's username.
 const { redis, HttpError, createSession, tokenKey, bearer, requireUser, hashPassword, checkPassword, body, handler } = require('./_lib');
 const { RIVALS } = require('./_rivals');
+const { clientContext, saveContext, sendEvent } = require('./_meta');
 
 const MAX_FAILURES = 10, LOCK_SECONDS = 15 * 60;
 
@@ -63,6 +64,9 @@ module.exports = handler(async req => {
     if (taken && taken !== name) throw new HttpError(409, 'Ese usuario ya existe. Elegí otro o entrá con tu contraseña.');
     const created = await redis('SET', 'user:' + name, JSON.stringify({ ...hashPassword(password), created: Date.now() }), 'NX');
     if (!created) throw new HttpError(409, 'Ese usuario ya existe. Elegí otro o entrá con tu contraseña.');
+    // The page's CompleteRegistration, also from the server (same event id), now that the account exists
+    const ctx = clientContext(req, data.track);
+    await Promise.all([saveContext(name, ctx), sendEvent({ event: 'CompleteRegistration', id: data.track?.event_id, name, ctx, custom: { content_name: 'Cuenta Templo Ninja' } })]);
     return { token: await createSession(name), user: { name, display: name } };
   }
 

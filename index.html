@@ -1484,11 +1484,12 @@ $('authForm').onsubmit = async e => {
   e.preventDefault();
   $('authErr').textContent = ''; $('authSubmit').disabled = true;
   try {
-    const r = await api('auth', { action: authMode, username: $('user').value, password: $('pass').value });
+    const regId = eventId(); // a new account is a CompleteRegistration from the server too, with this id
+    const r = await api('auth', { action: authMode, username: $('user').value, password: $('pass').value, ...(authMode === 'register' ? { track: metaTrack(regId) } : {}) });
     $('authDlg').close();
     await signedIn(r.token, r.user.name, r.user.display);
     loadRanking();
-    if (authMode === 'register') track('CompleteRegistration', { content_name: 'Cuenta Templo Ninja' });
+    if (authMode === 'register') track('CompleteRegistration', { content_name: 'Cuenta Templo Ninja' }, regId);
     tn.capture(authMode === 'register' ? 'signed_up' : 'logged_in', { source: signupFrom || 'account' });
     const left = limited() ? Math.max(0, billing.freePerDay - usedToday()) : 0, more = signupFrom && left ? ` Tenés ${left} ${left === 1 ? 'práctica' : 'prácticas'} más hoy: ¡a seguir!` : '';
     toast((authMode === 'register' ? `Cuenta creada. Tu progreso se guarda en ${r.user.name}.` : `Hola, ${shownName()}. Seguimos donde dejaste.`) + more);
@@ -2016,25 +2017,58 @@ function guestPlays() { try { const p = JSON.parse(localStorage.getItem(PLAYS_KE
 const usedToday = () => auth.name ? billing.plays : guestPlays();
 async function loadBilling(sync) {
   try { Object.assign(billing, await api('billing', sync ? { action: 'sync' } : undefined)); } catch {}
-  startPixel(billing.pixel);
+  await startPixel(billing.pixel); // before any event of this page, like the Purchase coming back from paying
   if (billing.enabled) tn.people({ plan: billing.premium ? 'ilimitado' : 'gratis' });
   renderPlanNote();
 }
 
 /* ---------- Meta Pixel: only when META_PIXEL_ID is set on the server (see api/_meta.js) ---------- */
 // Events: PageView · CompleteRegistration (new account) · Practica (custom: a practice starts, with its section)
-// · ViewContent (sees the prices, with why: limit or upgrade) · InitiateCheckout (goes to pay) · Purchase (back from paying; the server also reports it, same event id).
-let pixelOn = false;
-function startPixel(id) {
-  if (pixelOn || !/^\d{6,20}$/.test(id || '')) return;
-  pixelOn = true;
+// · ViewContent (sees the prices, with why: limit or upgrade) · InitiateCheckout (goes to pay) · Purchase (back from paying).
+// The last four also go from the server (Conversions API) with the same event id, so Meta counts each one once.
+const cookie = name => (document.cookie.match('(?:^|; )' + name + '=([^;]*)') || [])[1];
+// _fbc: the click on an ad (fbclid in the address), kept 90 days. Created here too, not only by the pixel, because the
+// pixel loads later and the address may change before that; without it Meta can't tie the visit to the ad.
+(() => {
+  const click = new URLSearchParams(location.search).get('fbclid');
+  if (click && /^[\w.-]{1,500}$/.test(click) && !(cookie('_fbc') || '').endsWith('.' + click))
+    document.cookie = `_fbc=fb.1.${Date.now()}.${click};max-age=7776000;path=/;SameSite=Lax`;
+})();
+// This browser's anonymous id: the pixel's external_id (hashed), the same one the server sends with its events.
+const ANON_KEY = 'teclado-ciego-anon';
+const anonId = (() => {
+  try { const id = localStorage.getItem(ANON_KEY); if (/^[\w-]{8,64}$/.test(id || '')) return id; } catch {}
+  const id = crypto.randomUUID?.() || Date.now().toString(36) + Math.random().toString(36).slice(2, 12);
+  try { localStorage.setItem(ANON_KEY, id); } catch {}
+  return id;
+})();
+const sha256 = async text => {
+  try { return [...new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text.trim().toLowerCase())))].map(b => b.toString(16).padStart(2, '0')).join(''); }
+  catch { return null; } // no crypto.subtle (an insecure copy): the pixel goes without external_id
+};
+const eventId = () => 'ev_' + (crypto.randomUUID?.() || Date.now().toString(36) + Math.random().toString(36).slice(2, 12));
+// What the server needs to send the same event: Meta's cookies, this browser's id and the page.
+const metaTrack = id => ({ event_id: id, fbp: cookie('_fbp'), fbc: cookie('_fbc'), anon: anonId, url: location.origin + location.pathname });
+let pixelOn = false, pixelStarting = false;
+async function startPixel(id) {
+  if (pixelOn || pixelStarting || !/^\d{6,20}$/.test(id || '')) return;
+  pixelStarting = true;
+  const externalId = await sha256(anonId);
   !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
   fbq('set', 'autoConfig', false, id); // only our events: no automatic button clicks (SubscribedButtonClick)
-  fbq('init', id); fbq('track', 'PageView');
+  fbq('init', id, externalId ? { external_id: externalId } : {}); fbq('track', 'PageView');
+  pixelOn = true;
 }
 const track = (event, params, eventID) => { if (pixelOn) fbq('track', event, params || {}, eventID ? { eventID } : undefined); };
 const trackCustom = (event, params) => { if (pixelOn) fbq('trackCustom', event, params || {}); };
-const cookie = name => (document.cookie.match('(?:^|; )' + name + '=([^;]*)') || [])[1];
+// An event that happens only in the page (ViewContent): the pixel, and the server through /api/track with the same id.
+function trackBoth(event, params, extra) {
+  if (!pixelOn) return;
+  const id = eventId();
+  track(event, params, id);
+  fetch('/api/track', { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json', ...(auth.token ? { Authorization: 'Bearer ' + auth.token } : {}) },
+    body: JSON.stringify({ event, event_id: id, ...extra, track: metaTrack(id) }) }).catch(() => {});
+}
 // The Purchase of an approved payment, once per browser (the server sends the same event id).
 function trackPurchase() {
   const p = billing.purchase, key = 'teclado-ciego-pixel-' + p?.id;
@@ -2075,7 +2109,7 @@ function practiceInfo(ninja) {
 }
 function showPlan(reason) {
   tn.capture('pricing_viewed', { reason, payments_on: billing.enabled, premium: billing.premium, logged_in: !!auth.name, used_today: usedToday() });
-  if (!billing.premium) track('ViewContent', { content_name: 'Templo Ninja · precios', content_category: reason });
+  if (!billing.premium) trackBoth('ViewContent', { content_name: 'Templo Ninja · precios', content_category: reason }, { reason });
   // Also opened from the header CTA: without payments configured, or with the plan already active, it only informs.
   const canBuy = billing.enabled && !billing.premium;
   const offer = freeAccountOffer(), outOfGuest = offer && reason === 'limit';
@@ -2120,8 +2154,9 @@ $('planForm').onsubmit = async e => {
   tn.capture('checkout_clicked', { logged_in: !!auth.name, price: billing.amount ?? null, currency: billing.currency ?? null });
   if (!auth.name) { planAfterLogin = true; $('planDlg').close(); openAuth(); setAuthMode('register'); return; }
   $('planSubmit').disabled = true; $('planErr').textContent = '';
-  track('InitiateCheckout', { value: billing.amount, currency: billing.currency, content_name: 'Templo Ninja · acceso ilimitado' });
-  try { const { url } = await api('billing', { action: 'buy', track: { fbp: cookie('_fbp'), fbc: cookie('_fbc') } }); tn.capture('checkout_started', { provider: 'mercadopago' }); location.href = url; }
+  const checkoutId = eventId(); // the server sends the same InitiateCheckout once the checkout exists
+  track('InitiateCheckout', { value: billing.amount, currency: billing.currency, content_name: 'Templo Ninja · acceso ilimitado' }, checkoutId);
+  try { const { url } = await api('billing', { action: 'buy', track: metaTrack(checkoutId) }); tn.capture('checkout_started', { provider: 'mercadopago' }); location.href = url; }
   catch (err) { tn.capture('checkout_error', { status: err.status ?? null }); $('planErr').textContent = err.message; $('planSubmit').disabled = false; }
 };
 
