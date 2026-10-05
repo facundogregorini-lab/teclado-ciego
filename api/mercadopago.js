@@ -1,5 +1,5 @@
-// Webhook for Mercado Pago events (one-time payments, and the monthly subscriptions from before). The payload is
-// only a hint: the payment or subscription is always re-read from Mercado Pago before changing anything.
+// Webhook for Mercado Pago events (one-time payments and their refunds, and the monthly subscriptions from before). The
+// payload is only a hint: the payment or subscription is always re-read from Mercado Pago before changing anything.
 const { handler } = require('./_lib');
 const { settings, mp, storeSubscription, storePayment } = require('./_billing');
 
@@ -11,13 +11,19 @@ module.exports = handler(async req => {
   const id = String(payload.data?.id || query['data.id'] || query.id || '');
   if (!/^[\w-]{1,64}$/.test(id)) return { ok: true };
 
-  if (type === 'payment') {
-    await storePayment(await mp('/v1/payments/' + id));
-  } else if (type.includes('preapproval')) {
-    await storeSubscription(await mp('/preapproval/' + id));
-  } else if (type === 'subscription_authorized_payment') {
-    const payment = await mp('/authorized_payments/' + id);
-    if (payment.preapproval_id) await storeSubscription(await mp('/preapproval/' + encodeURIComponent(payment.preapproval_id)));
+  try {
+    if (type === 'payment') {
+      await storePayment(await mp('/v1/payments/' + id));
+    } else if (type.includes('preapproval')) {
+      await storeSubscription(await mp('/preapproval/' + id));
+    } else if (type === 'subscription_authorized_payment') {
+      const payment = await mp('/authorized_payments/' + id);
+      if (payment.preapproval_id) await storeSubscription(await mp('/preapproval/' + encodeURIComponent(payment.preapproval_id)));
+    }
+  } catch (error) {
+    // Something Mercado Pago doesn't know (like the panel's test notification): nothing to do, and no retries.
+    // Any other failure answers with an error, so Mercado Pago tries again later.
+    if (error.mpStatus !== 404) throw error;
   }
   return { ok: true };
 });

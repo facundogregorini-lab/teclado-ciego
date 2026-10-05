@@ -1,20 +1,20 @@
 // Freemium + Mercado Pago flow against a fake Mercado Pago API. Run: npm run test:billing
-const http = require('node:http'), assert = require('node:assert/strict');
+const http = require('node:http'), assert = require('node:assert/strict'), crypto = require('node:crypto');
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
 const SITE = 'http://127.0.0.1:4193', MP = 'http://127.0.0.1:4194';
 Object.assign(process.env, { MP_ACCESS_TOKEN: 'TEST-token', MP_PRICE: '4900', MP_API_BASE: MP, APP_URL: SITE, TECLADO_PREMIUM_USERS: 'regalo',
-  META_PIXEL_ID: '123456789012345', META_CAPI_TOKEN: 'capi-token', META_GRAPH_BASE: MP + '/graph',
+  META_PIXEL_ID: '123456789012345', META_CAPI_TOKEN: 'capi-token', META_GRAPH_BASE: MP + '/graph', META_TEST_EVENT_CODE: 'TEST123',
   POSTHOG_KEY: 'phc_test', POSTHOG_INGEST_HOST: MP + '/ph' });
 const { createServer } = require('./server.cjs');
 
 // Fake Mercado Pago. Checkout: creating a preference is as if the user paid right away (an approved payment
 // with the same reference and metadata). Old monthly subscriptions can still be read back.
-const subs = new Map(), payments = new Map(), capi = [], ph = [];
+const subs = new Map(), payments = new Map(), capi = [], capiBodies = [], ph = [];
 const fakeMP = http.createServer(async (req, res) => {
   let raw = ''; for await (const c of req) raw += c;
   const url = new URL(req.url, MP), send = d => { res.setHeader('Content-Type', 'application/json'); res.end(JSON.stringify(d)); };
   // Fake Meta Conversions API
-  if (req.method === 'POST' && url.pathname === '/graph/123456789012345/events' && url.searchParams.get('access_token') === 'capi-token') { capi.push(...JSON.parse(raw).data); return send({ events_received: 1 }); }
+  if (req.method === 'POST' && url.pathname === '/graph/123456789012345/events' && url.searchParams.get('access_token') === 'capi-token') { const b = JSON.parse(raw); capiBodies.push(b); capi.push(...b.data); return send({ events_received: 1 }); }
   // Fake PostHog ingestion
   if (req.method === 'POST' && url.pathname === '/ph/i/v0/e/') { const e = JSON.parse(raw); if (e.api_key === 'phc_test') ph.push(e); return send({ status: 1 }); }
   if (req.headers.authorization !== 'Bearer TEST-token') { res.statusCode = 401; return send({ message: 'bad token' }); }
@@ -22,7 +22,8 @@ const fakeMP = http.createServer(async (req, res) => {
     const body = JSON.parse(raw), id = 'pay_' + (payments.size + 1);
     assert.equal(body.items[0].unit_price, 4900); assert.equal(body.items[0].quantity, 1);
     assert.ok(!body.auto_recurring && body.notification_url.endsWith('/api/mercadopago'));
-    payments.set(id, { id, status: 'approved', transaction_amount: 4900, currency_id: 'ARS', external_reference: body.external_reference, metadata: body.metadata });
+    payments.set(id, { id, status: 'approved', transaction_amount: 4900, currency_id: 'ARS', external_reference: body.external_reference, metadata: body.metadata,
+      transaction_details: { net_received_amount: 4530.5 }, fee_details: [{ type: 'mercadopago_fee', amount: 369.5 }], payment_method_id: 'account_money', payment_type_id: 'account_money', installments: 1 });
     // The token is a test one (TEST-…): the app must send the user to the sandbox checkout, not the real one.
     return send({ id: 'pref_' + id, init_point: MP + '/checkout-real', sandbox_init_point: body.back_urls.success + '&sandbox=1' });
   }
@@ -43,7 +44,7 @@ const check = (name, ok) => { assert.ok(ok, name); console.log('PASS', name); };
   const errors = [];
   // A stand-in for Meta's fbevents.js that writes every pixel call to the console (kept across navigations).
   const PIXEL = "document.cookie='_fbp=fb.1.1700000000000.42;path=/';(window.fbq.queue||[]).forEach(a=>console.log('PX '+JSON.stringify([...a])));window.fbq.callMethod=(...a)=>console.log('PX '+JSON.stringify(a));";
-  const open = async () => {
+  const open = async (path = '') => {
     const ctx = await browser.newContext();
     await ctx.route('https://connect.facebook.net/**', r => r.fulfill({ contentType: 'text/javascript', body: PIXEL }));
     // Analytics events (analytics.js keeps them in window.tnEvents on local copies), also kept across navigations.
@@ -51,10 +52,14 @@ const check = (name, ok) => { assert.ok(ok, name); console.log('PASS', name); };
     const p = await ctx.newPage(); p.px = []; p.tn = [];
     p.on('pageerror', e => errors.push(e.message));
     p.on('console', m => { const t = m.text(); if (t.startsWith('PX ')) p.px.push(JSON.parse(t.slice(3))); if (t.startsWith('TN ')) p.tn.push(JSON.parse(t.slice(3))); });
-    await p.goto(SITE); await p.waitForSelector('#planNote:not([hidden])'); return p;
+    await p.goto(SITE + path); await p.waitForSelector('#planNote:not([hidden])'); return p;
   };
   const fired = (p, name) => p.px.filter(a => a[1] === name);
   const events = (p, name) => p.tn.filter(e => e[0] === name).map(e => e[1]);
+  const sent = name => capi.filter(e => e.event_name === name);
+  const hash = s => crypto.createHash('sha256').update(s).digest('hex');
+  // The Conversions API events arrive a moment after the page's (the page doesn't wait for them)
+  const waitSent = async (name, n) => { for (let i = 0; i < 50 && sent(name).length < n; i++) await new Promise(r => setTimeout(r, 100)); return sent(name); };
   // One practice: start the next lesson and type its first key.
   const practice = async p => {
     await p.click('#continue');
@@ -69,8 +74,11 @@ const check = (name, ok) => { assert.ok(ok, name); console.log('PASS', name); };
   };
   try {
     // Guest: three free practices a day, counted in this browser
-    const guest = await open();
+    const guest = await open('/?fbclid=clickGuest1&utm_source=meta');
     await guest.waitForFunction(() => window.fbq);
+    const guestAnon = await guest.evaluate(() => localStorage.getItem('teclado-ciego-anon'));
+    check('The pixel starts with this browser\'s anonymous id, hashed, as external_id', guest.px.some(a => a[0] === 'init' && a[2]?.external_id === hash(guestAnon)));
+    check('An ad click (fbclid) leaves the _fbc cookie', /^fb\.1\.\d+\.clickGuest1$/.test(await guest.evaluate(() => document.cookie.match(/_fbc=([^;]*)/)?.[1])));
     check('The Meta Pixel starts with the id from the server, without automatic events, and counts the visit', guest.px.some(a => a[0] === 'set' && a[1] === 'autoConfig' && a[2] === false) && guest.px.some(a => a[0] === 'init' && a[1] === '123456789012345') && fired(guest, 'PageView').length === 1);
     check('Guests see how many free practices are left', (await guest.textContent('#planNote')).includes('quedan 3 prácticas de 3'));
     await guest.click('#continue'); await guest.keyboard.press('Escape');
@@ -86,6 +94,11 @@ const check = (name, ok) => { assert.ok(ok, name); console.log('PASS', name); };
       && (await guest.textContent('#planFreeText')).includes('6 prácticas por día') && await guest.isVisible('#planOr') && !(await guest.getAttribute('#planSubmit', 'class')).includes('primary'));
     check('Hitting the limit is a pricing_viewed event with its reason', events(guest, 'pricing_viewed').some(e => e.reason === 'limit' && e.payments_on && !e.logged_in));
     check('Seeing the prices is a ViewContent pixel event with its reason', fired(guest, 'ViewContent').some(a => a[2].content_category === 'limit'));
+    const view = fired(guest, 'ViewContent')[0], viewSent = (await waitSent('ViewContent', 1))[0];
+    check('The server sends the same ViewContent, with the same event id', view[3]?.eventID && viewSent?.event_id === view[3].eventID && viewSent.custom_data.content_category === 'limit');
+    check('The server ViewContent carries what Meta matches people with', viewSent.user_data.external_id[0] === hash(guestAnon) && viewSent.user_data.client_ip_address === '127.0.0.1'
+      && viewSent.user_data.client_user_agent && viewSent.user_data.fbp === 'fb.1.1700000000000.42' && /\.clickGuest1$/.test(viewSent.user_data.fbc) && viewSent.event_source_url === SITE + '/');
+    check('Only the page\'s own events can be sent through /api/track', (await fetch(SITE + '/api/track', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ event: 'Purchase', event_id: 'ev_12345678' }) })).status === 400);
     await guest.click('#planClose'); await guest.reload(); await guest.waitForSelector('#planNote:not([hidden])');
     check('Reloading does not reset the daily limit', (await guest.textContent('#planNote')).includes('ya usaste'));
     check('Without free practices left, the daily plan offers the free account and unlimited access instead of a rest', await guest.isVisible('#dojoUnlock') && (await guest.textContent('#dojoUnlock')) === 'Seguir gratis'
@@ -113,6 +126,8 @@ const check = (name, ok) => { assert.ok(ok, name); console.log('PASS', name); };
     // Account: the limit is counted on the server
     const ana = await open(); await register(ana, 'ana');
     check('Creating an account is a CompleteRegistration', fired(ana, 'CompleteRegistration').length === 1);
+    const reg = fired(ana, 'CompleteRegistration')[0], regSent = (await waitSent('CompleteRegistration', 2)).find(e => e.event_id === reg[3]?.eventID);
+    check('The server sends the same CompleteRegistration, with the same event id and the account', regSent && regSent.user_data.external_id.includes(hash('ana')) && regSent.user_data.client_ip_address);
     check('Creating an account is a signed_up event, identified by the username only', events(ana, 'signed_up').length === 1 && events(ana, 'signed_up')[0].source === 'account' && events(ana, '$identify').some(e => e.id === 'ana'));
     check('Accounts see their larger free plan', (await ana.textContent('#planNote')).includes('quedan 6 prácticas de 6'));
     for (let i = 0; i < 6; i++) await practice(ana);
@@ -127,12 +142,17 @@ const check = (name, ok) => { assert.ok(ok, name); console.log('PASS', name); };
     for (let i = 0; i < 50 && !fired(ana2, 'Purchase').length; i++) await ana2.waitForTimeout(100); // the pixel script loads after the page
     const checkout = fired(ana2, 'InitiateCheckout')[0], buy = fired(ana2, 'Purchase');
     check('Going to pay is an InitiateCheckout with the price', checkout && checkout[2].value === 4900 && checkout[2].currency === 'ARS');
+    check('The server sends the same InitiateCheckout once the checkout exists', sent('InitiateCheckout').length === 1 && sent('InitiateCheckout')[0].event_id === checkout[3]?.eventID && sent('InitiateCheckout')[0].custom_data.value === 4900);
     check('Going to pay is checkout_clicked and checkout_started', events(ana2, 'checkout_clicked').some(e => e.logged_in && e.price === 4900) && events(ana2, 'checkout_started').length === 1);
-    check('The server reports the payment to PostHog once, for the account', ph.filter(e => e.event === 'payment_succeeded').length === 1 && ph[0].distinct_id === 'ana' && ph[0].properties.value === 4900 && ph[0].properties.source === 'server');
+    const succeeded = ph.filter(e => e.event === 'payment_succeeded');
+    check('The server reports the payment to PostHog once, for the account', succeeded.length === 1 && succeeded[0].distinct_id === 'ana' && succeeded[0].properties.value === 4900 && succeeded[0].properties.source === 'server');
+    check('The payment in PostHog has what Mercado Pago keeps and what reaches the account', succeeded[0].properties.net_amount === 4530.5 && succeeded[0].properties.fee === 369.5 && succeeded[0].properties.payment_method === 'account_money' && succeeded[0].properties.installments === 1);
     check('No analytics event carries a password', ![...ana.tn, ...ana2.tn, ...ph].some(e => JSON.stringify(e).includes('secreto1')));
     check('Coming back paid is one Purchase, with the payment as event id', buy.length === 1 && buy[0][2].value === 4900 && buy[0][3].eventID === 'pay_pay_1');
-    check('The server reports the same Purchase once to the Conversions API', capi.length === 1 && capi[0].event_name === 'Purchase' && capi[0].event_id === 'pay_pay_1' && capi[0].custom_data.value === 4900
-      && capi[0].user_data.fbp === 'fb.1.1700000000000.42' && /^[0-9a-f]{64}$/.test(capi[0].user_data.external_id[0]) && capi[0].user_data.client_user_agent);
+    const purchase = sent('Purchase');
+    check('The server reports the same Purchase once to the Conversions API', purchase.length === 1 && purchase[0].event_id === 'pay_pay_1' && purchase[0].custom_data.value === 4900 && purchase[0].custom_data.currency === 'ARS'
+      && purchase[0].user_data.fbp === 'fb.1.1700000000000.42' && purchase[0].user_data.external_id.includes(hash('ana')) && purchase[0].user_data.client_user_agent);
+    check('The Purchase carries the IP of the person who paid and the site\'s address', purchase[0].user_data.client_ip_address === '127.0.0.1' && purchase[0].event_source_url === SITE + '/');
     check('Coming back from Mercado Pago unlocks everything, with thanks from the monks', await ana2.isHidden('#planNote') && !ana2.url().includes('aporte') && (await ana2.textContent('#toast')).includes('monjes ninja') && (await ana2.textContent('#upgradeLabel')).includes('Ninja'));
     await ana2.reload(); await ana2.waitForSelector('#acctBtn .nm'); await ana2.waitForTimeout(1000);
     check('Reloading does not count the purchase again', fired(ana2, 'Purchase').length === 1);
@@ -156,8 +176,16 @@ const check = (name, ok) => { assert.ok(ok, name); console.log('PASS', name); };
     payments.get('pay_90').status = 'approved';
     check('The webhook of an approved payment unlocks for good', (await hook({ type: 'payment', data: { id: 'pay_90' } })).status === 200 && (await planOf(token)).premium && (await planOf(token)).lifetime);
     await hook({ type: 'payment', data: { id: 'pay_90' } });
-    check('A purchase that only arrives by webhook is reported from the server, once', capi.length === 2 && capi[1].event_id === 'pay_pay_90');
+    check('A purchase that only arrives by webhook is reported from the server, once', sent('Purchase').length === 2 && sent('Purchase')[1].event_id === 'pay_pay_90');
     check('It also reaches PostHog once', ph.filter(e => e.event === 'payment_succeeded').map(e => e.distinct_id).join() === 'ana,bobo');
+    // A refund (or a charge back) takes the access away and is negative revenue, once
+    payments.get('pay_90').status = 'refunded';
+    await hook({ type: 'payment', data: { id: 'pay_90' } }); await hook({ type: 'payment', data: { id: 'pay_90' } });
+    const refunds = ph.filter(e => e.event === 'payment_refunded');
+    check('A refunded payment takes the unlimited access away', !(await planOf(token)).premium);
+    check('A refund reaches PostHog once, as negative revenue', refunds.length === 1 && refunds[0].distinct_id === 'bobo' && refunds[0].properties.value === -4900 && refunds[0].properties.reason === 'refunded');
+    check('The webhook says ok to a payment Mercado Pago doesn\'t know (no endless retries)', (await hook({ type: 'payment', data: { id: '123456' } })).status === 200);
+    check('Every Conversions API request goes to Test events while META_TEST_EVENT_CODE is set', capiBodies.length && capiBodies.every(b => b.test_event_code === 'TEST123'));
     // A charge of an old monthly subscription is not the one-time payment
     payments.set('pay_91', { id: 'pay_91', status: 'approved', transaction_amount: 5000, external_reference: 'carla' });
     await hook({ type: 'payment', data: { id: 'pay_91' } });

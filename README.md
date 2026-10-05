@@ -73,7 +73,20 @@ La app carga el Píxel de Meta **Templo Ninja Web** (`2167285730522630`, el ID l
 | `InitiateCheckout` | Al ir a pagar el aporte, con el precio. |
 | `Purchase` | Al volver de Mercado Pago con el pago aprobado (una vez por navegador). |
 
-Con `META_CAPI_TOKEN` (token de la API de conversiones, en el Administrador de eventos → el píxel → Configuración), el servidor también informa cada `Purchase` la primera vez que ve el pago aprobado (webhook o vuelta del pago). Usa el mismo `event_id` que el navegador (`pay_<id del pago>`), así Meta lo cuenta una sola vez, y le pasa el monto, las cookies `_fbp`/`_fbc` (viajan en la metadata del pago), el navegador y el usuario cifrado con SHA-256. Opcional: `META_GRAPH_VERSION` (por defecto `v23.0`).
+El píxel se inicia con `external_id`: un id anónimo de ese navegador (`teclado-ciego-anon` en `localStorage`), cifrado con SHA-256. Si la visita viene de un anuncio (`fbclid` en la dirección), la página crea la cookie `_fbc` apenas abre, sin esperar al píxel.
+
+**API de conversiones.** Con `META_CAPI_TOKEN` (token de la API de conversiones, en el Administrador de eventos → el píxel → Configuración), el servidor también manda los eventos que importan para las campañas, cada uno con el mismo `event_id` que el navegador, así Meta lo cuenta una sola vez (*Navegador y servidor · deduplicado*):
+
+| Evento | Lo manda | `event_id` |
+| --- | --- | --- |
+| `ViewContent` | `api/track.js`, que la página llama junto con el píxel. | `ev_…` (lo genera la página) |
+| `CompleteRegistration` | `api/auth.js`, al crear la cuenta. | `ev_…` (viaja con el registro) |
+| `InitiateCheckout` | `api/billing.js`, cuando Mercado Pago ya devolvió el link de pago. | `ev_…` (viaja con el pedido de pago) |
+| `Purchase` | `api/_billing.js`, la primera vez que ve el pago aprobado (webhook o vuelta del pago). | `pay_<id del pago>` |
+
+Cada evento lleva la IP y el navegador de quien lo hizo, `_fbp`, `_fbc`, el `external_id` del navegador y, con cuenta, también el del usuario (los dos cifrados con SHA-256), y la página (`event_source_url`, por defecto `https://www.temploninja.com/`; se cambia con `APP_URL`). Para el `Purchase`, que puede llegar solo por webhook, el servidor guarda esos datos al ir a pagar (`meta:<usuario>` en Redis, 30 días). No se manda email porque la app no lo pide. `PageView` no pasa por acá: lo cubre la versión de la API de conversiones alojada por Meta.
+
+**Probar:** en el Administrador de eventos → *Probar eventos*, copiá el código de prueba y cargalo en Vercel como `META_TEST_EVENT_CODE` (Redeploy). Los eventos del servidor van a esa pestaña en lugar de contar para los anuncios. Verificá que cada uno aparezca como *Navegador y servidor · deduplicado* y **borrá la variable** al terminar. Opcional: `META_GRAPH_VERSION` (por defecto `v23.0`).
 
 ### Analítica de producto (PostHog y Vercel)
 
@@ -87,7 +100,8 @@ Con `META_CAPI_TOKEN` (token de la API de conversiones, en el Administrador de e
 | `pricing_viewed` | `showPlan()`: botón ✦ del header, nota del plan gratis, límite diario o botón del plan diario. | `reason` (`upgrade` o `limit`), `payments_on`, `premium`, `logged_in`, `used_today`. |
 | `checkout_clicked` | Botón de pagar del diálogo del plan (también sin cuenta, antes de pedirla). | `logged_in`, `price`, `currency`. |
 | `checkout_started` / `checkout_error` | Al recibir el link de Mercado Pago, justo antes de ir / si falla. | `provider` / `status`. |
-| `payment_succeeded` | **Servidor** (`api/_billing.js`), la primera vez que ve un pago aprobado (vuelta del pago o webhook). | `value`, `currency`, `provider`, `source: server`. |
+| `payment_succeeded` | **Servidor** (`api/_billing.js`), la primera vez que ve un pago aprobado (vuelta del pago o webhook). | `value` (bruto), `currency`, `provider`, `payment_id`, `net_amount` (lo que acredita Mercado Pago), `fee` (su comisión), `payment_method`, `payment_type`, `installments`, `source: server`. |
+| `payment_refunded` | **Servidor**, la primera vez que ve un pago devuelto o con contracargo. También saca el acceso ilimitado. | `value` (negativo), `currency`, `reason` (`refunded` o `charged_back`), `payment_id`. |
 | `payment_pending` / `payment_failed` | Al volver de Mercado Pago sin pago aprobado (`?aporte=ok` todavía sin confirmar / `?aporte=error`). | `status`. |
 | `signup_prompt_clicked` | Botones *Crear cuenta gratis* / *Ya tengo cuenta* del diálogo del plan (invitados sin prácticas o desde el botón del plan). | `mode` (`register` o `login`), `used_today`. |
 | `signed_up` / `logged_in` | Al crear la cuenta / entrar. | `source`: `plan` si vino del diálogo del plan, `account` si no. |
