@@ -31,13 +31,22 @@ en pagar. `velocidad` 41 usuarios, 14 practican, 2 ven precios. `templo` 13 usua
 - **Regla de decisión:** si `test` duplica o más el % de clic en pagar sin bajar el % que practica, pasa al 100% y se aplica lo mismo al anuncio `velocidad` (directo a la medición de 1 minuto). Si no se mueve, se descarta y se revisa el precio.
 - **Cambio en Meta (2026-10-05):** se pausó el anuncio `templo` (13 visitantes, ninguno practicó) para concentrar el presupuesto en `iq`.
 
-## Hipótesis activas
-Ver `growth/research/oportunidades.md`.
+## Próximo
+Ver `growth/backlog.md`. Esta semana:
+- **BL-002** (a aprobar): experimento para el anuncio `velocidad`, directo a la medición de 1 minuto.
+- **BL-003**: investigar el abandono al crear la cuenta (pedido a producto, abajo).
+
+## Pedidos del coordinador
+Cada rutina responde primero lo que le toca, en una sección "Pedidos del coordinador" de su informe.
+- **Producto:** ver las grabaciones de quienes tocaron "crear cuenta" al llegar al límite y no la terminaron (BL-003). ¿Dónde abandonan y por qué?
+- **Marketing:** visitas reales por semana de `iq` y `velocidad`, para estimar cuánto tarda cada experimento en llegar a 60 personas por grupo.
+- **Research:** qué empresas argentinas usan tests online de aptitud en sus búsquedas y cómo se busca eso en Google (BL-006).
 
 ## Estructura de Growth
 | Rutina | Cuándo (hora de Argentina) | Entrega | Instrucciones |
 | --- | --- | --- | --- |
 | Status diario | todos los días, 8:47 | email | `growth/status/PROMPT.md` |
+| Coordinador | lunes 9:13, después de las tres semanales | un PR con todo + email | `growth/coordinador/PROMPT.md` |
 | Producto y CRO | lunes 7:21 | PR + email a las 9:00 | `growth/producto/PROMPT.md` |
 | Adquisición y retención | lunes 7:34 | PR + email a las 9:00 | `growth/marketing/PROMPT.md` |
 | Research de mercado | lunes 7:48 | PR + email a las 9:00 | `growth/research/PROMPT.md` |

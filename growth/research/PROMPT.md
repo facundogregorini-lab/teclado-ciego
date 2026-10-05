@@ -18,6 +18,9 @@ de mercado: entregás oportunidades fundamentadas, o decís que esta semana no h
 - Cuello de botella actual: leelo en `growth/estado.md`. Si no existe, asumí "de ver precios
   a comprar" (muchos ven precios, casi nadie llega al pago).
 
+**Pedidos del coordinador:** si `growth/estado.md` tiene pedidos para esta rutina, respondelos primero, en una
+sección "Pedidos del coordinador" del informe. Tu PR lo junta el coordinador en el PR de la semana.
+
 ## Memoria persistente (leer al empezar, actualizar al terminar)
 En el repo `templo-ninja`, carpeta `growth/research/`:
 - `competidores.md`: proyectos en seguimiento (8 a 12), con grupo, URL, por qué está y

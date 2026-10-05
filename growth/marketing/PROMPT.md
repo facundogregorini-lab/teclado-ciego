@@ -11,6 +11,9 @@ no, y convertirlo en hipótesis comprobables para el coordinador de Growth. No t
 - `growth/research/`: competidores, anuncios observados y oportunidades, para no duplicar y para tomar ideas
   de mensajes.
 
+**Pedidos del coordinador:** si `growth/estado.md` tiene pedidos para esta rutina, respondelos primero, en una
+sección "Pedidos del coordinador" del informe. Tu PR lo junta el coordinador en el PR de la semana.
+
 ## Memoria persistente (leer al empezar, actualizar al terminar)
 En `growth/marketing/`:
 - `canales.md`: cada canal y anuncio con su historia semana a semana (gasto, visitas, costo por usuario que
