@@ -98,7 +98,8 @@ Cada evento lleva la IP y el navegador de quien lo hizo, `_fbp`, `_fbc`, el `ext
 | `practice_started` | `countPractice()`: primera tecla o primera respuesta de una práctica (lo mismo que cuenta para el límite). | `section`, `kind` (`leccion`, `repaso`, `medicion`, `sesion`, `simulacro`, `desafio-5-min`), `lesson`, `method`, `track`, `difficulty`, `guided`, `free_left`. |
 | `practice_completed` | `finish()`, `finishQuiz()` y `finishNinja()`. | Las de arriba más `wpm` y `accuracy` (teclado), `correct`, `questions`, `stars`, `score`, `iq`, `flagged`, `duration_ms`. |
 | `pricing_viewed` | `showPlan()`: botón ✦ del header, nota del plan gratis, límite diario o botón del plan diario. | `reason` (`upgrade` o `limit`), `payments_on`, `premium`, `logged_in`, `used_today`. |
-| `checkout_clicked` | Botón de pagar del diálogo del plan (también sin cuenta, antes de pedirla). | `logged_in`, `price`, `currency`. |
+| `checkout_clicked` | Botón de pagar del diálogo del plan (también sin cuenta, antes de pedirla). | `logged_in`, `price`, `currency`, `source` (por qué se abrió el plan: `limit`, `upgrade` o `iq_result`). |
+| `iq_offer_viewed` | Experimento `iq-desafio-directo`, variante `test`: se muestra la oferta debajo del resultado del desafío de 5 minutos. | `iq`, `score`. |
 | `checkout_started` / `checkout_error` | Al recibir el link de Mercado Pago, justo antes de ir / si falla. | `provider` / `status`. |
 | `payment_succeeded` | **Servidor** (`api/_billing.js`), la primera vez que ve un pago aprobado (vuelta del pago o webhook). | `value` (bruto), `currency`, `provider`, `payment_id`, `net_amount` (lo que acredita Mercado Pago), `fee` (su comisión), `payment_method`, `payment_type`, `installments`, `source: server`. |
 | `payment_refunded` | **Servidor**, la primera vez que ve un pago devuelto o con contracargo. También saca el acceso ilimitado. | `value` (negativo), `currency`, `reason` (`refunded` o `charged_back`), `payment_id`. |
@@ -108,6 +109,8 @@ Cada evento lleva la IP y el navegador de quien lo hizo, `_fbp`, `_fbc`, el `ext
 | `challenge_accepted` | Botón *Aceptar* de un desafío recibido. | `kind`, `has_score`. |
 
 Con cuenta, `posthog.identify()` usa el nombre de usuario (es el id de la cuenta; la app no pide email) y la propiedad `plan` (`gratis` o `ilimitado`). Al salir, `posthog.reset()`. Nunca se mandan contraseñas, emails ni datos de pago.
+
+**Experimento `iq-desafio-directo`.** Solo para quienes llegan por el anuncio `iq` (`utm_content=iq`; queda recordado en el navegador). El feature flag de PostHog del mismo nombre los reparte 50/50. En `control`, Ninja mental queda como siempre. En `test`, el botón principal de Ninja mental es "Medí tu IQ ninja" (va directo al desafío de 5 minutos) y debajo del resultado aparece el plan ilimitado; el IQ sigue siendo gratis. Sin el flag (o fuera del experimento) todo queda como en `control`. Se evalúa con `window.tn.flag()` (en copias locales, `window.tnFlags`, que usan los tests).
 
 **Leer métricas:** `node scripts/posthog-query.cjs funnel` (también `events`, `sources` o cualquier consulta HogQL entre comillas; `DAYS=30` cambia el período). Usa `POSTHOG_PERSONAL_API_KEY`, `POSTHOG_PROJECT_ID` y `POSTHOG_HOST` del entorno, con `api/_posthog.js`; la personal key nunca llega a la página. Variables en `.env.example`. Para las grabaciones, en PostHog tiene que estar activado *Settings → Session replay → Record user sessions*.
 

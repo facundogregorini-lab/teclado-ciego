@@ -34,5 +34,11 @@
     identify(id, props) { window.tnEvents.push(['$identify', { id }]); window.posthog?.identify?.(id, props || {}); },
     people(props) { window.posthog?.setPersonProperties?.(props); window.posthog?.register?.(props); },
     reset() { window.tnEvents.push(['$reset', {}]); window.posthog?.reset?.(); },
+    // An experiment's variant (PostHog feature flag), once flags have loaded. Asking for it counts as an exposure,
+    // so call it only for the people in the experiment. Local copies read window.tnFlags (the tests set it).
+    flag(key, done) {
+      if (local || !window.posthog?.onFeatureFlags) return done(window.tnFlags?.[key]);
+      window.posthog.onFeatureFlags(() => done(window.posthog.getFeatureFlag(key)));
+    },
   };
 })();

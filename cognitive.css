@@ -227,3 +227,7 @@ a.btn {text-decoration:none}
   .top .tc-cta {order:4} .top .tc-cta + .ninja-cta {order:5;margin-right:auto}
   .top .main-nav {order:6;flex:1 1 100%}
 }
+
+/* Experiment iq-desafio-directo: the unlimited plan under the challenge's result */
+.iq-offer {margin:16px 0;padding:14px 16px;border:2px solid var(--accent);border-radius:12px;background:var(--card);display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.iq-offer p {margin:0;flex:1 1 260px}

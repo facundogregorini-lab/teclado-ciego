@@ -1602,13 +1602,33 @@ function qFigure(q, cls = 'fig') {
   return '';
 }
 const optHtml = (q, o) => q.text ? `<span class="opt-txt">${escHtml(o)}</span>` : Figures.draw(o);
+/* ---------- Experiment: the "iq" ad goes straight to the 5-minute challenge, with the offer next to the IQ ----------
+   Only visitors who came from that ad (utm_content=iq, remembered in this browser) are in it. The PostHog flag
+   iq-desafio-directo splits them 50/50: "control" sees Ninja mental as always; "test" gets "Medí tu IQ ninja" as the
+   main button and, under the result, the unlimited plan. The IQ itself stays free. Asked after this script runs. */
+var IQ_FLAG = 'iq-desafio-directo', iqVariant = null;
+function iqTest() { return iqVariant === 'test'; }
+queueMicrotask(() => {
+  const KEY = 'teclado-ciego-iq-exp';
+  let inExp = new URLSearchParams(location.search).get('utm_content') === 'iq';
+  try { if (inExp) localStorage.setItem(KEY, '1'); else inExp = localStorage.getItem(KEY) === '1'; } catch {}
+  if (inExp) window.tn?.flag?.(IQ_FLAG, v => { iqVariant = v === 'test' ? 'test' : 'control'; if (iqTest()) renderCog(); });
+});
+// The offer under the challenge's result (test variant, payments on, not unlimited yet).
+function iqOffer() {
+  if (!iqTest() || !billing.enabled || billing.premium) return '';
+  const price = billing.amount ? '$ ' + Number(billing.amount).toLocaleString('es-AR') : billing.price;
+  return `<div class="iq-offer" id="iqOffer"><p><b>Subí tu IQ ninja:</b> práctica ilimitada de figuras, números e inglés. ${escHtml(price)}, pago único, sin suscripción.</p>
+    <button class="btn primary" id="iqOfferBtn">Quiero entrenar sin límites</button></div>`;
+}
 function renderCog() {
   const T = TRACKS[cogTrack], all = SESSIONS[cogTrack], nx = nextSession(), anyDone = all.some(x => S.cog[x.id]);
   document.querySelectorAll('#cogTracks button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === cogTrack)));
   document.querySelectorAll('#cogTracks button small').forEach(el => { const ss = SESSIONS[el.parentElement.dataset.v]; el.textContent = `${ss.filter(x => S.cog[x.id]?.stars >= 1).length}/${ss.length} sesiones`; });
   $('cogTitle').innerHTML = `${T.icon} ${T.name}`;
   $('cogBlurb').textContent = T.blurb;
-  $('cogContinue').innerHTML = `${anyDone ? 'Seguir' : 'Empezar'}: sesión ${nx.n} <small>${nx.name} · nivel ${tierShort(nx.g)}</small>`;
+  $('cogContinue').innerHTML = iqTest() ? 'Medí tu IQ ninja <small>desafío de 5 min</small>'
+    : `${anyDone ? 'Seguir' : 'Empezar'}: sesión ${nx.n} <small>${nx.name} · nivel ${tierShort(nx.g)}</small>`;
   $('simBtn').innerHTML = `Simulacro de entrevista <small>${T.sim.n} preguntas · ${T.sim.min} min</small>`;
   $('cogTrackName').textContent = T.short.toUpperCase();
   $('cStars').textContent = `${all.reduce((a, x) => a + (S.cog[x.id]?.stars || 0), 0)}/${all.length * 3}`;
@@ -1902,7 +1922,7 @@ async function finishNinja() {
     <div class="house-result">${Typists.typist(ti)}<div class="house-copy"><span class="eyebrow">Tu IQ ninja estimado</span><h4 class="iq">IQ ${iq}</h4>
       <p class="joke">${rnd(IQ_JOKES[ti])}</p>
       <p>Pensás como ${TIERS[ti].name}. ${record && S.ninja.runs.length > 1 ? '¡Nuevo récord personal! ' : ''}Es una estimación lúdica según tu puntaje, no un test de IQ real.</p>
-      ${flagged ? '' : ninjaChallengeResult(score)}<p id="ninjaRankLine">${flagged ? '' : auth.name ? '' : 'Entrá con tu cuenta para aparecer en el ranking ninja.'}</p></div></div>
+      ${flagged ? '' : ninjaChallengeResult(score)}<p id="ninjaRankLine">${flagged ? '' : auth.name ? '' : 'Entrá con tu cuenta para aparecer en el ranking ninja.'}</p></div></div>${iqOffer()}
     <div class="nums"><div><b>${score}</b><span>puntos</span></div><div><b>${ok}/${n}</b><span>correctas</span></div><div><b>${r.acc}%</b><span>efectividad</span></div><div><b>${r.maxLevel}</b><span>dificultad máxima</span></div></div>
     <p>Cada acierto suma su dificultad (de 1 a 5) y el total se multiplica por tu efectividad: ${r.points} × ${r.acc}% = ${score} puntos.</p>
     <div class="actions"><button class="btn primary" id="qrAgain">Otra vez <small>Enter</small></button><button class="btn" id="qrChallenge">${flagged ? 'Invitar a un amigo' : 'Desafiar a un amigo'}</button><button class="btn" id="qrHome">Ninja mental</button></div>`;
@@ -1910,6 +1930,7 @@ async function finishNinja() {
   $('qrAgain').onclick = startNinja;
   $('qrChallenge').onclick = () => openChallenge(flagged ? { kind: 'ninja', score: 0 } : { kind: 'ninja', score, run: r.id });
   $('qrHome').onclick = goCog;
+  if ($('iqOfferBtn')) { tn.capture('iq_offer_viewed', { iq, score }); $('iqOfferBtn').onclick = () => showPlan('iq_result'); }
   $('qrAgain').focus({ preventScroll: true });
 }
 function ninjaRankLine(score) {
@@ -1930,7 +1951,7 @@ $('qEnd').onclick = () => { if (mode === 'quiz') finishQuiz(); };
 $('qGo').onclick = beginNinja;
 // Leaving the 5-minute run halfway shows its result (if something was answered) instead of losing it.
 function leaveQuiz() { if (mode === 'quiz' && quiz?.ninja && quiz.picks.some(x => x != null)) finishQuiz(); else goCog(); }
-$('cogContinue').onclick = () => startQuiz(nextSession());
+$('cogContinue').onclick = () => iqTest() ? startNinja() : startQuiz(nextSession());
 $('scNinja').onclick = goCog;
 $('scMax').onclick = () => startQuiz('ninja');
 $('simBtn').onclick = () => startQuiz('sim');
@@ -2008,6 +2029,7 @@ document.querySelectorAll('#rankView button').forEach(b => b.onclick = () => { r
 
 /* ---------- Freemium: a few free practices per day, unlimited with a Mercado Pago subscription ---------- */
 // With payments not configured (or no server) nothing is limited. Guests count in this browser; accounts on the server.
+let planFrom = null; // why the plan was last opened (limit, upgrade, iq_result), for checkout_clicked
 let billing = { enabled: false, premium: false, plays: 0, price: '', freePerDay: 3, guestPerDay: 3, accountPerDay: 3 }, counted = false, planAfterLogin = false, signupFrom = null;
 // Guests: a few practices in this browser. A free account gets more (accountPerDay), so running out offers one first.
 const freeAccountOffer = () => limited() && !auth.name && billing.accountPerDay > billing.guestPerDay;
@@ -2108,6 +2130,7 @@ function practiceInfo(ninja) {
   return { section: 'teclado-ciego', kind: cur === 'test' ? 'medicion' : cur?.review ? 'repaso' : 'leccion', lesson: cur === 'test' ? null : cur?.id ?? null, method: cur === 'test' ? testMethod : null };
 }
 function showPlan(reason) {
+  planFrom = reason;
   tn.capture('pricing_viewed', { reason, payments_on: billing.enabled, premium: billing.premium, logged_in: !!auth.name, used_today: usedToday() });
   if (!billing.premium) trackBoth('ViewContent', { content_name: 'Templo Ninja · precios', content_category: reason }, { reason });
   // Also opened from the header CTA: without payments configured, or with the plan already active, it only informs.
@@ -2119,6 +2142,7 @@ function showPlan(reason) {
     : billing.premium ? '✦ Ya tenés acceso ilimitado. ¡Gracias por bancar el templo! Los monjes ninja te lo agradecen 🙏'
     : outOfGuest ? `Ya usaste tus ${billing.freePerDay} prácticas gratis de hoy sin cuenta.`
     : reason === 'limit' ? `Ya usaste tus ${billing.freePerDay} prácticas gratis de hoy. Volvé mañana o hacé tu aporte para seguir ahora.`
+    : reason === 'iq_result' ? 'Tu IQ ninja sube con práctica: figuras, números e inglés sin límite diario, para siempre.'
     : `Con el plan gratis tenés ${billing.freePerDay} prácticas por día${offer ? ` (${billing.accountPerDay} con tu cuenta gratis)` : ''}.`;
   $('planFree').hidden = !offer; $('planOr').hidden = !offer;
   $('planFreeText').textContent = `Solo usuario y contraseña: tenés ${billing.accountPerDay} prácticas por día, tu progreso guardado en cualquier dispositivo y tu lugar en el ranking.`;
@@ -2151,7 +2175,7 @@ $('planSignup').onclick = () => signupFromPlan('register');
 $('planLogin').onclick = () => signupFromPlan('login');
 $('planForm').onsubmit = async e => {
   e.preventDefault();
-  tn.capture('checkout_clicked', { logged_in: !!auth.name, price: billing.amount ?? null, currency: billing.currency ?? null });
+  tn.capture('checkout_clicked', { logged_in: !!auth.name, price: billing.amount ?? null, currency: billing.currency ?? null, source: planFrom });
   if (!auth.name) { planAfterLogin = true; $('planDlg').close(); openAuth(); setAuthMode('register'); return; }
   $('planSubmit').disabled = true; $('planErr').textContent = '';
   const checkoutId = eventId(); // the server sends the same InitiateCheckout once the checkout exists

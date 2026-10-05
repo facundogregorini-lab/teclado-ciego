@@ -44,8 +44,9 @@ const check = (name, ok) => { assert.ok(ok, name); console.log('PASS', name); };
   const errors = [];
   // A stand-in for Meta's fbevents.js that writes every pixel call to the console (kept across navigations).
   const PIXEL = "document.cookie='_fbp=fb.1.1700000000000.42;path=/';(window.fbq.queue||[]).forEach(a=>console.log('PX '+JSON.stringify([...a])));window.fbq.callMethod=(...a)=>console.log('PX '+JSON.stringify(a));";
-  const open = async (path = '') => {
+  const open = async (path = '', flags) => {
     const ctx = await browser.newContext();
+    if (flags) await ctx.addInitScript(f => { window.tnFlags = f; }, flags); // PostHog feature flags, as the page would get them
     await ctx.route('https://connect.facebook.net/**', r => r.fulfill({ contentType: 'text/javascript', body: PIXEL }));
     // Analytics events (analytics.js keeps them in window.tnEvents on local copies), also kept across navigations.
     await ctx.addInitScript(() => { window.tnEvents = { push: e => console.log('TN ' + JSON.stringify(e)) }; });
@@ -110,6 +111,28 @@ const check = (name, ok) => { assert.ok(ok, name); console.log('PASS', name); };
     check('The interview training uses the same daily limit', await guest.isVisible('#planDlg') && await guest.isHidden('#quiz'));
     await guest.click('#planClose');
 
+    // Experiment iq-desafio-directo: visitors from the "iq" ad, split by a PostHog flag
+    const iqTestPage = await open('/?utm_content=iq#ninja', { 'iq-desafio-directo': 'test' });
+    await iqTestPage.waitForFunction(() => document.querySelector('#cogContinue').textContent.includes('IQ ninja'));
+    check('Experiment (test): the main Ninja mental button is the IQ challenge', (await iqTestPage.textContent('#cogContinue')).includes('desafío de 5 min'));
+    await iqTestPage.click('#cogContinue');
+    check('Experiment (test): it opens the 5-minute challenge', await iqTestPage.isVisible('#qIntro'));
+    await iqTestPage.click('#qGo'); await iqTestPage.waitForSelector('#qPlay:not([hidden])');
+    await iqTestPage.keyboard.press('1'); await iqTestPage.waitForTimeout(300); await iqTestPage.click('#qEnd');
+    await iqTestPage.waitForSelector('#iqOffer');
+    check('Experiment (test): the result shows the IQ and, under it, the unlimited plan without subscription', (await iqTestPage.textContent('#qResult')).includes('IQ ')
+      && (await iqTestPage.textContent('#iqOffer')).includes('$ 4.900, pago único, sin suscripción') && events(iqTestPage, 'iq_offer_viewed').length === 1);
+    await iqTestPage.click('#iqOfferBtn');
+    check('Experiment (test): the offer opens the plan, explained and measured as iq_result', await iqTestPage.isVisible('#planDlg')
+      && (await iqTestPage.textContent('#planReason')).includes('Tu IQ ninja sube') && events(iqTestPage, 'pricing_viewed').some(e => e.reason === 'iq_result'));
+    await iqTestPage.click('#planClose');
+    const iqControl = await open('/?utm_content=iq#ninja', { 'iq-desafio-directo': 'control' });
+    await iqControl.waitForTimeout(300);
+    check('Experiment (control): Ninja mental stays as it was', (await iqControl.textContent('#cogContinue')).includes('sesión 1'));
+    const notInExp = await open('/#ninja', { 'iq-desafio-directo': 'test' });
+    await notInExp.waitForTimeout(300);
+    check('Experiment: visitors who did not come from the iq ad are not in it', (await notInExp.textContent('#cogContinue')).includes('sesión 1'));
+
     // Out of guest practices: create the free account from the plan and keep going
     const nico = await open();
     for (let i = 0; i < 3; i++) await practice(nico);
@@ -143,7 +166,7 @@ const check = (name, ok) => { assert.ok(ok, name); console.log('PASS', name); };
     const checkout = fired(ana2, 'InitiateCheckout')[0], buy = fired(ana2, 'Purchase');
     check('Going to pay is an InitiateCheckout with the price', checkout && checkout[2].value === 4900 && checkout[2].currency === 'ARS');
     check('The server sends the same InitiateCheckout once the checkout exists', sent('InitiateCheckout').length === 1 && sent('InitiateCheckout')[0].event_id === checkout[3]?.eventID && sent('InitiateCheckout')[0].custom_data.value === 4900);
-    check('Going to pay is checkout_clicked and checkout_started', events(ana2, 'checkout_clicked').some(e => e.logged_in && e.price === 4900) && events(ana2, 'checkout_started').length === 1);
+    check('Going to pay is checkout_clicked (saying where the plan was opened) and checkout_started', events(ana2, 'checkout_clicked').some(e => e.logged_in && e.price === 4900 && e.source === 'limit') && events(ana2, 'checkout_started').length === 1);
     const succeeded = ph.filter(e => e.event === 'payment_succeeded');
     check('The server reports the payment to PostHog once, for the account', succeeded.length === 1 && succeeded[0].distinct_id === 'ana' && succeeded[0].properties.value === 4900 && succeeded[0].properties.source === 'server');
     check('The payment in PostHog has what Mercado Pago keeps and what reaches the account', succeeded[0].properties.net_amount === 4530.5 && succeeded[0].properties.fee === 369.5 && succeeded[0].properties.payment_method === 'account_money' && succeeded[0].properties.installments === 1);
