@@ -2048,7 +2048,7 @@ document.querySelectorAll('#rankView button').forEach(b => b.onclick = () => { r
 /* ---------- Freemium: a few free practices per day, unlimited with a Mercado Pago subscription ---------- */
 // With payments not configured (or no server) nothing is limited. Guests count in this browser; accounts on the server.
 let planFrom = null; // why the plan was last opened (limit, upgrade, iq_result), for checkout_clicked
-let billing = { enabled: false, premium: false, plays: 0, price: '', freePerDay: 3, guestPerDay: 3, accountPerDay: 3 }, counted = false, planAfterLogin = false, signupFrom = null;
+let billing = { enabled: false, premium: false, plays: 0, price: '', freePerDay: 5, guestPerDay: 5, accountPerDay: 5 }, counted = false, planAfterLogin = false, signupFrom = null;
 // Guests: a few practices in this browser. A free account gets more (accountPerDay), so running out offers one first.
 const freeAccountOffer = () => limited() && !auth.name && billing.accountPerDay > billing.guestPerDay;
 const PLAYS_KEY = 'teclado-ciego-plays', arDay = () => new Date(Date.now() - 3 * 36e5).toISOString().slice(0, 10);

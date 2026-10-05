@@ -31,6 +31,9 @@ en pagar. `velocidad` 41 usuarios, 14 practican, 2 ven precios. `templo` 13 usua
 - **Regla de decisión:** si `test` duplica o más el % de clic en pagar sin bajar el % que practica, pasa al 100% y se aplica lo mismo al anuncio `velocidad` (directo a la medición de 1 minuto). Si no se mueve, se descarta y se revisa el precio.
 - **Cambio en Meta (2026-10-05):** se pausó el anuncio `templo` (13 visitantes, ninguno practicó) para concentrar el presupuesto en `iq`.
 
+## Cambios recientes a vigilar
+- **2026-10-05, plan gratis de 3/6 a 5/10 prácticas por día.** Revisar el 19/10: clics en pagar por visitante real y vistas de precios por motivo. Si los clics bajan, volver a 3/6.
+
 ## Próximo
 Ver `growth/backlog.md`. Esta semana:
 - **BL-002** (a aprobar): experimento para el anuncio `velocidad`, directo a la medición de 1 minuto.

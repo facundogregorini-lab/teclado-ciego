@@ -55,7 +55,7 @@ Para que no moleste: es chico y queda pegado al borde; desaparece durante las le
 
 El botón **✦ Apoyá el templo** del header, a la izquierda del usuario, se ve siempre, con o sin cuenta (con acceso ilimitado dice **✦ Ninja ilimitado**). Abre el plan; si los pagos todavía no están configurados, avisa que el acceso ilimitado está en camino y que por ahora todo es gratis.
 
-- **Gratis:** 3 prácticas por día sin cuenta y 6 con una cuenta gratis (hora de Argentina). Al quedarse sin prácticas, un invitado ve primero la opción de crear su cuenta gratis y seguir; el aporte queda como segunda opción. Una práctica es una lección, una medición, una sesión o un desafío y cuenta desde la primera respuesta: abrir y salir no la usa.
+- **Gratis:** 5 prácticas por día sin cuenta y 10 con una cuenta gratis (hora de Argentina). Al quedarse sin prácticas, un invitado ve primero la opción de crear su cuenta gratis y seguir; el aporte queda como segunda opción. Una práctica es una lección, una medición, una sesión o un desafío y cuenta desde la primera respuesta: abrir y salir no la usa.
 - **Acceso ilimitado para siempre:** un único pago con **Mercado Pago** (Checkout Pro), sin suscripción ni débitos automáticos: "Tu pequeño aporte al templo nos permite mejorar el entrenamiento semana a semana. Los monjes ninja te lo agradecerán 🙏". Precio de lanzamiento: $ 4.900. Queda guardado en `paid:<usuario>` y no vence. Las suscripciones mensuales de antes siguen valiendo hasta el final de su período pago.
 
 Mientras no estén configuradas las variables de Mercado Pago, la app no tiene límites. Para los invitados el límite se cuenta en el navegador (alguien con conocimientos técnicos podría saltearlo); para las cuentas lo lleva el servidor.

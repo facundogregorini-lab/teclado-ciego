@@ -6,7 +6,7 @@ const { redis, HttpError } = require('./_lib');
 const { reportPurchase } = require('./_meta');
 const posthog = require('./_posthog');
 
-const DAY_MS = 86400e3, GRACE_MS = 3 * DAY_MS, FREE_PER_DAY = 3, FREE_ACCOUNT_PER_DAY = 6;
+const DAY_MS = 86400e3, GRACE_MS = 3 * DAY_MS, FREE_PER_DAY = 5, FREE_ACCOUNT_PER_DAY = 10;
 const env = name => (process.env[name] || '').trim();
 
 function settings() {
