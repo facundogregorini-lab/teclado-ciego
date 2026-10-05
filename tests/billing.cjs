@@ -140,6 +140,19 @@ const check = (name, ok) => { assert.ok(ok, name); console.log('PASS', name); };
     await notInExp.mouse.click(5, 300); await notInExp.waitForTimeout(100);
     check('Experiment: visitors who did not come from the iq ad are not in it', (await notInExp.textContent('#cogContinue')).includes('sesión 1') && events(notInExp, 'iq_exp_activated').length === 0);
 
+    // /profesional is where the professional ads land: it starts the pixel too, with the same ids as the app
+    const proCtx = await browser.newContext();
+    await proCtx.route('https://connect.facebook.net/**', r => r.fulfill({ contentType: 'text/javascript', body: PIXEL }));
+    const pro = await proCtx.newPage(); pro.px = []; pro.on('pageerror', e => errors.push(e.message));
+    pro.on('console', m => { const t = m.text(); if (t.startsWith('PX ')) pro.px.push(JSON.parse(t.slice(3))); });
+    await pro.goto(SITE + '/profesional?fbclid=proClick1&utm_source=meta'); await pro.waitForFunction(() => window.fbq);
+    await pro.waitForTimeout(200);
+    const proAnon = await pro.evaluate(() => localStorage.getItem('teclado-ciego-anon'));
+    check('The /profesional page counts the visit in the Meta Pixel, with the anonymous id and the ad click', fired(pro, 'PageView').length === 1
+      && pro.px.some(a => a[0] === 'init' && a[1] === '123456789012345' && a[2]?.external_id === hash(proAnon)) && pro.px.some(a => a[0] === 'set' && a[1] === 'autoConfig' && a[2] === false)
+      && /^fb\.1\.\d+\.proClick1$/.test(await pro.evaluate(() => document.cookie.match(/_fbc=([^;]*)/)?.[1])));
+    await proCtx.close();
+
     // Out of guest practices: create the free account from the plan and keep going
     const nico = await open();
     for (let i = 0; i < 5; i++) await practice(nico);
