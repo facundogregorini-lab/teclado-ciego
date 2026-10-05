@@ -33,3 +33,14 @@ en pagar. `velocidad` 41 usuarios, 14 practican, 2 ven precios. `templo` 13 usua
 
 ## Hipótesis activas
 Ver `growth/research/oportunidades.md`.
+
+## Estructura de Growth
+| Rutina | Cuándo (hora de Argentina) | Entrega | Instrucciones |
+| --- | --- | --- | --- |
+| Status diario | todos los días, 8:47 | email | `growth/status/PROMPT.md` |
+| Producto y CRO | lunes 7:21 | PR + email a las 9:00 | `growth/producto/PROMPT.md` |
+| Adquisición y retención | lunes 7:34 | PR + email a las 9:00 | `growth/marketing/PROMPT.md` |
+| Research de mercado | lunes 7:48 | PR + email a las 9:00 | `growth/research/PROMPT.md` |
+
+Dashboards de PostHog: "Growth · Producto y CRO", "Growth · Adquisición", "Growth · Retención" y
+"Templo Ninja · Embudo de conversión".

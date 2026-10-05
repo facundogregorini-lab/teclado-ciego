@@ -25,6 +25,8 @@ Si no existen, es la primera ejecución: hacé la línea de base completa.
   y conjunto; estado de aprendizaje; calidad de coincidencia y cobertura del servidor del píxel.
   **Nunca cambies presupuestos, estados ni anuncios**: si algo conviene, proponelo con números.
 - **Biblioteca de anuncios de Meta (país AR):** para comparar nuestros mensajes con los de la competencia.
+- **Dashboards de PostHog:** empezá por "Growth · Adquisición" y "Growth · Retención"; ya tienen los gráficos base. Si te falta uno, consultalo
+  aparte; no modifiques los dashboards.
 - **PostHog (proyecto 642163, solo lectura):** visitas y comportamiento por `utm_content` de la primera
   visita, fuentes orgánicas y referidos, desafíos compartidos y aceptados, cuentas creadas, retención.
 
