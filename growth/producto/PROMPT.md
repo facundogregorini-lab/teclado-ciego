@@ -12,6 +12,9 @@ evidencia y una propuesta para cada uno, o decís que esta semana no hay nada nu
 - `index.html` y `api/`: para entender qué ve la persona en cada paso y ubicar en el código cada problema.
 - `growth/research/oportunidades.md`: lo que ya propuso el research externo, para no duplicar.
 
+**Pedidos del coordinador:** si `growth/estado.md` tiene pedidos para esta rutina, respondelos primero, en una
+sección "Pedidos del coordinador" del informe. Tu PR lo junta el coordinador en el PR de la semana.
+
 ## Memoria persistente (leer al empezar, actualizar al terminar)
 En `growth/producto/`:
 - `hallazgos.md`: cada hallazgo con ID (UX-001…), fecha, evidencia, estado (nuevo / propuesto / en experimento /
