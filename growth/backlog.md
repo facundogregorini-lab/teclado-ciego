@@ -17,7 +17,8 @@ referidos y otros anuncios). Un experimento por segmento a la vez.
 | BL-005 | OP-002 | Certificado verificable incluido en el aporte, empezando por un botón para medir la demanda | resultado → clic en pagar | iq o velocidad | 6 | 4 | 7 | 168 | backlog (después de BL-001 y BL-002: toca las mismas pantallas) |
 | BL-006 | OP-003 | Simulacros del test de una empresa argentina | nuevo segmento | nuevo anuncio | 7 | 2 | 5 | 70 | **en curso**: el primero (estilo Mercado Libre) salió con BL-010; falta validar demanda con un anuncio hacia `/profesional` (a aprobar) |
 
-| BL-011 | BL-010 | Comprensión verbal en español (verdadero, falso o no se puede saber) y juicio situacional en `/profesional` | práctica | todos | 6 | 4 | 4 | 96 | backlog (contenido escrito a mano) |
+| BL-011 | BL-010 | Razonamiento verbal en español (analogías, sinónimos, comprensión con verdadero, falso o no se puede saber); después, juicio situacional | práctica | todos | 7 | 6 | 4 | 168 | **próximo**: es parte de todo psicotécnico en español y es el hueco que marca `/profesional` (relevamiento del 2026-10-05) |
+| BL-012 | relevamiento | Pista de atención y concentración (estilo Toulouse) | práctica | todos | 4 | 4 | 6 | 96 | backlog (los referentes no la priorizan) |
 
 ## Cerradas
 
