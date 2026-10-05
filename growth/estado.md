@@ -21,7 +21,7 @@ en pagar. `velocidad` 41 usuarios, 14 practican, 2 ven precios. `templo` 13 usua
 ## Experimentos en curso
 
 ### `iq-desafio-directo` (OP-001), desde 2026-10-05
-- **Quién:** visitantes del anuncio `iq` (`utm_content=iq`), 50/50 con el flag de PostHog.
+- **Quién:** visitantes del anuncio `iq` (`utm_content=iq`), 50/50 con el flag de PostHog. Solo cuentan los que además interactúan de verdad (`iq_exp_activated`): las cargas automáticas de Instagram, Facebook y Meta no entran (UX-001).
 - **Cambio (`test`):** el botón principal de Ninja mental lleva al desafío de 5 minutos, y debajo del IQ aparece el plan ilimitado ($4.900, pago único). El IQ sigue siendo gratis.
 - **Métrica que decide:** % de visitantes del anuncio que hacen clic en pagar (`checkout_clicked`). Línea de base: 1 de 42.
 - **Señal temprana:** % que completa el desafío (`practice_completed` con `kind=desafio-5-min`). Línea de base: 1 de 13 que practican.
