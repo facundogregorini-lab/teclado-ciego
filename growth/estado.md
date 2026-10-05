@@ -31,6 +31,11 @@ en pagar. `velocidad` 41 usuarios, 14 practican, 2 ven precios. `templo` 13 usua
 - **Regla de decisión:** si `test` duplica o más el % de clic en pagar sin bajar el % que practica, pasa al 100% y se aplica lo mismo al anuncio `velocidad` (directo a la medición de 1 minuto). Si no se mueve, se descarta y se revisa el precio.
 - **Cambio en Meta (2026-10-05):** se pausó el anuncio `templo` (13 visitantes, ninguno practicó) para concentrar el presupuesto en `iq`.
 
+## Cambios recientes a vigilar
+- **2026-10-05, plan gratis de 3/6 a 5/10 prácticas por día.** Revisar el 19/10: clics en pagar por visitante real y vistas de precios por motivo. Si los clics bajan, volver a 3/6.
+
+- **2026-10-05, versión profesional (BL-010):** página `/profesional`, pista 🧩 Lógica y series (también la ven los dos grupos de `iq-desafio-directo`, que arranca el mismo día) y simulacro estilo Mercado Libre. Revisar el 19/10: `pro_cta_clicked`, prácticas de lógica y simulacros por empresa, y si llevan a ver precios y a pagar.
+
 ## Próximo
 Ver `growth/backlog.md`. Esta semana:
 - **BL-002** (a aprobar): experimento para el anuncio `velocidad`, directo a la medición de 1 minuto.
@@ -40,7 +45,7 @@ Ver `growth/backlog.md`. Esta semana:
 Cada rutina responde primero lo que le toca, en una sección "Pedidos del coordinador" de su informe.
 - **Producto:** ver las grabaciones de quienes tocaron "crear cuenta" al llegar al límite y no la terminaron (BL-003). ¿Dónde abandonan y por qué?
 - **Marketing:** visitas reales por semana de `iq` y `velocidad`, para estimar cuánto tarda cada experimento en llegar a 60 personas por grupo.
-- **Research:** qué empresas argentinas usan tests online de aptitud en sus búsquedas y cómo se busca eso en Google (BL-006).
+- **Research:** qué empresas argentinas usan tests online de aptitud en sus búsquedas y cómo se busca eso en Google (BL-006). Solo con fuente pública enlazada: cada empresa nueva para `/profesional` necesita una fuente; revisar también que las cinco de hoy sigan vigentes.
 
 ## Estructura de Growth
 | Rutina | Cuándo (hora de Argentina) | Entrega | Instrucciones |
