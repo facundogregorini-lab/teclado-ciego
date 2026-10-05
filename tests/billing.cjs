@@ -115,7 +115,10 @@ const check = (name, ok) => { assert.ok(ok, name); console.log('PASS', name); };
     const iqTestPage = await open('/?utm_content=iq#ninja', { 'iq-desafio-directo': 'test' });
     await iqTestPage.waitForFunction(() => document.querySelector('#cogContinue').textContent.includes('IQ ninja'));
     check('Experiment (test): the main Ninja mental button is the IQ challenge', (await iqTestPage.textContent('#cogContinue')).includes('desafío de 5 min'));
+    check('Experiment: an automatic load (nobody touches the page) is not activated', events(iqTestPage, 'iq_exp_activated').length === 0);
     await iqTestPage.click('#cogContinue');
+    check('Experiment: the first real tap activates the visitor, once, with the variant', events(iqTestPage, 'iq_exp_activated').length === 1
+      && events(iqTestPage, 'iq_exp_activated')[0].variant === 'test' && events(iqTestPage, 'iq_exp_activated')[0]['$feature/iq-desafio-directo'] === 'test');
     check('Experiment (test): it opens the 5-minute challenge', await iqTestPage.isVisible('#qIntro'));
     await iqTestPage.click('#qGo'); await iqTestPage.waitForSelector('#qPlay:not([hidden])');
     await iqTestPage.keyboard.press('1'); await iqTestPage.waitForTimeout(300); await iqTestPage.click('#qEnd');
@@ -126,12 +129,16 @@ const check = (name, ok) => { assert.ok(ok, name); console.log('PASS', name); };
     check('Experiment (test): the offer opens the plan, explained and measured as iq_result', await iqTestPage.isVisible('#planDlg')
       && (await iqTestPage.textContent('#planReason')).includes('Tu IQ ninja sube') && events(iqTestPage, 'pricing_viewed').some(e => e.reason === 'iq_result'));
     await iqTestPage.click('#planClose');
+    check('Experiment: later taps do not activate again', events(iqTestPage, 'iq_exp_activated').length === 1);
     const iqControl = await open('/?utm_content=iq#ninja', { 'iq-desafio-directo': 'control' });
     await iqControl.waitForTimeout(300);
     check('Experiment (control): Ninja mental stays as it was', (await iqControl.textContent('#cogContinue')).includes('sesión 1'));
+    await iqControl.mouse.click(5, 300); await iqControl.waitForTimeout(100);
+    check('Experiment (control): a real tap activates the visitor as control', events(iqControl, 'iq_exp_activated').map(e => e.variant).join() === 'control');
     const notInExp = await open('/#ninja', { 'iq-desafio-directo': 'test' });
     await notInExp.waitForTimeout(300);
-    check('Experiment: visitors who did not come from the iq ad are not in it', (await notInExp.textContent('#cogContinue')).includes('sesión 1'));
+    await notInExp.mouse.click(5, 300); await notInExp.waitForTimeout(100);
+    check('Experiment: visitors who did not come from the iq ad are not in it', (await notInExp.textContent('#cogContinue')).includes('sesión 1') && events(notInExp, 'iq_exp_activated').length === 0);
 
     // Out of guest practices: create the free account from the plan and keep going
     const nico = await open();

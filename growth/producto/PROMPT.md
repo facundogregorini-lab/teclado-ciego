@@ -20,6 +20,8 @@ En `growth/producto/`:
 Si no existen, es la primera ejecución: hacé la línea de base completa.
 
 ## Fuentes
+- **Dashboards de PostHog:** empezá por "Growth · Producto y CRO" (y "Templo Ninja · Embudo de conversión"); ya tienen los gráficos base. Si te falta uno, consultalo
+  aparte; no modifiques los dashboards.
 - **PostHog (proyecto 642163, solo lectura):** eventos, embudos, rutas, retención de la primera sesión,
   web analytics (páginas, dispositivos, rebote), web vitals, `$rageclick`, `$autocapture`, excepciones si
   las hay, `feedback_opened` / `feedback_sent` (ánimo y tipo, nunca el texto) y grabaciones de sesión.

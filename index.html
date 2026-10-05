@@ -1612,8 +1612,26 @@ queueMicrotask(() => {
   const KEY = 'teclado-ciego-iq-exp';
   let inExp = new URLSearchParams(location.search).get('utm_content') === 'iq';
   try { if (inExp) localStorage.setItem(KEY, '1'); else inExp = localStorage.getItem(KEY) === '1'; } catch {}
-  if (inExp) window.tn?.flag?.(IQ_FLAG, v => { iqVariant = v === 'test' ? 'test' : 'control'; if (iqTest()) renderCog(); });
+  if (inExp) window.tn?.flag?.(IQ_FLAG, v => {
+    if (iqVariant) return; // flags can reload: one variant and one activation per page
+    iqVariant = v === 'test' ? 'test' : 'control';
+    if (iqTest()) renderCog();
+    iqActivateOnRealUse();
+  });
 });
+// The experiment counts only people: Instagram/Facebook preload the ad's page and Meta's review robot opens it,
+// and both run this script without anyone looking. So the analysis requires iq_exp_activated, sent with the first
+// tap, click, swipe or mouse wheel while the page is visible (PostHog: exposure criteria → activation event).
+// Not "scroll": the page itself scrolls to Ninja mental on arrival.
+function iqActivateOnRealUse() {
+  const kinds = ['pointerdown', 'touchstart', 'wheel'];
+  const go = () => {
+    if (document.visibilityState !== 'visible') return;
+    kinds.forEach(k => removeEventListener(k, go, true));
+    tn.capture('iq_exp_activated', { variant: iqVariant, ['$feature/' + IQ_FLAG]: iqVariant });
+  };
+  kinds.forEach(k => addEventListener(k, go, { capture: true, passive: true }));
+}
 // The offer under the challenge's result (test variant, payments on, not unlimited yet).
 function iqOffer() {
   if (!iqTest() || !billing.enabled || billing.premium) return '';
