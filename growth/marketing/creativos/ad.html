@@ -1,0 +1,20 @@
+<!doctype html><html><head><meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&display=swap">
+<style>
+*{box-sizing:border-box}body{margin:0;width:1080px;height:1350px;background:#1f3a31;color:#f3f6ef;font-family:"Liberation Sans",Arial,sans-serif;display:flex;flex-direction:column;padding:90px 84px;gap:44px}
+.tag{font:700 30px "Liberation Sans",Arial,sans-serif;letter-spacing:.14em;color:#f0b340}
+h1{font:800 104px/1.02 "Liberation Sans",Arial,sans-serif;letter-spacing:-.04em;margin:0;color:#fff}
+p{font-size:40px;line-height:1.4;margin:0;color:#c9d6cf}
+.card{background:#fffefa;color:#273e37;border-radius:36px;padding:44px 50px;display:grid;gap:22px}
+.card .q{font-size:32px;color:#64716a}.card .s{font:700 66px "Liberation Sans",Arial,sans-serif;letter-spacing:.01em}
+.card .s b{color:#326953}.opts{display:flex;gap:18px}.opts span{border:3px solid #dde4dc;border-radius:18px;padding:12px 26px;font:700 34px "Liberation Sans",Arial,sans-serif}
+.opts span.ok{border-color:#326953;background:#e0ede2}
+.foot{margin-top:auto;display:flex;justify-content:space-between;align-items:center;font:700 36px "Liberation Sans",Arial,sans-serif}
+.foot .brand{display:flex;align-items:center;gap:18px}.foot kbd{display:inline-grid;place-items:center;width:64px;height:64px;border-radius:16px;background:#edf3e9;color:#326953;font:600 30px monospace}
+.pill{background:#f0b340;color:#1f2a24;border-radius:99px;padding:14px 30px}
+</style></head><body>
+<span class="tag" id="tag"></span><h1 id="h"></h1><p id="p"></p>
+<div class="card"><span class="q">¿Qué número sigue?</span><span class="s">3, 7, 15, 31, 63, <b>?</b></span><div class="opts"><span>94</span><span>127</span><span>126</span><span>95</span></div></div>
+<div class="foot"><span class="brand"><kbd>⛩</kbd>Templo Ninja</span><span class="pill">Gratis para empezar</span></div>
+<script>const v=new URLSearchParams(location.search).get('v');const T={a:['TESTS DE SELECCIÓN','¿Te toca un test de selección?','Lógica, números y figuras con reloj, como el día del test. Y la explicación de cada respuesta.'],b:['TEST DE LÓGICA Y MATEMÁTICA','40 preguntas. 30 minutos.','Practicá el formato que cuentan candidatos de grandes empresas argentinas, con reloj y explicaciones.']}[v];tag.textContent=T[0];h.textContent=T[1];p.textContent=T[2];</script>
+</body></html>
