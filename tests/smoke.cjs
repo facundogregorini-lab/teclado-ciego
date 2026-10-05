@@ -317,6 +317,24 @@ function typeText(page) {
     check('The mock test review gives the technique of each mistake', (await a.textContent('#qResult h3')).includes('Inglés') && (await a.locator('#qResult .rv').count() === 0 || await a.locator('#qResult .rv-tip').count() > 0));
     await a.click('#qrHome');
     check('Each track keeps its own mock test', (await a.textContent('#cBest')).endsWith('%') && (await a.textContent('#cogTracks [data-v="eng"] small')).includes('/15'));
+    // Logic track (logic.js) and the company mock test
+    await a.click('#cogTracks [data-v="log"]');
+    check('Ninja mental has a logic track with 15 sessions', (await a.textContent('#cogTitle')).includes('Lógica y series') && (await a.textContent('#cogTracks [data-v="log"] small')).includes('/15'));
+    check('Every logic puzzle has one right answer among distinct options, at every level', await a.evaluate(() => Logic.KINDS.every(k => [1, 2, 3, 4, 5].every(d => Array.from({ length: 60 }, () => Logic.make[k](d))
+      .every(q => q.answer >= 0 && q.answer < q.options.length && new Set(q.options).size === q.options.length && q.explain && q.tip)))));
+    await a.evaluate(() => { window.qlog = []; for (const k of Object.keys(Logic.make)) { const f = Logic.make[k]; Logic.make[k] = (d, u) => { const q = f(d, u); qlog.push(q); return q; }; } });
+    await a.click('#cogContinue');
+    check('Number series show the series and four options', await a.isVisible('#qFig .q-series') && await a.locator('#qOpts .opt').count() === 4);
+    await a.keyboard.press(String(1 + await a.evaluate(() => qlog[0].answer)));
+    check('A right series answer explains the rule', (await a.textContent('#qExplain')).startsWith('✓') && (await a.textContent('#qExplain')).includes('sigue'));
+    await a.keyboard.press('Escape');
+    await a.click('#cogPath .group:nth-child(1) .lc >> nth=2');
+    check('Syllogisms show two premises and True / False / Can\'t say', await a.locator('#qFig .q-clues li').count() === 2 && (await a.textContent('#qOpts')).includes('No se puede saber') && await a.locator('#qOpts .opt').count() === 3);
+    await a.keyboard.press('Escape');
+    check('The logic track offers the company mock test', (await a.textContent('[data-company="meli"]')).includes('Mercado Libre'));
+    await a.click('[data-company="meli"]');
+    check('The Mercado Libre-style mock test has 40 questions in 30 minutes and no tips', (await a.textContent('#qNum')) === '1/40' && (await a.textContent('#qGroup')).includes('40 preguntas en 30 minutos') && await a.isHidden('#qTip'));
+    await a.keyboard.press('Escape');
     await a.click('#cogTracks [data-v="fig"]');
     await a.click('.main-nav a[href="#learning"]');
     check('Lessons are one click away', await a.isVisible('#home') && !a.url().includes('#ninja'));
@@ -411,6 +429,18 @@ function typeText(page) {
     await b.click('#acctBtn'); await b.click('#logout');
     await b.waitForFunction(() => document.querySelector('#acctBtn').textContent.trim() === 'Entrar');
     check('Logging out clears this browser', (await b.textContent('#hStars')) === '0/78');
+
+    // /profesional: the company and test-type page, and its links into the app
+    const pro = await browser.newPage(); pro.on('pageerror', e => errors.push(e.message));
+    await pro.goto(SITE + '/profesional');
+    check('/profesional shows the companies and links to their practice', (await pro.textContent('h1')).includes('tests de selección') && await pro.locator('.co').count() >= 5
+      && await pro.locator('a[href="/?simulacro=meli"]').count() >= 2 && (await pro.textContent('main')).includes('no está afiliado'));
+    await pro.goto(SITE + '/?pista=log');
+    check('A link with ?pista opens that track', (await pro.textContent('#cogTitle')).includes('Lógica') && pro.url().includes('#ninja'));
+    await pro.goto(SITE + '/?pista=toString&simulacro=constructor'); await pro.waitForTimeout(200);
+    check('Unknown ?pista and ?simulacro values are ignored', await pro.isVisible('#home') && errors.length === 0);
+    await pro.goto(SITE + '/?simulacro=meli');
+    check('A link with ?simulacro starts the company mock test', (await pro.textContent('#qNum')) === '1/40' && await pro.isVisible('#qOpts .opt'));
 
     check('No uncaught browser errors', errors.length === 0);
   } finally {

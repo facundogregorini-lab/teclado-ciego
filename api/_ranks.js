@@ -7,7 +7,7 @@ const { redis } = require('./_lib');
 // Same ids as LESSONS in index.html: only real lessons count for the ranking.
 const LESSON_IDS = ['fj', 'dk', 'sl', 'añ', 'gh', 'rep1', 'ei', 'ru', 'ty', 'wo', 'qp', 'rep2', 'nm', 'vb', 'c,', 'x.', 'z', 'rep3', 'may', 'til', 'ref', 'cos', 'ofi', 'tec', 'coc', 'via'];
 const MAX_PPM = 250; // faster than any sustained human record: ignored
-const COG_ID = /^(serie|matriz|distinta|tabla|grafico|porcentaje|lectura|conectores|orden)[1-5]$/;
+const COG_ID = /^(serie|matriz|distinta|tabla|grafico|porcentaje|lectura|conectores|orden|sucesion|deduccion|silogismo)[1-5]$/;
 const MAX_NINJA = 300; // about 60 right answers at the top difficulty in 5 minutes: beyond that, ignored
 
 function scores(progress) {

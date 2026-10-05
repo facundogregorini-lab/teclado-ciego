@@ -2,7 +2,7 @@
 
 > Nueva experiencia: plan diario (debajo de las tarjetas de cada sección) para cuatro áreas y tres niveles, repaso de errores, práctica guiada sin reloj, humor configurable, retos con el mismo texto y mejoras de accesibilidad y mobile. Ver [MEJORAS.md](MEJORAS.md) para decisiones, referentes, validación y límites. `dojo.js` contiene las funciones de aprendizaje y `dojo.css`, los estilos nuevos.
 
-Aplicación en español con dos secciones: **⌨️ Teclado Ciego**, para aprender a escribir sin mirar el teclado, y **🥷 Ninja mental**, para entrenar los tests de razonamiento de las entrevistas laborales. El frontend no requiere compilación: `index.html` contiene las lecciones y la práctica; `scenery.css` y `scenery.js` agregan el diseño y los paisajes de `assets/`; `typists.js` y `typists.css` dibujan (en SVG) los personajes que escriben; `figures.js`, `numeric.js`, `english.js` y `cognitive.css`, Ninja mental.
+Aplicación en español con dos secciones: **⌨️ Teclado Ciego**, para aprender a escribir sin mirar el teclado, y **🥷 Ninja mental**, para entrenar los tests de razonamiento de las entrevistas laborales. El frontend no requiere compilación: `index.html` contiene las lecciones y la práctica; `scenery.css` y `scenery.js` agregan el diseño y los paisajes de `assets/`; `typists.js` y `typists.css` dibujan (en SVG) los personajes que escriben; `figures.js`, `numeric.js`, `english.js`, `logic.js` y `cognitive.css`, Ninja mental; `profesional.html` (`/profesional`), la página de preparación para los tests de selección por empresa.
 
 ## Qué tiene
 
@@ -29,11 +29,16 @@ Sin cuenta, el progreso se guarda en el navegador (`localStorage`).
 
 ## Ninja mental (tests de razonamiento de entrevistas)
 
-Desde **🥷 Ninja mental** en el header, al lado del nombre de la app (o `/#ninja`), se entrena para los tests que usan muchas empresas en sus procesos de selección, tomando como referencia los de [AssessmentDay](https://www.assessmentday.com/). Tiene tres pistas, cada una con el mismo diseño que las lecciones: 5 niveles de dificultad con su personaje (chimpancé, bebé, niño, ninja del mate, intelectual), 3 tipos de ejercicio por nivel, sesiones con tiempo, un simulacro y *La cima* (premio Nobel al aprobar las 15 sesiones de la pista, alien con 3 estrellas en todas).
+Desde **🥷 Ninja mental** en el header, al lado del nombre de la app (o `/#ninja`), se entrena para los tests que usan muchas empresas en sus procesos de selección, tomando como referencia los de [AssessmentDay](https://www.assessmentday.com/). Tiene cuatro pistas, cada una con el mismo diseño que las lecciones: 5 niveles de dificultad con su personaje (chimpancé, bebé, niño, ninja del mate, intelectual), 3 tipos de ejercicio por nivel, sesiones con tiempo, un simulacro y *La cima* (premio Nobel al aprobar las 15 sesiones de la pista, alien con 3 estrellas en todas).
 
 - **🔷 Figuras abstractas** (`figures.js`, generadas al azar): series (¿qué figura sigue?), matrices de 3×3 y la figura distinta. Simulacro: 11 preguntas en 11 minutos.
 - **📊 Razonamiento numérico** (`numeric.js`, generado al azar): tablas y gráficos de barras de ventas (diferencias, promedios, variaciones, participaciones, razones, monedas, proyecciones y puntos porcentuales) y problemas de porcentajes (descuentos, IVA, aumentos seguidos, márgenes). Las opciones incorrectas salen de los errores típicos (dividir por la base equivocada, sumar porcentajes, correr la coma). Simulacro: 10 preguntas en 15 minutos.
 - **🇬🇧 Inglés para el trabajo** (`english.js`, banco escrito a mano, niveles A2 a C1): comprensión de textos de trabajo con *True / False / Cannot say*, conectores para unir oraciones y ordenar oraciones en un párrafo. Cada ítem explica su respuesta en español. Simulacro: 12 preguntas en 12 minutos.
+- **🧩 Lógica y series** (`logic.js`, generado al azar): sucesiones numéricas, deducción (ordenar personas a partir de pistas; en los niveles 4 y 5, qué es seguro y qué no) y silogismos con palabras inventadas (*Verdadero / Falso / No se puede saber*). Cada pregunta se verifica por fuerza bruta: la deducción prueba todos los órdenes posibles y los silogismos todos los diagramas de Venn, así que siempre hay una sola respuesta correcta. Simulacro: 12 preguntas en 12 minutos.
+
+**Simulacros por empresa** (`COMPANY_SIMS` en `index.html`): el formato que publicaron candidatos o medios, mezclando pistas. Hoy, *Simulacro estilo Mercado Libre*: 40 preguntas de lógica y matemática en 30 minutos (iProfesional, 2021), con dificultad de 2 a 4. Está en *La cima* de la pista de lógica y en `/?simulacro=meli`; se guarda con los simulacros de lógica, marcado con `company`. `/?pista=log` (o `fig`, `num`, `eng`) abre una pista.
+
+**`/profesional`** (`profesional.html`): página en español al estilo de practiceaptitudetests.com. Tiene tipos de test, empresas (Mercado Libre, Techint, YPF, Despegar y Unilever) con lo que se sabe de su proceso **y su fuente**, formatos, consejos, planes y preguntas frecuentes, y aclara que no hay afiliación con esas empresas. Cada dato de una empresa tiene que salir de una fuente pública y enlazada; si no hay fuente, no va.
 
 **Aprender con técnicas:** cada pregunta muestra un 💡 *Técnica* para resolver ese tipo de caso (sin revelar la respuesta). Al responder aparece la explicación (en numérico, la cuenta completa) y, si corresponde, un *Para la próxima* con la técnica específica de la regla que se usó. Cada pista tiene una guía de técnicas por tipo de ejercicio. En los simulacros y el desafío de 5 minutos no hay tips, como en un test real; el repaso del simulacro muestra la técnica de cada error.
 
@@ -95,7 +100,7 @@ Cada evento lleva la IP y el navegador de quien lo hizo, `_fbp`, `_fbc`, el `ext
 | Evento | Dónde se dispara | Propiedades |
 | --- | --- | --- |
 | `$pageview`, `$autocapture`, grabación | Automáticos de PostHog. | UTM de la visita, dispositivo, etc. |
-| `practice_started` | `countPractice()`: primera tecla o primera respuesta de una práctica (lo mismo que cuenta para el límite). | `section`, `kind` (`leccion`, `repaso`, `medicion`, `sesion`, `simulacro`, `desafio-5-min`), `lesson`, `method`, `track`, `difficulty`, `guided`, `free_left`. |
+| `practice_started` | `countPractice()`: primera tecla o primera respuesta de una práctica (lo mismo que cuenta para el límite). | `section`, `kind` (`leccion`, `repaso`, `medicion`, `sesion`, `simulacro`, `desafio-5-min`), `lesson`, `method`, `track` (`mixto` en el desafío y en los simulacros por empresa), `company` (simulacro por empresa, por ejemplo `meli`), `difficulty`, `guided`, `free_left`. |
 | `practice_completed` | `finish()`, `finishQuiz()` y `finishNinja()`. | Las de arriba más `wpm` y `accuracy` (teclado), `correct`, `questions`, `stars`, `score`, `iq`, `flagged`, `duration_ms`. |
 | `pricing_viewed` | `showPlan()`: botón ✦ del header, nota del plan gratis, límite diario o botón del plan diario. | `reason` (`upgrade` o `limit`), `payments_on`, `premium`, `logged_in`, `used_today`. |
 | `checkout_clicked` | Botón de pagar del diálogo del plan (también sin cuenta, antes de pedirla). | `logged_in`, `price`, `currency`, `source` (por qué se abrió el plan: `limit`, `upgrade` o `iq_result`). |
@@ -108,6 +113,7 @@ Cada evento lleva la IP y el navegador de quien lo hizo, `_fbp`, `_fbc`, el `ext
 | `signup_prompt_clicked` | Botones *Crear cuenta gratis* / *Ya tengo cuenta* del diálogo del plan (invitados sin prácticas o desde el botón del plan). | `mode` (`register` o `login`), `used_today`. |
 | `signed_up` / `logged_in` | Al crear la cuenta / entrar. | `source`: `plan` si vino del diálogo del plan, `account` si no. |
 | `challenge_accepted` | Botón *Aceptar* de un desafío recibido. | `kind`, `has_score`. |
+| `pro_cta_clicked` | `/profesional`: cualquier link a la práctica (empresa, tipo de test, plan). | `cta` (por ejemplo `sim-meli`, `pista-log`, `techint`). |
 
 Con cuenta, `posthog.identify()` usa el nombre de usuario (es el id de la cuenta; la app no pide email) y la propiedad `plan` (`gratis` o `ilimitado`). Al salir, `posthog.reset()`. Nunca se mandan contraseñas, emails ni datos de pago.
 
@@ -154,7 +160,7 @@ Si falta la base, la práctica funciona igual sin cuenta y el formulario avisa q
 ## Desarrollo
 
 - `npm run dev` levanta el sitio y la API en http://127.0.0.1:3000 con una base en memoria.
-- `npm test` prueba en Chromium: la portada que cambia sola, crear cuenta, practicar y evolucionar de nivel, las tildes en Mac y Safari, medir la velocidad y ver a quién te parecés, el ranking, los desafíos por WhatsApp y email, Ninja mental (las tres pistas con sus técnicas, el simulacro, el desafío de 5 minutos corregido por el servidor, con su ranking y sus desafíos, y que no cuenten las partidas con clics de un script, con el puntero que salta a las respuestas o con un puntaje inventado), entrar desde otro navegador y cerrar sesión. Después corre `tests/billing.cjs` (también suelto con `npm run test:billing`): el límite de 3 prácticas sin cuenta y 6 con cuenta, la oferta de cuenta gratis al quedarse sin prácticas, el aporte (pago único) y su webhook contra un Mercado Pago simulado, y que una suscripción mensual anterior siga valiendo.
+- `npm test` prueba en Chromium: la portada que cambia sola, crear cuenta, practicar y evolucionar de nivel, las tildes en Mac y Safari, medir la velocidad y ver a quién te parecés, el ranking, los desafíos por WhatsApp y email, Ninja mental (las cuatro pistas con sus técnicas, el simulacro estilo Mercado Libre, `/profesional` y sus links, el simulacro, el desafío de 5 minutos corregido por el servidor, con su ranking y sus desafíos, y que no cuenten las partidas con clics de un script, con el puntero que salta a las respuestas o con un puntaje inventado), entrar desde otro navegador y cerrar sesión. Después corre `tests/billing.cjs` (también suelto con `npm run test:billing`): el límite de 5 prácticas sin cuenta y 10 con cuenta, la oferta de cuenta gratis al quedarse sin prácticas, el aporte (pago único) y su webhook contra un Mercado Pago simulado, y que una suscripción mensual anterior siga valiendo.
 
 ## Publicar en Vercel
 

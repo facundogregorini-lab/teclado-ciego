@@ -392,11 +392,12 @@ dialog::backdrop{background:rgba(10,14,18,.45)}
     </section>
     </section>
     <section class="block" id="cog" aria-labelledby="cogBlockTitle">
-      <div class="block-head"><span class="sc-icon" aria-hidden="true">🥷</span><div><span class="eyebrow">SECCIÓN 2 · NINJA MENTAL</span><h2 id="cogBlockTitle">Pensá rápido. <em>Ganá la entrevista.</em></h2><p>Los tests que usan las empresas para elegir candidatos, en tres pistas con niveles, técnicas y simulacros.</p></div></div>
+      <div class="block-head"><span class="sc-icon" aria-hidden="true">🥷</span><div><span class="eyebrow">SECCIÓN 2 · NINJA MENTAL</span><h2 id="cogBlockTitle">Pensá rápido. <em>Ganá la entrevista.</em></h2><p>Los tests que usan las empresas para elegir candidatos, en cuatro pistas con niveles, técnicas y simulacros. <a href="/profesional">Preparación por empresa →</a></p></div></div>
     <nav class="track-tabs" id="cogTracks" aria-label="Pistas de Ninja mental">
       <button data-v="fig" aria-pressed="true"><span class="ti">🔷</span><b>Figuras abstractas</b><small></small></button>
       <button data-v="num" aria-pressed="false"><span class="ti">📊</span><b>Razonamiento numérico</b><small></small></button>
       <button data-v="eng" aria-pressed="false"><span class="ti">🇬🇧</span><b>Inglés para el trabajo</b><small></small></button>
+      <button data-v="log" aria-pressed="false"><span class="ti">🧩</span><b>Lógica y series</b><small></small></button>
     </nav>
     <section class="cog-hero" aria-labelledby="cogTitle">
       <div>
@@ -623,6 +624,7 @@ dialog::backdrop{background:rgba(10,14,18,.45)}
 <script src="figures.js"></script>
 <script src="numeric.js"></script>
 <script src="english.js"></script>
+<script src="logic.js"></script>
 <script>
 (() => {
 const $ = id => document.getElementById(id);
@@ -1521,14 +1523,15 @@ $('logout').onclick = async () => {
   signedOut('Cerraste sesión. Tu progreso quedó guardado en tu cuenta.');
 };
 
-/* ---------- Ninja mental: interview-style tests in three tracks ---------- */
-// Figuras (figures.js), Numérico (numeric.js) and Inglés (english.js). Same design as the lessons in each track:
+/* ---------- Ninja mental: interview-style tests in four tracks ---------- */
+// Figuras (figures.js), Numérico (numeric.js), Inglés (english.js) and Lógica (logic.js). Same design as the lessons in each track:
 // five levels of difficulty with their typist (chimpancé … intelectual), three kinds of exercise per level, a mock test,
 // and La cima: premio Nobel with every session passed, alien with 3 stars in all. Every question brings a technique (tip).
 const COG_JOKES = {
   fig: ['Resolviste como un chimpancé: con entusiasmo y eligiendo las figuras por el color.', 'Nivel bebé: las figuras te parecen lindas, pero todavía no te dicen nada.', 'Nivel niño: ya encontrás patrones, sobre todo en las nubes.', 'Justo en el medio: a tu razonamiento abstracto le faltan unas monedas de práctica.', 'Nivel intelectual: ya te sale decir "es obvio, la flecha gira 45°".', 'Nivel premio Nobel: el inventor de las matrices estaría orgulloso.', 'Nivel alien: resolvés matrices mientras pensás en otra galaxia.'],
   num: ['Resolviste como un chimpancé: contaste con los dedos y te sobraron dedos.', 'Nivel bebé: los números te gustan, sobre todo para morderlos.', 'Nivel niño: sabés sumar, pero los porcentajes todavía te hacen trampa.', 'Justo en el medio: hacés las cuentas, pero a veces dividís por el número equivocado.', 'Nivel intelectual: ya sabés que subir y bajar un 20% no te deja igual.', 'Nivel premio Nobel: tu contador te pide consejos.', 'Nivel alien: calculás puntos porcentuales desde otra galaxia.'],
   eng: ['Resolviste como un chimpancé: "Cannot say" fue tu mejor amigo.', 'Nivel bebé: ya decís "however", aunque no sabés bien cuándo.', 'Nivel niño: tu inglés es de canción de los Beatles: entendés la mitad y cantás el resto.', 'Justo en el medio: te alcanza para el mail, todavía no para la reunión.', 'Nivel intelectual: ya distinguís "despite" de "although" sin pensar.', 'Nivel premio Nobel: los nativos te piden que les corrijas los mails.', 'Nivel alien: tu inglés suena a subtítulo perfecto.'],
+  log: ['Resolviste como un chimpancé: la serie seguía y vos también, pero para otro lado.', 'Nivel bebé: "algunos" y "todos" te parecen lo mismo. Ya no.', 'Nivel niño: las sucesiones fáciles salen; las intercaladas, todavía no.', 'Nivel genio incomprendido: encadenás pistas, pero a veces te inventás una.', 'Nivel intelectual: los silogismos ya no te asustan.', 'Nivel premio Nobel: deducís más rápido de lo que lee el reclutador.', 'Nivel alien: ninguna serie te sorprende. ¿Las inventás vos?'],
 };
 const TRACKS = {
   fig: {
@@ -1564,6 +1567,23 @@ const TRACKS = {
     levels: [{ name: 'Básico (A2)', perQ: 75 }, { name: 'Pre-intermedio (B1)', perQ: 70 }, { name: 'Intermedio (B1+)', perQ: 65 }, { name: 'Intermedio alto (B2)', perQ: 60 }, { name: 'Avanzado (C1)', perQ: 55 }],
     sim: { n: 12, min: 12, ref: 'Como referencia, apuntá a 9 de 12 o más.' },
   },
+  log: {
+    id: 'log', name: 'Lógica y series', short: 'Lógica', icon: '🧩', gen: Logic, title: 'Con lógica.',
+    blurb: 'Sucesiones numéricas, ordenar personas a partir de pistas y silogismos: la parte de "lógica" de los tests psicotécnicos que toman muchas empresas.',
+    kinds: [
+      { id: 'sucesion', name: 'Sucesiones', ask: '¿Qué número sigue?', desc: 'Series de números con una regla: sumas, multiplicaciones, potencias y series intercaladas.', guide: Logic.GUIDE.sucesion },
+      { id: 'deduccion', name: 'Deducción', ask: '¿Quién va primero?', desc: 'Pistas sobre quién llegó antes, quién sacó más puntos o quién es mayor: armá el orden y deducí lo que es seguro.', guide: Logic.GUIDE.deduccion },
+      { id: 'silogismo', name: 'Silogismos', ask: '¿Verdadero, falso o no se sabe?', desc: 'Dos premisas con palabras inventadas: decidí si la afirmación se deduce, es imposible o no se puede saber.', guide: Logic.GUIDE.silogismo },
+    ],
+    levels: [{ name: 'Reglas simples', perQ: 70 }, { name: 'Dos pasos', perQ: 65 }, { name: 'Patrones combinados', perQ: 60 }, { name: 'Lo que es seguro', perQ: 55 }, { name: 'Todo junto y rápido', perQ: 50 }],
+    sim: { n: 12, min: 12, ref: 'Como referencia, apuntá a 9 de 12 o más.' },
+  },
+};
+// Mock tests shaped like a company's screening test, from what candidates published (see /profesional). They mix
+// tracks; the results are kept with the logic track's mock tests, marked with the company.
+const COMPANY_SIMS = {
+  meli: { id: 'meli', name: 'Simulacro estilo Mercado Libre', n: 40, min: 30, kinds: ['sucesion', 'porcentaje', 'deduccion', 'tabla', 'silogismo', 'serie', 'grafico', 'matriz'],
+    ref: 'Según testimonios de candidatos publicados por iProfesional (2021), el test de Mercado Libre tuvo 40 preguntas de lógica y matemática en 30 minutos. Es una práctica con ese formato, no el test oficial.' },
 };
 const TRACK_KEY = 'teclado-ciego-track';
 let cogTrack = 'fig';
@@ -1574,7 +1594,7 @@ const SESSIONS = Object.fromEntries(Object.values(TRACKS).map(t => [t.id, t.leve
 const kindInfo = id => Object.values(TRACKS).flatMap(t => t.kinds).find(k => k.id === id);
 const cogStarsFor = (ok, n) => ok === n ? 3 : ok / n >= .8 ? 2 : ok / n >= .66 ? 1 : 0;
 const tierForPct = pct => [0, 20, 35, 50, 65, 80, 95].filter(v => pct >= v).length - 1;
-const simsOf = tr => S.sims.filter(t => (t.track || 'fig') === tr);
+const simsOf = (tr, company) => S.sims.filter(t => (t.track || 'fig') === tr && (t.company || null) === (company || null));
 function cogState(gi, tr = cogTrack) {
   const all = SESSIONS[tr], ss = gi === FINAL ? all : all.filter(x => x.g === gi), done = ss.filter(x => S.cog[x.id]?.stars >= 1).length;
   const gold = ss.every(x => S.cog[x.id]?.stars === 3);
@@ -1660,7 +1680,7 @@ function renderCog() {
   $('cogPathTitle').textContent = `${T.icon} ${T.name}: de chimpancé a premio Nobel.`;
   $('cogPath').replaceChildren(...T.levels.map((lv, gi) => {
     const sec = document.createElement('section'); sec.className = 'group';
-    sec.innerHTML = `<div class="group-head"><div><h2>${lv.name}</h2><p>Dificultad ${gi + 1} de 5 · ${lv.perQ} segundos por pregunta. Aprobás con ${passFor(6)} de 6 (${passFor(5)} de 5 en ordenar oraciones); todas bien, 3 estrellas.</p></div>${cogCard(gi)}</div>`;
+    sec.innerHTML = `<div class="group-head"><div><h2>${lv.name}</h2><p>Dificultad ${gi + 1} de 5 · ${lv.perQ} segundos por pregunta. Aprobás con ${passFor(6)} de 6${cogTrack === 'eng' ? ` (${passFor(5)} de 5 en ordenar oraciones)` : ''}; todas bien, 3 estrellas.</p></div>${cogCard(gi)}</div>`;
     const cards = document.createElement('div'); cards.className = 'cards';
     for (const x of all.filter(x => x.g === gi)) {
       const rec = S.cog[x.id], b = document.createElement('button');
@@ -1671,12 +1691,17 @@ function renderCog() {
     }
     sec.append(cards);
     return sec;
-  }), Object.assign(document.createElement('section'), { className: 'group final', innerHTML: `<div class="group-head"><div><h2>La cima</h2><p>El simulacro de entrevista: ${T.sim.n} preguntas mezcladas en ${T.sim.min} minutos, sin ayuda hasta el final. Te dice a quién te parecés y repasa tus errores con sus técnicas.</p></div>${cogCard(FINAL)}</div><div class="cards"><button class="lc" id="simCard"><span class="meta"><span>Simulacro</span></span><span class="caps"><span class="name">Simulacro de entrevista</span></span><span class="best">${best < 0 ? 'Sin intentos' : `Mejor: ${best}% · ${sims.length} ${sims.length === 1 ? 'intento' : 'intentos'}`}</span></button></div>` }));
+  }), Object.assign(document.createElement('section'), { className: 'group final', innerHTML: `<div class="group-head"><div><h2>La cima</h2><p>El simulacro de entrevista: ${T.sim.n} preguntas mezcladas en ${T.sim.min} minutos, sin ayuda hasta el final. Te dice a quién te parecés y repasa tus errores con sus técnicas.</p></div>${cogCard(FINAL)}</div><div class="cards"><button class="lc" id="simCard"><span class="meta"><span>Simulacro</span></span><span class="caps"><span class="name">Simulacro de entrevista</span></span><span class="best">${best < 0 ? 'Sin intentos' : `Mejor: ${best}% · ${sims.length} ${sims.length === 1 ? 'intento' : 'intentos'}`}</span></button>${cogTrack === 'log' ? Object.values(COMPANY_SIMS).map(companyCard).join('') : ''}</div>` }));
   $('simCard').onclick = () => startQuiz('sim');
+  document.querySelectorAll('[data-company]').forEach(b => b.onclick = () => startQuiz({ company: b.dataset.company }));
   const allSessions = Object.values(SESSIONS).flat();
   $('scSessions').textContent = `${allSessions.filter(x => S.cog[x.id]?.stars >= 1).length}/${allSessions.length}`;
   $('scIq').textContent = S.ninja.best ? S.ninja.best.iq : '—';
   renderNinjaMax();
+}
+function companyCard(co) {
+  const sims = simsOf('log', co.id), best = sims.reduce((b, t) => Math.max(b, t.pct), -1);
+  return `<button class="lc" data-company="${co.id}"><span class="meta"><span>Por empresa</span></span><span class="caps"><span class="name">${co.name}</span></span><span class="best">${co.n} preguntas · ${co.min} min${best < 0 ? '' : ` · mejor: ${best}%`}</span></button>`;
 }
 function setTrack(tr) {
   if (!TRACKS[tr]) return;
@@ -1714,15 +1739,15 @@ const IQ_JOKES = [
 function startQuiz(sess) {
   if (sess === 'ninja') return startNinja();
   if (!mayStart()) return;
-  const sim = sess === 'sim', tr = sim ? cogTrack : sess.track, T = TRACKS[tr], used = new Set();
-  const qs = sim
-    ? shuffle(Array.from({ length: T.sim.n }, (_, i) => T.gen.make[T.kinds[i % 3].id](3 + (i % 3 + Math.floor(i / 3)) % 3, used)))
+  const co = sess?.company && Object.hasOwn(COMPANY_SIMS, sess.company) ? COMPANY_SIMS[sess.company] : null, sim = sess === 'sim' || !!co, tr = co ? 'log' : sim ? cogTrack : sess.track, T = TRACKS[tr], used = new Set();
+  const qs = co ? Array.from({ length: co.n }, (_, i) => { const k = co.kinds[i % co.kinds.length]; return genOf(k).make[k](2 + Math.floor(3 * i / co.n), used); })
+    : sim ? shuffle(Array.from({ length: T.sim.n }, (_, i) => T.gen.make[T.kinds[i % 3].id](3 + (i % 3 + Math.floor(i / 3)) % 3, used)))
     : Array.from({ length: sess.size }, () => T.gen.make[sess.kind](sess.d, used));
-  quiz = { sess, sim, tr, qs, i: 0, ok: 0, picks: [], limit: sim ? T.sim.min * 60000 : sess.size * T.levels[sess.d - 1].perQ * 1000, t0: performance.now() };
+  quiz = { sess, sim, co, tr, qs, i: 0, ok: 0, picks: [], limit: co ? co.min * 60000 : sim ? T.sim.min * 60000 : sess.size * T.levels[sess.d - 1].perQ * 1000, t0: performance.now() };
   quiz.guided = !sim && dojo.guided;
   mode = 'quiz'; counted = false; setQuizLabels(false); $('qIntro').hidden = true;
-  $('qGroup').textContent = sim ? `${T.icon} ${T.short} · simulacro de ${T.sim.n} preguntas en ${T.sim.min} minutos` : `${T.icon} ${T.short} · sesión ${sess.n} · nivel ${tierShort(sess.g)} · dificultad ${sess.d}`;
-  $('qName').textContent = sim ? 'Simulacro de entrevista' : sess.name;
+  $('qGroup').textContent = co ? `🏢 ${co.name} · ${co.n} preguntas en ${co.min} minutos` : sim ? `${T.icon} ${T.short} · simulacro de ${T.sim.n} preguntas en ${T.sim.min} minutos` : `${T.icon} ${T.short} · sesión ${sess.n} · nivel ${tierShort(sess.g)} · dificultad ${sess.d}`;
+  $('qName').textContent = co ? co.name : sim ? 'Simulacro de entrevista' : sess.name;
   $('qPlay').hidden = false; $('qResult').hidden = true;
   show('quiz'); renderQ();
   clearInterval(timer); timer = setInterval(qTick, 250); qTick();
@@ -1783,7 +1808,7 @@ function renderQ() {
   // The technique for this question, except in the mock test and the 5-minute run (as in a real test)
   $('qTip').hidden = !q.tip || quiz.sim || quiz.ninja;
   $('qTip').innerHTML = q.tip ? `💡 <b>Técnica:</b> ${escHtml(q.tip)}` : '';
-  $('qOpts').className = 'q-opts' + (q.text ? ' txt' : q.kind === 'distinta' ? ' big' : '');
+  $('qOpts').className = 'q-opts' + (q.text ? ' txt' + (q.options.some(o => String(o).length > 28) ? ' long' : '') : q.kind === 'distinta' ? ' big' : ''); // long: sentences, one per row
   $('qOpts').replaceChildren(...q.options.map((t, i) => {
     const b = document.createElement('button'); b.className = 'opt'; b.type = 'button';
     b.innerHTML = `<b>${'ABCDE'[i]}</b>${optHtml(q, t)}`; b.setAttribute('aria-label', 'Opción ' + 'ABCDE'[i] + ': ' + (q.text ? t : Figures.describe(t)));
@@ -1868,11 +1893,11 @@ function finishQuiz() {
   let html;
   if (quiz.sim) {
     const ti = tierForPct(pct), T = TRACKS[quiz.tr];
-    S.sims.push({ pct, ms: Math.round(ms), date: Date.now(), track: quiz.tr }); S.sims = S.sims.slice(-100);
+    S.sims.push({ pct, ms: Math.round(ms), date: Date.now(), track: quiz.tr, ...(quiz.co ? { company: quiz.co.id } : {}) }); S.sims = S.sims.slice(-100);
     const wrong = quiz.qs.map((q, i) => ({ q, i, pick: quiz.picks[i] })).filter(x => x.pick !== x.q.answer);
-    html = `<h3>Simulacro de entrevista · ${T.short}</h3>
+    html = `<h3>${quiz.co ? quiz.co.name : `Simulacro de entrevista · ${T.short}`}</h3>
       <div class="house-result">${Typists.typist(ti)}<div class="house-copy"><span class="eyebrow">Con ${ok} de ${n} correctas resolviste como</span><h4>${cap1(TIERS[ti].name)}</h4>
-        <p class="joke">${COG_JOKES[quiz.tr][ti]}</p><p>${timedOut ? 'Se terminó el tiempo: las preguntas sin responder cuentan como incorrectas. ' : ''}${T.sim.ref}</p></div></div>
+        <p class="joke">${COG_JOKES[quiz.tr][ti]}</p><p>${timedOut ? 'Se terminó el tiempo: las preguntas sin responder cuentan como incorrectas. ' : ''}${escHtml(quiz.co ? quiz.co.ref : T.sim.ref)}</p></div></div>
       <div class="nums"><div><b>${ok}/${n}</b><span>correctas</span></div><div><b>${pct}%</b><span>aciertos</span></div><div><b>${fmt(ms)}</b><span>tiempo</span></div></div>
       ${wrong.length ? `<div class="review"><h4>Para repasar</h4>${wrong.map(x => `<div class="rv${x.q.text ? ' txt' : ''}"><span class="rv-n">${x.i + 1}</span><div><p><b>${kindInfo(x.q.kind).name}.</b> ${escHtml(x.q.prompt)} ${x.pick == null ? 'Sin responder' : `Elegiste la ${'ABCDE'[x.pick]}`}; era la ${'ABCDE'[x.q.answer]}${x.q.text ? ` (${escHtml(x.q.options[x.q.answer])})` : ''}.</p><p class="rv-x">${escHtml(x.q.explain)}</p><p class="rv-tip">💡 ${escHtml(x.q.after || x.q.tip)}</p></div>${x.q.text ? '' : Figures.draw(x.q.options[x.q.answer], 'fig small')}</div>`).join('')}</div>` : '<p>¡Sin errores!</p>'}`;
   } else {
@@ -1894,7 +1919,7 @@ function finishQuiz() {
   }
   save();
   tn.capture('practice_completed', { ...practiceInfo(true), accuracy: pct, correct: ok, questions: n, stars: quiz.sim ? null : S.cog[sess.id]?.stars || 0, duration_ms: Math.round(ms) });
-  recordSession({ lesson: 'cog', name: quiz.sim ? `Ninja · simulacro de ${TRACKS[quiz.tr].short}` : `Ninja · ${TRACKS[quiz.tr].short} · ${sess.name} (sesión ${sess.n})`, stars: quiz.sim ? 0 : S.cog[sess.id]?.stars || 0, ppm: 0, acc: pct, ms: Math.round(ms) });
+  recordSession({ lesson: 'cog', name: quiz.co ? `Ninja · ${quiz.co.name}` : quiz.sim ? `Ninja · simulacro de ${TRACKS[quiz.tr].short}` : `Ninja · ${TRACKS[quiz.tr].short} · ${sess.name} (sesión ${sess.n})`, stars: quiz.sim ? 0 : S.cog[sess.id]?.stars || 0, ppm: 0, acc: pct, ms: Math.round(ms) });
   const nx = !quiz.sim && cogStarsFor(ok, n) > 0 && SESSIONS[quiz.tr][SESSIONS[quiz.tr].indexOf(sess) + 1];
   $('qResult').innerHTML = html + `<div class="actions">
       ${nx ? `<button class="btn primary" id="qrNext">Siguiente: sesión ${nx.n} <small>Enter</small></button>` : ''}
@@ -2144,7 +2169,7 @@ function renderPlanNote() {
 }
 // What a practice is, for the analytics events (no personal data).
 function practiceInfo(ninja) {
-  if (ninja) return { section: 'ninja-mental', kind: quiz?.ninja ? 'desafio-5-min' : quiz?.sim ? 'simulacro' : 'sesion', track: quiz?.ninja ? 'mixto' : quiz?.tr, difficulty: quiz?.sess?.d ?? null, guided: !!quiz?.guided };
+  if (ninja) return { section: 'ninja-mental', kind: quiz?.ninja ? 'desafio-5-min' : quiz?.sim ? 'simulacro' : 'sesion', track: quiz?.ninja ? 'mixto' : quiz?.co ? 'mixto' : quiz?.tr, ...(quiz?.co ? { company: quiz.co.id } : {}), difficulty: quiz?.sess?.d ?? null, guided: !!quiz?.guided };
   return { section: 'teclado-ciego', kind: cur === 'test' ? 'medicion' : cur?.review ? 'repaso' : 'leccion', lesson: cur === 'test' ? null : cur?.id ?? null, method: cur === 'test' ? testMethod : null };
 }
 function showPlan(reason) {
@@ -2426,7 +2451,13 @@ if (matchMedia('(hover: none) and (pointer: coarse)').matches) $('touchNote').hi
 
 applyLayout(); applyKbMode(); renderHome(); renderAccountBtn();
 // Accounts need the server (Vercel functions). Without it (a local file or a static copy), hide the button.
-if (NINJA_HASH.test(location.hash) || challenge?.kind === 'ninja') goCog();
+// Links from /profesional: ?pista=log opens a track, ?simulacro=meli starts a company's mock test.
+{
+  const q = new URLSearchParams(location.search), own = (o, k) => k && Object.hasOwn(o, k), pista = q.get('pista'), co = own(COMPANY_SIMS, q.get('simulacro')) && COMPANY_SIMS[q.get('simulacro')];
+  if (own(TRACKS, pista)) { setTrack(pista); goCog(); }
+  else if (NINJA_HASH.test(location.hash) || challenge?.kind === 'ninja') goCog();
+  if (co) { setTrack('log'); goCog(); startQuiz({ company: co.id }); }
+}
 addEventListener('hashchange', () => { if (NINJA_HASH.test(location.hash) && mode !== 'quiz' && mode !== 'typing') goCog(); });
 renderRanking();
 // Without a saved session there is nothing to check: guests skip the request (and its 401).

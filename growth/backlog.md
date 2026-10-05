@@ -15,7 +15,9 @@ referidos y otros anuncios). Un experimento por segmento a la vez.
 | BL-003 | UX-003 | Entender por qué casi nadie termina la cuenta al llegar al límite (12 → 2): grabaciones antes de cambiar nada | límite → cuenta | todos | 5 | 4 | 9 | 180 | **próximo** (investigar: producto) |
 | BL-004 | UX-002 | En el celular, mostrar primero Ninja mental (el teclado de la pantalla arruina la lección de tipeo) | práctica | resto | 4 | 5 | 7 | 140 | backlog (el segmento `resto` hoy casi no tiene volumen) |
 | BL-005 | OP-002 | Certificado verificable incluido en el aporte, empezando por un botón para medir la demanda | resultado → clic en pagar | iq o velocidad | 6 | 4 | 7 | 168 | backlog (después de BL-001 y BL-002: toca las mismas pantallas) |
-| BL-006 | OP-003 | Simulacros del test de una empresa argentina | nuevo segmento | nuevo anuncio | 7 | 2 | 5 | 70 | backlog (investigar: research) |
+| BL-006 | OP-003 | Simulacros del test de una empresa argentina | nuevo segmento | nuevo anuncio | 7 | 2 | 5 | 70 | **en curso**: el primero (estilo Mercado Libre) salió con BL-010; falta validar demanda con un anuncio hacia `/profesional` (a aprobar) |
+
+| BL-011 | BL-010 | Comprensión verbal en español (verdadero, falso o no se puede saber) y juicio situacional en `/profesional` | práctica | todos | 6 | 4 | 4 | 96 | backlog (contenido escrito a mano) |
 
 ## Cerradas
 
@@ -24,3 +26,4 @@ referidos y otros anuncios). Un experimento por segmento a la vez.
 | BL-007 | UX-001 / MK-001 | Contar solo personas reales: activación del experimento y visitas reales por anuncio | **aplicado** 2026-10-05 | Evento `iq_exp_activated` y tabla "Visitas reales por anuncio" en PostHog |
 | BL-008 | MK-002 | Recordatorio por email para volver a practicar | **descartado** 2026-10-05 (decidió Facundo) | — |
 | BL-009 | MK-003 | Optimizar el conjunto de Meta por la conversión "Practica" | **descartado** 2026-10-05 (decidió Facundo) | — |
+| BL-010 | Facundo | Versión profesional: `/profesional` al estilo de practiceaptitudetests.com, en español y con empresas argentinas; pista 🧩 Lógica y series; simulacro estilo Mercado Libre (40 preguntas, 30 min) | **aplicado** 2026-10-05 (decidió Facundo) | Medir: `pro_cta_clicked` por `cta`, prácticas con `track=log` y `company=meli`, y si quienes usan la pista de lógica ven precios y hacen clic en pagar más que el resto |

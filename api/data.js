@@ -26,12 +26,12 @@ function cleanProgress(p) {
     layout: p.layout === 'es' ? 'es' : 'la',
     kb: ['always', 'error', 'hidden'].includes(p.kb) ? p.kb : 'always',
     tildes: p.tildes === 'loose' ? 'loose' : 'strict',
-    // Ninja mental: best result per session (serie1…orden5, three tracks) and the mock tests of each track
+    // Ninja mental: best result per session (serie1…silogismo5, four tracks) and the mock tests of each track (and per company)
     cog: Object.fromEntries(Object.entries(p.cog && typeof p.cog === 'object' ? p.cog : {})
-      .filter(([id]) => /^(serie|matriz|distinta|tabla|grafico|porcentaje|lectura|conectores|orden)[1-5]$/.test(id))
+      .filter(([id]) => /^(serie|matriz|distinta|tabla|grafico|porcentaje|lectura|conectores|orden|sucesion|deduccion|silogismo)[1-5]$/.test(id))
       .map(([id, r]) => [id, { stars: num(r?.stars, 3), pct: num(r?.pct, 100), ms: num(r?.ms, 3_600_000) }])),
     sims: (Array.isArray(p.sims) ? p.sims : []).filter(t => t && Number(t.date) > 0).slice(-100)
-      .map(t => ({ pct: num(t.pct, 100), ms: num(t.ms, 3_600_000), date: Math.round(Number(t.date)), track: ['fig', 'num', 'eng'].includes(t.track) ? t.track : 'fig' })),
+      .map(t => ({ pct: num(t.pct, 100), ms: num(t.ms, 3_600_000), date: Math.round(Number(t.date)), track: ['fig', 'num', 'eng', 'log'].includes(t.track) ? t.track : 'fig', ...(t.company === 'meli' ? { company: 'meli' } : {}) })),
     // The 5-minute challenge is not taken from here: api/ninja.js grades it and keeps it (see withNinja).
   };
 }
