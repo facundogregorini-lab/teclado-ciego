@@ -2083,6 +2083,7 @@ const usedToday = () => auth.name ? billing.plays : guestPlays();
 async function loadBilling(sync) {
   try { Object.assign(billing, await api('billing', sync ? { action: 'sync' } : undefined)); } catch {}
   await startPixel(billing.pixel); // before any event of this page, like the Purchase coming back from paying
+  startGoogleTag(billing.gads);
   if (billing.enabled) tn.people({ plan: billing.premium ? 'ilimitado' : 'gratis' });
   renderPlanNote();
 }
@@ -2098,6 +2099,12 @@ const cookie = name => (document.cookie.match('(?:^|; )' + name + '=([^;]*)') ||
   const click = new URLSearchParams(location.search).get('fbclid');
   if (click && /^[\w.-]{1,500}$/.test(click) && !(cookie('_fbc') || '').endsWith('.' + click))
     document.cookie = `_fbc=fb.1.${Date.now()}.${click};max-age=7776000;path=/;SameSite=Lax`;
+})();
+// _gcl_aw: the click on a Google ad (gclid), kept 90 days in the cookie Google's tag reads, for the same reason.
+(() => {
+  const click = new URLSearchParams(location.search).get('gclid');
+  if (click && /^[\w-]{10,200}$/.test(click) && !(cookie('_gcl_aw') || '').endsWith('.' + click))
+    document.cookie = `_gcl_aw=GCL.${Math.floor(Date.now() / 1000)}.${click};max-age=7776000;path=/;SameSite=Lax`;
 })();
 // This browser's anonymous id: the pixel's external_id (hashed), the same one the server sends with its events.
 const ANON_KEY = 'teclado-ciego-anon';
@@ -2124,11 +2131,28 @@ async function startPixel(id) {
   fbq('init', id, externalId ? { external_id: externalId } : {}); fbq('track', 'PageView');
   pixelOn = true;
 }
-const track = (event, params, eventID) => { if (pixelOn) fbq('track', event, params || {}, eventID ? { eventID } : undefined); };
-const trackCustom = (event, params) => { if (pixelOn) fbq('trackCustom', event, params || {}); };
+/* Google Ads tag: the same events as the pixel, each one a Google Ads conversion (api/_google.js has the labels).
+   Only when the server sends an AW- id (GOOGLE_ADS_ID=off turns it off, as in local copies). */
+const GADS = { ViewContent: 'precios', CompleteRegistration: 'registro', Practica: 'practica', InitiateCheckout: 'pago', Purchase: 'compra' };
+let gads = null;
+function startGoogleTag(cfg) {
+  if (gads || !/^AW-\d{6,15}$/.test(cfg?.id || '')) return;
+  gads = { id: cfg.id, labels: cfg.labels || {} };
+  window.dataLayer = window.dataLayer || [];
+  window.gtag = function () { dataLayer.push(arguments); };
+  gtag('js', new Date()); gtag('config', gads.id);
+  const s = document.createElement('script'); s.async = true; s.src = 'https://www.googletagmanager.com/gtag/js?id=' + gads.id; document.head.append(s);
+}
+function gadsConversion(event, params, id) {
+  const label = gads?.labels[GADS[event]];
+  if (!label) return;
+  gtag('event', 'conversion', { send_to: gads.id + '/' + label, ...(params?.value != null ? { value: params.value, currency: params.currency } : {}), ...(id ? { transaction_id: id } : {}) });
+}
+const track = (event, params, eventID) => { gadsConversion(event, params, eventID); if (pixelOn) fbq('track', event, params || {}, eventID ? { eventID } : undefined); };
+const trackCustom = (event, params) => { gadsConversion(event, params); if (pixelOn) fbq('trackCustom', event, params || {}); };
 // An event that happens only in the page (ViewContent): the pixel, and the server through /api/track with the same id.
 function trackBoth(event, params, extra) {
-  if (!pixelOn) return;
+  if (!pixelOn) return gadsConversion(event, params);
   const id = eventId();
   track(event, params, id);
   fetch('/api/track', { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json', ...(auth.token ? { Authorization: 'Bearer ' + auth.token } : {}) },

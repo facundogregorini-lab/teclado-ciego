@@ -104,6 +104,26 @@ Cada evento lleva la IP y el navegador de quien lo hizo, `_fbp`, `_fbc`, el `ext
 
 **Probar:** en el Administrador de eventos → *Probar eventos*, copiá el código de prueba y cargalo en Vercel como `META_TEST_EVENT_CODE` (Redeploy). Los eventos del servidor van a esa pestaña en lugar de contar para los anuncios. Verificá que cada uno aparezca como *Navegador y servidor · deduplicado* y **borrá la variable** al terminar. Opcional: `META_GRAPH_VERSION` (por defecto `v23.0`).
 
+### Etiqueta de Google Ads (anuncios de búsqueda)
+
+La app y `/profesional` cargan la etiqueta de Google (`gtag.js`) de la cuenta de Google Ads **Growth Labs** (5235658460) y mandan, en el mismo momento que el píxel de Meta, una conversión por cada evento:
+
+| Evento de Meta | Conversión de Google Ads | Rol en la campaña |
+| --- | --- | --- |
+| `ViewContent` | TN - Vio precios (`precios`) | **Principal**: la campaña optimiza por esta, como el conjunto activo de Meta ("Vieron precios"). |
+| `CompleteRegistration` | TN - Cuenta creada (`registro`) | Secundaria (se mide, no guía la puja). |
+| `Practica` | TN - Práctica (`practica`) | Secundaria. |
+| `InitiateCheckout` | TN - Inició pago (`pago`) | Secundaria, con el precio. |
+| `Purchase` | TN - Compra acceso ilimitado (`compra`) | Secundaria, con el precio. |
+
+Cada conversión lleva como `transaction_id` el mismo id del evento de Meta (en la compra, `pay_<id del pago>`), así Google no la cuenta dos veces. Si la visita viene de un anuncio (`gclid` en la dirección), la página guarda la cookie `_gcl_aw` apenas abre, igual que `_fbc`. A diferencia de Meta, Google no recibe los eventos desde el servidor: solo desde el navegador.
+
+**Configurar:** los ids están en Google Ads → Objetivos → Conversiones → cada acción → *Configurar etiqueta* → *Instalar la etiqueta por tu cuenta*. El fragmento de evento dice `send_to: 'AW-123456789/AbCdEf…'`. En Vercel van dos variables:
+- `GOOGLE_ADS_ID`: la parte `AW-…`, la misma para todas las conversiones.
+- `GOOGLE_ADS_LABELS`: las etiquetas de cada conversión, con este formato: `precios=…,registro=…,practica=…,pago=…,compra=…`.
+
+Sin `GOOGLE_ADS_ID`, la etiqueta no se carga. Con `GOOGLE_ADS_ID=off` se apaga a propósito, como en las copias locales. También se pueden dejar fijos en `api/_google.js`, como el id del píxel de Meta.
+
 ### Analítica de producto (PostHog y Vercel)
 
 `analytics.js` (en `index.html` y `precios.html`) carga **Vercel Web Analytics y Speed Insights** (los scripts los sirve Vercel en `/_vercel/…` cuando están activados en el proyecto) y **PostHog** (proyecto 642163, región US) con páginas vistas automáticas, autocapture y grabación de sesiones con todos los campos de texto ocultos. PostHog va por `/ingest`, un rewrite de `vercel.json` hacia `us.i.posthog.com`, para que no lo frenen los bloqueadores de anuncios. La Project API key es pública y está en el código. En copias locales (`localhost`, `127.0.0.1`) no se carga nada: los eventos quedan en `window.tnEvents` para los tests.

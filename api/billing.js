@@ -4,6 +4,7 @@
 const { redis, HttpError, requireUser, bearer, body, handler } = require('./_lib');
 const { FREE_PER_DAY, FREE_ACCOUNT_PER_DAY, settings, playsKey, mp, status } = require('./_billing');
 const { metaSettings, purchaseId, clientContext, saveContext, sendEvent } = require('./_meta');
+const { googleSettings } = require('./_google');
 
 async function userInfo(name, options) {
   const s = settings();
@@ -16,7 +17,7 @@ async function userInfo(name, options) {
 
 module.exports = handler(async req => {
   const s = settings();
-  const base = { enabled: s.enabled, price: s.label, amount: s.price, currency: s.currency, freePerDay: FREE_PER_DAY, guestPerDay: FREE_PER_DAY, accountPerDay: FREE_ACCOUNT_PER_DAY, pixel: metaSettings().pixel };
+  const base = { enabled: s.enabled, price: s.label, amount: s.price, currency: s.currency, freePerDay: FREE_PER_DAY, guestPerDay: FREE_PER_DAY, accountPerDay: FREE_ACCOUNT_PER_DAY, pixel: metaSettings().pixel, gads: googleSettings() };
 
   if (req.method === 'GET') {
     if (!bearer(req)) return base;

@@ -4,6 +4,7 @@ const http = require('node:http'), fs = require('node:fs'), path = require('node
 const root = path.resolve(__dirname, '..');
 process.env.TECLADO_MEMORY_DB ??= '1';
 process.env.META_PIXEL_ID ??= 'off'; // local copies don't send visits to the real Meta Pixel
+process.env.GOOGLE_ADS_ID ??= 'off'; // nor conversions to Google Ads
 process.env.POSTHOG_KEY ??= 'off'; // nor events to PostHog
 
 function createServer() {
