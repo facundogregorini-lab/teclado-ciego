@@ -56,6 +56,17 @@ Para que no moleste: es chico y queda pegado al borde; desaparece durante las le
 
 `api/feedback.js` guarda los mensajes en la lista `feedback` de Redis (los últimos 2000), con un límite de 6 por hora por conexión y un campo trampa para bots. **Para leerlos:** `/comentarios.html` (no se indexa) pide la clave de la variable `FEEDBACK_KEY`, que hay que agregar en Vercel (cualquier texto largo y secreto) y hacer Redeploy. Muestra un resumen (total, última semana, ánimo promedio y cantidad por tipo), filtros, búsqueda y descarga en CSV. PostHog recibe `feedback_opened` y `feedback_sent` (ánimo, tipo y largo, nunca el texto).
 
+## Panel de cuentas (`/admin`)
+
+`/admin` (no se indexa) muestra cada cuenta registrada: fecha de registro, origen (anuncio, reto o directo), si regresó (días distintos con actividad), última actividad, hasta qué paso del embudo llegó (se registró → practicó → vio precios → clic en pagar → Mercado Pago → pagó), su práctica y rendimiento (lecciones, ppm, Ninja mental, IQ) y su plan. Arriba, indicadores, el embudo del período y las visitas y cuentas nuevas por día; abajo, el detalle de la cuenta elegida y un mapa de actividad de los últimos 14 días. Se puede buscar, cambiar el período (7, 30, 90 o 365 días), ocultar las cuentas de prueba y descargar un CSV.
+
+`api/admin.js` recorre las cuentas de Redis (`user:*`) con su progreso, historial, desafíos, pago y el contexto del último ingreso, y las cruza por nombre de usuario con PostHog (la cuenta es el `distinct_id` desde `tn.identify`). Variables en Vercel:
+- `ADMIN_KEY`: la clave del panel (cualquier texto largo y secreto). Mientras no esté, sirve `FEEDBACK_KEY`. Diez intentos fallidos bloquean 15 minutos.
+- `POSTHOG_PERSONAL_API_KEY` (personal API key con permiso de lectura de *Query*) y `POSTHOG_PROJECT_ID=642163`. Sin ellas el panel muestra solo lo que hay en la base y avisa que faltan.
+- `ADMIN_TEST_USERS` (opcional): cuentas de prueba separadas por comas, que el panel oculta por defecto.
+
+PostHog mide desde el 2/10/2026: las cuentas anteriores que no volvieron a entrar aparecen con los datos de la base y sin origen ni embudo.
+
 ## Aporte al templo (freemium con pago único)
 
 El botón **✦ Apoyá el templo** del header, a la izquierda del usuario, se ve siempre, con o sin cuenta (con acceso ilimitado dice **✦ Ninja ilimitado**). Abre el plan; si los pagos todavía no están configurados, avisa que el acceso ilimitado está en camino y que por ahora todo es gratis.
