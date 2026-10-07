@@ -194,7 +194,7 @@
 <script>
 // Which link people use here (PostHog, no personal data): the company or the test type they came for.
 document.querySelectorAll('[data-cta]').forEach(a => a.addEventListener('click', () => window.tn?.capture('pro_cta_clicked', { cta: a.dataset.cta })));
-// Meta Pixel, as in the app (index.html, startPixel): this page is where ads land, so Meta needs its PageView. Same
+// Meta Pixel and Google Ads tag, as in the app (index.html, startPixel): this page is where ads land, so they need the visit. Same
 // anonymous id (external_id, hashed) and the same _fbc cookie from the ad click; only our events, no automatic ones.
 (async () => {
   const cookie = name => (document.cookie.match('(?:^|; )' + name + '=([^;]*)') || [])[1];
@@ -203,7 +203,15 @@ document.querySelectorAll('[data-cta]').forEach(a => a.addEventListener('click',
     document.cookie = `_fbc=fb.1.${Date.now()}.${click};max-age=7776000;path=/;SameSite=Lax`;
   let anon; try { anon = localStorage.getItem('teclado-ciego-anon'); } catch {}
   if (!/^[\w-]{8,64}$/.test(anon || '')) { anon = crypto.randomUUID?.() || Date.now().toString(36) + Math.random().toString(36).slice(2, 12); try { localStorage.setItem('teclado-ciego-anon', anon); } catch {} }
-  let id; try { id = (await (await fetch('/api/billing')).json()).pixel; } catch {}
+  const gclid = new URLSearchParams(location.search).get('gclid'); // Google's ad click, kept like _fbc (index.html)
+  if (gclid && /^[\w-]{10,200}$/.test(gclid) && !(cookie('_gcl_aw') || '').endsWith('.' + gclid))
+    document.cookie = `_gcl_aw=GCL.${Math.floor(Date.now() / 1000)}.${gclid};max-age=7776000;path=/;SameSite=Lax`;
+  let id, gads; try { ({ pixel: id, gads } = await (await fetch('/api/billing')).json()); } catch {}
+  if (/^AW-\d{6,15}$/.test(gads?.id || '')) { // Google Ads tag: the visit (page_view) and the ad click; conversions happen in the app
+    window.dataLayer = window.dataLayer || []; window.gtag = function () { dataLayer.push(arguments); };
+    gtag('js', new Date()); gtag('config', gads.id);
+    const s = document.createElement('script'); s.async = true; s.src = 'https://www.googletagmanager.com/gtag/js?id=' + gads.id; document.head.append(s);
+  }
   if (!/^\d{6,20}$/.test(id || '')) return;
   let ext = null; try { ext = [...new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(anon.trim().toLowerCase())))].map(b => b.toString(16).padStart(2, '0')).join(''); } catch {}
   !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
