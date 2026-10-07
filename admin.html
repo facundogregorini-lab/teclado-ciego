@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Cuentas registradas · Templo Ninja</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&display=swap">
+<link rel="stylesheet" href="legal.css">
+<style>
+/* Admin panel: every registered account (api/admin.js: Redis + PostHog), with funnel step, return visits and origin. Only with ADMIN_KEY. */
+:root {--ok:#2f7a4f;--ok-bg:#dcefe1;--warn:#9a6a12;--warn-bg:#f8e9c7;--bad:#b0402c;--bad-bg:#f6dcd4;--sand:#d9c08f;--mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+.wrap {max-width:1240px}
+.num {font-family:var(--mono);font-variant-numeric:tabular-nums}
+.gate[hidden] {display:none}
+.gate {display:flex;flex-wrap:wrap;gap:10px;align-items:end;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 18px}
+.gate label {display:grid;gap:4px;font-weight:700;font-size:.85rem;flex:1 1 240px}
+input,select {font:inherit;padding:9px 12px;border-radius:10px;border:1px solid var(--line);background:#fff;color:var(--ink)}
+button {font:inherit;font-weight:700;border-radius:99px;border:1px solid var(--accent);background:var(--accent);color:#fff;padding:9px 18px;cursor:pointer}
+button.ghost {background:none;color:var(--accent)}
+button:disabled {opacity:.5;cursor:wait}
+:focus-visible {outline:3px solid var(--gold);outline-offset:2px}
+.err {color:var(--bad);font-weight:700;min-height:1.4em;margin:8px 0 0}
+.note {background:var(--warn-bg);color:var(--warn);border-radius:12px;padding:10px 14px;font-size:.9rem;margin:0 0 16px}
+.bar-top {display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:18px 0}
+.bar-top input[type=search] {flex:1 1 220px}
+.bar-top .check {display:inline-flex;gap:6px;align-items:center;font-size:.9rem}
+.bar-top .check input {width:16px;height:16px;accent-color:var(--accent)}
+.stamp {color:var(--muted);font-size:.85rem;margin-left:auto}
+.kpis {display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.kpi {background:var(--card);padding:14px 16px;display:grid;gap:2px;align-content:start}
+.kpi span {color:var(--muted);font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;font-weight:700}
+.kpi b {font:600 2rem/1.1 var(--display);letter-spacing:-.03em}
+.kpi b small {font:400 .9rem var(--body);color:var(--muted);margin-left:4px}
+.kpi em {font-style:normal;color:var(--muted);font-size:.82rem}
+.two {display:grid;grid-template-columns:1.2fr 1fr;gap:28px}
+.two > section {min-width:0}
+@media (max-width:860px) {.two {grid-template-columns:1fr} .kpis {grid-template-columns:repeat(2,1fr)}}
+.sub {color:var(--muted);font-size:.88rem;margin:0 0 12px}
+.funnel {display:grid;gap:7px}
+.frow {display:grid;grid-template-columns:140px 1fr 96px;gap:10px;align-items:center;font-size:.88rem}
+.frow i {display:block;height:12px;border-radius:3px;background:var(--accent);min-width:2px}
+.frow .v {text-align:right;font-family:var(--mono);font-size:.8rem}
+.frow .v small {color:var(--muted)}
+@media (max-width:480px) {.frow {grid-template-columns:110px 1fr 80px}}
+#daily svg {width:100%;height:auto;display:block}
+#daily text {fill:var(--muted);font:10px var(--mono)}
+#daily line {stroke:var(--line)}
+.legend {display:flex;gap:14px;flex-wrap:wrap;font-size:.82rem;color:var(--muted);margin-top:6px}
+.legend i {display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.tablebox {overflow-x:auto;border:1px solid var(--line);border-radius:16px;background:var(--card)}
+table {border-collapse:collapse;width:100%;min-width:1100px;font-size:.86rem;line-height:1.4}
+th,td {padding:9px 12px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line)}
+th {background:#eef2ea;font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);white-space:nowrap;cursor:pointer;user-select:none}
+th[aria-sort=ascending]::after {content:' ↑'} th[aria-sort=descending]::after {content:' ↓'}
+tbody tr {cursor:pointer}
+tbody tr:hover td {background:#f3f6ef}
+tbody tr.sel td {background:var(--accent-soft)}
+tbody tr:last-child td {border-bottom:0}
+td .u {font-weight:700}
+td .m {color:var(--muted);font-size:.78rem}
+.pill {display:inline-block;padding:1px 9px;border-radius:99px;font-size:.74rem;font-weight:700;white-space:nowrap;margin:2px 4px 0 0}
+.pill.ok {background:var(--ok-bg);color:var(--ok)} .pill.warn {background:var(--warn-bg);color:var(--warn)}
+.pill.bad {background:var(--bad-bg);color:var(--bad)} .pill.gray {background:#eceee8;color:var(--muted)}
+.steps {display:flex;gap:3px} .steps b {width:16px;height:8px;border-radius:2px;background:var(--line)}
+.steps b.on {background:var(--accent)} .steps b.at {background:var(--gold)}
+.empty {color:var(--muted);padding:18px}
+.detail {background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 20px;margin-top:16px}
+.detail h3 {font:600 1.3rem var(--display);margin:0 0 10px}
+.dgrid {display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px 20px}
+.dgrid div {display:grid;min-width:0}
+.dgrid span {color:var(--muted);font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;font-weight:700}
+.dgrid b {font-weight:400;overflow-wrap:anywhere}
+.heat {overflow-x:auto}
+.heat table {min-width:640px}
+.heat th,.heat td {text-align:center;padding:6px 4px;cursor:default}
+.heat th:first-child,.heat td:first-child {text-align:left;padding-left:12px}
+.cell {display:inline-block;width:22px;height:22px;border-radius:5px;background:#eceee8}
+.cell.on {background:var(--accent)} .cell.reg {outline:2px solid var(--gold);outline-offset:1px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header><a class="brand" href="/"><kbd>⛩</kbd>Templo Ninja</a><nav><a href="/comentarios.html">Comentarios</a><a href="/">Volver a la app</a></nav></header>
+<main>
+<h1>Cuentas registradas</h1>
+<p class="lead">Cada cuenta de la base con su avance, sus días de práctica y su plan, junto con lo que PostHog vio de esa persona: hasta qué paso del embudo llegó, de dónde vino y con qué dispositivo. Pide la clave <code>ADMIN_KEY</code> de Vercel; queda guardada solo en esta pestaña.</p>
+<form class="gate" id="gate">
+  <label for="key">Clave del panel<input id="key" type="password" autocomplete="current-password" required></label>
+  <button type="submit" id="enter">Entrar</button>
+</form>
+<p class="err" id="err" role="alert"></p>
+
+<section id="panel" hidden>
+  <p class="note" id="phNote" hidden></p>
+  <div class="bar-top" role="group" aria-label="Filtros">
+    <input id="q" type="search" placeholder="Buscar usuario…" aria-label="Buscar usuario">
+    <select id="days" aria-label="Período"><option value="7">Últimos 7 días</option><option value="30" selected>Últimos 30 días</option><option value="90">Últimos 90 días</option><option value="365">Último año</option></select>
+    <label class="check" for="hideTest"><input type="checkbox" id="hideTest" checked> Ocultar pruebas</label>
+    <button type="button" class="ghost" id="reload">Actualizar</button>
+    <button type="button" class="ghost" id="csv">Descargar CSV</button>
+    <button type="button" class="ghost" id="logout">Salir</button>
+    <span class="stamp" id="stamp"></span>
+  </div>
+  <div class="kpis" id="kpis"></div>
+
+  <div class="two">
+    <section>
+      <h2>Embudo del período</h2>
+      <p class="sub">Personas únicas por paso según PostHog, incluidas las que no crearon cuenta.</p>
+      <div class="funnel" id="funnel"></div>
+    </section>
+    <section>
+      <h2>Visitas y cuentas nuevas por día</h2>
+      <p class="sub">Visitantes únicos de PostHog y cuentas creadas según la base (hora de Argentina).</p>
+      <div id="daily"></div>
+      <div class="legend"><span><i style="background:var(--sand)"></i>Visitantes</span><span><i style="background:var(--accent)"></i>Cuentas nuevas</span></div>
+    </section>
+  </div>
+
+  <h2>Detalle por usuario</h2>
+  <p class="sub">Tocá una fila para ver todo lo que hay de esa cuenta. “Regresó” cuenta los días distintos con actividad (prácticas guardadas o visitas medidas).</p>
+  <div class="tablebox"><table id="users"><thead></thead><tbody></tbody></table></div>
+  <div class="detail" id="detail" hidden aria-live="polite"></div>
+
+  <h2>Actividad de los últimos 14 días</h2>
+  <p class="sub">Cuentas con actividad en esas dos semanas. El borde dorado marca el día en que se registró.</p>
+  <div class="heat tablebox"><table id="heat"></table></div>
+</section>
+</main>
+</div>
+<script>
+(() => {
+  const $ = id => document.getElementById(id), KEY = 'tn-admin-key';
+  const STEPS = ['Se registró', 'Practicó', 'Vio precios', 'Clic en pagar', 'Mercado Pago', 'Pagó'];
+  const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+  const session = { get: () => { try { return sessionStorage.getItem(KEY); } catch { return null; } }, set: v => { try { v ? sessionStorage.setItem(KEY, v) : sessionStorage.removeItem(KEY); } catch {} } };
+  const dayOf = ms => new Date(ms - 3 * 3600e3).toISOString().slice(0, 10); // Argentina
+  const when = ms => ms ? new Date(ms).toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—';
+  const ago = ms => { if (!ms) return ''; const m = (Date.now() - ms) / 60000; return m < 60 ? `hace ${Math.max(1, Math.round(m))} min` : m < 1440 ? `hace ${Math.round(m / 60)} h` : `hace ${Math.round(m / 1440)} d`; };
+  const dur = m => m == null ? '—' : m < 60 ? `${Math.round(m)} min` : m < 1440 ? `${(m / 60).toFixed(1)} h` : `${Math.round(m / 1440)} días`;
+  const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+  let data = null, rows = [], sortKey = 'created', sortDir = -1, selected = null;
+
+  // One row per account: Redis and PostHog together.
+  function build(d) {
+    const ph = d.posthog.users || {};
+    return d.users.map(u => {
+      const p = ph[u.name] || null, pr = u.practice;
+      const days = [...new Set([...pr.days, ...(p?.days || [])])].sort();
+      const practiced = pr.sessions || pr.lessons || pr.speedTests || pr.cogDone || pr.sims || pr.ninjaRuns || p?.completed;
+      const premium = u.paid || (u.sub && u.sub.paidUntil > Date.now()) || p?.paid;
+      const step = premium ? 5 : p?.checkoutStarted ? 4 : p?.checkoutClicked ? 3 : p?.pricing ? 2 : practiced ? 1 : 0;
+      const last = Math.max(pr.last || 0, p?.lastSeen || 0, u.created || 0) || null;
+      const src = p?.utmSource || u.origin?.utm_source, content = p?.utmContent || u.origin?.utm_content;
+      const origin = src ? `${src === 'meta' ? 'Meta' : src}${content ? ' · ' + content : ''}` : p?.challenges ? 'Reto compartido' : p?.referrer && p.referrer !== '$direct' ? p.referrer : p || u.origin ? 'Directo' : '—';
+      return { ...u, ctx: u.origin, ph: p, days, practiced: !!practiced, premium: !!premium, step, last, origin,
+        signupWait: u.created && p?.firstSeen && u.created >= p.firstSeen ? (u.created - p.firstSeen) / 60000 : null };
+    });
+  }
+  const visible = () => {
+    const q = $('q').value.trim().toLowerCase(), hide = $('hideTest').checked;
+    return rows.filter(r => (!hide || !r.test) && (!q || r.name.includes(q) || (r.display || '').toLowerCase().includes(q)));
+  };
+
+  async function load(key) {
+    $('err').textContent = ''; $('enter').disabled = $('reload').disabled = true;
+    try {
+      const r = await fetch('/api/admin?days=' + $('days').value, { headers: { 'X-Admin-Key': key } });
+      const json = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(json.error || (r.status === 404 ? 'Esta página funciona en la versión publicada.' : 'No se pudo leer el panel.'));
+      session.set(key); data = json; rows = build(json);
+      $('panel').hidden = false; $('gate').hidden = true; $('key').value = '';
+      if (!selected && rows.length) selected = [...rows].sort((a, b) => (b.created || 0) - (a.created || 0))[0].name;
+      render();
+    } catch (error) {
+      $('err').textContent = error.message;
+      if (session.get() === key && /Clave/.test(error.message)) session.set(null);
+    }
+    $('enter').disabled = $('reload').disabled = false;
+  }
+
+  function render() {
+    $('phNote').hidden = !data.posthog.error; $('phNote').textContent = data.posthog.error || '';
+    $('stamp').textContent = 'Actualizado ' + when(data.generated);
+    renderKpis(); renderFunnel(); renderDaily(); renderTable(); renderDetail(); renderHeat();
+  }
+
+  function renderKpis() {
+    const v = visible(), n = v.length, since = Date.now() - data.days * 864e5, f = data.posthog.funnel;
+    const fresh = v.filter(r => r.created >= since).length;
+    const back = v.filter(r => r.days.length > 1).length;
+    const waits = v.map(r => r.signupWait).filter(w => w != null).sort((a, b) => a - b);
+    const k = [
+      ['Cuentas', n, '', `${fresh} nuevas en ${data.days} días`],
+      ['Regresaron', back, `/ ${n}`, 'activas en más de un día'],
+      ['Practicaron', v.filter(r => r.practiced).length, `/ ${n}`, 'guardaron al menos una práctica'],
+      ['Activas hoy', v.filter(r => r.last && dayOf(r.last) === dayOf(Date.now())).length, '', `${v.reduce((s, r) => s + r.playsToday, 0)} prácticas hoy`],
+      ['Hasta registrarse', waits.length ? Math.round(waits[Math.floor((waits.length - 1) / 2)]) : '—', waits.length ? 'min' : '', 'mediana desde la 1.ª visita'],
+      ['Llegaron a pagar', v.filter(r => r.step >= 3).length, `/ ${n}`, 'clic en pagar o más'],
+      ['Pagaron', v.filter(r => r.premium).length, `/ ${n}`, `${v.filter(r => r.gift).length} con cortesía`],
+      ['Visitante → cuenta', f && f.visitors ? (100 * f.signedUp / f.visitors).toFixed(1).replace('.', ',') : '—', f && f.visitors ? '%' : '', f ? `${f.signedUp} de ${f.visitors} en ${data.days} días` : 'sin PostHog'],
+    ];
+    $('kpis').innerHTML = k.map(([l, b, s, e]) => `<div class="kpi"><span>${l}</span><b class="num">${b}<small>${s}</small></b><em>${esc(e)}</em></div>`).join('');
+  }
+
+  function renderFunnel() {
+    const f = data.posthog.funnel;
+    if (!f) { $('funnel').innerHTML = '<p class="sub">Sin datos de PostHog.</p>'; return; }
+    const steps = [['visitors', 'Visitaron'], ['started', 'Empezaron práctica'], ['completed', 'Terminaron práctica'], ['pricing', 'Vieron precios'], ['signedUp', 'Crearon cuenta'], ['checkoutClicked', 'Clic en pagar'], ['checkoutStarted', 'Mercado Pago'], ['paid', 'Pagaron']];
+    const max = Math.max(1, f.visitors);
+    $('funnel').innerHTML = steps.map(([k, l]) => `<div class="frow"><span>${l}</span><span><i style="width:${(100 * f[k] / max).toFixed(1)}%"></i></span><span class="v">${f[k]} <small>${(100 * f[k] / max).toFixed(f[k] / max < .1 ? 1 : 0)}%</small></span></div>`).join('');
+  }
+
+  function renderDaily() {
+    const days = [], start = Date.now() - (Math.min(data.days, 60) - 1) * 864e5;
+    for (let t = start; t <= Date.now(); t += 864e5) days.push(dayOf(t));
+    const visits = Object.fromEntries((data.posthog.daily || []).map(r => [r.d, r.visitors]));
+    const made = {}; for (const r of rows) if (r.created && (!$('hideTest').checked || !r.test)) made[dayOf(r.created)] = (made[dayOf(r.created)] || 0) + 1;
+    const W = 460, H = 210, pl = 32, pr = 8, pt = 12, pb = 24, vmax = Math.max(4, ...days.map(d => visits[d] || 0)), top = Math.ceil(vmax / 4) * 4;
+    const rmax = Math.max(1, ...days.map(d => made[d] || 0)), bw = (W - pl - pr) / days.length, y = v => pt + (H - pt - pb) * (1 - v / top);
+    let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Visitantes y cuentas nuevas por día">`;
+    for (let i = 0; i <= 4; i++) { const v = top * i / 4; s += `<line x1="${pl}" x2="${W - pr}" y1="${y(v)}" y2="${y(v)}"/><text x="${pl - 5}" y="${y(v) + 3}" text-anchor="end">${v}</text>`; }
+    const every = Math.ceil(days.length / 8);
+    days.forEach((d, i) => {
+      const x = pl + i * bw, v = visits[d] || 0, m = made[d] || 0;
+      s += `<rect x="${x + bw * .15}" y="${y(v)}" width="${bw * .7}" height="${y(0) - y(v)}" rx="2" fill="var(--sand)"><title>${d}: ${v} visitantes</title></rect>`;
+      if (m) s += `<rect x="${x + bw * .3}" y="${y(0) - (H - pt - pb) * .45 * m / rmax}" width="${bw * .4}" height="${(H - pt - pb) * .45 * m / rmax}" rx="2" fill="var(--accent)"><title>${d}: ${m} cuentas nuevas</title></rect>`;
+      if ((days.length - 1 - i) % every === 0) s += `<text x="${x + bw / 2}" y="${H - 8}" text-anchor="middle">${d.slice(8)}/${d.slice(5, 7)}</text>`;
+    });
+    $('daily').innerHTML = s + '</svg>';
+  }
+
+  const COLS = [
+    { k: 'name', l: 'Usuario', v: r => r.name, h: r => `<div class="u">${esc(r.display || r.name)}</div>${r.display ? `<div class="m">@${esc(r.name)}</div>` : ''}${r.test ? '<span class="pill gray">prueba</span>' : ''}${r.gift ? '<span class="pill gray">cortesía</span>' : ''}` },
+    { k: 'created', l: 'Registro', v: r => r.created || 0, h: r => `<div class="num">${when(r.created)}</div><div class="m">${r.ph?.signupFrom === 'plan' ? 'al llegar al límite' : r.ph?.signupFrom ? 'desde Entrar' : ''}</div>` },
+    { k: 'origin', l: 'Origen', v: r => r.origin, h: r => `<div>${esc(r.origin)}</div><div class="m">${esc([r.ph?.os || r.ph?.device, r.ph?.city].filter(Boolean).join(' · '))}</div>` },
+    { k: 'days', l: 'Regresó', v: r => r.days.length, h: r => r.days.length > 1 ? `<span class="pill ok">Sí · ${r.days.length} días</span>` : r.days.length ? '<span class="pill bad">No</span>' : '<span class="pill gray">sin actividad</span>' },
+    { k: 'last', l: 'Última actividad', v: r => r.last || 0, h: r => `<div class="num">${when(r.last)}</div><div class="m">${ago(r.last)}</div>` },
+    { k: 'step', l: 'Llegó hasta', v: r => r.step, h: r => `<div class="steps" aria-hidden="true">${STEPS.map((_, i) => `<b class="${i < r.step ? 'on' : i === r.step ? 'at' : ''}"></b>`).join('')}</div><div>${STEPS[r.step]}</div>` },
+    { k: 'practice', l: 'Práctica', v: r => r.practice.sessions + r.practice.ninjaRuns + r.practice.sims + (r.ph?.completed || 0), h: r => { const p = r.practice; const parts = [p.lessons && plural(p.lessons, 'lección', 'lecciones'), p.cogDone && plural(p.cogDone, 'sesión mental', 'sesiones mentales'), p.ninjaRuns && plural(p.ninjaRuns, 'desafío', 'desafíos'), p.sims && plural(p.sims, 'simulacro', 'simulacros'), p.speedTests && plural(p.speedTests, 'medición', 'mediciones')].filter(Boolean); return `<div>${parts.join(' · ') || '—'}</div><div class="m">${r.ph ? `${r.ph.completed} terminadas de ${r.ph.started} empezadas` : ''}</div>`; } },
+    { k: 'score', l: 'Rendimiento', v: r => (r.practice.bestPpm || 0) + (r.practice.bestIq || 0), h: r => [r.practice.bestPpm && `<div class="num">${r.practice.bestPpm} ppm</div>`, r.practice.bestIq && `<div class="num">IQ ${r.practice.bestIq}</div>`].filter(Boolean).join('') || '<span class="m">—</span>' },
+    { k: 'pay', l: 'Plan', v: r => (r.premium ? 100 : 0) + (r.ph?.checkoutClicked || 0), h: r => r.premium ? `<span class="pill ok">Pagó</span><div class="m">${r.paid ? `${r.paid.currency} ${r.paid.amount} · ${when(r.paid.date)}` : r.sub ? 'suscripción' : ''}</div>` : r.ph?.checkoutStarted ? `<span class="pill warn">Llegó a MP</span><div class="m">${r.ph.checkoutClicked} clic · ${r.ph.pricing} vistas de precios</div>` : r.ph?.pricing ? `<span class="pill gray">Vio precios</span><div class="m">${esc(r.ph.pricingReasons.map(x => x === 'limit' ? 'por límite' : x === 'upgrade' ? 'por botón' : x).join(', '))}</div>` : '<span class="m">gratis</span>' },
+  ];
+
+  function renderTable() {
+    const col = COLS.find(c => c.k === sortKey), list = visible().sort((a, b) => { const x = col.v(a), y = col.v(b); return (x > y ? 1 : x < y ? -1 : 0) * sortDir; });
+    $('users').tHead.innerHTML = '<tr>' + COLS.map(c => `<th scope="col" tabindex="0" data-k="${c.k}" aria-sort="${c.k === sortKey ? (sortDir > 0 ? 'ascending' : 'descending') : 'none'}">${c.l}</th>`).join('') + '</tr>';
+    $('users').tBodies[0].innerHTML = list.length ? list.map(r => `<tr tabindex="0" data-u="${esc(r.name)}" class="${r.name === selected ? 'sel' : ''}">${COLS.map(c => `<td>${c.h(r)}</td>`).join('')}</tr>`).join('') : `<tr><td class="empty" colspan="${COLS.length}">Ninguna cuenta con estos filtros.</td></tr>`;
+  }
+  $('users').addEventListener('click', e => {
+    const th = e.target.closest('th'), tr = e.target.closest('tbody tr[data-u]');
+    if (th) { sortDir = sortKey === th.dataset.k ? -sortDir : -1; sortKey = th.dataset.k; renderTable(); }
+    if (tr) { selected = tr.dataset.u; renderTable(); renderDetail(); $('detail').scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+  });
+  $('users').addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('th,tr')) { e.preventDefault(); e.target.click(); } });
+
+  function renderDetail() {
+    const r = rows.find(x => x.name === selected);
+    $('detail').hidden = !r;
+    if (!r) return;
+    const p = r.ph, pr = r.practice;
+    const f = [
+      ['Usuario', r.name + (r.display ? ` (${r.display})` : '')], ['Cuenta creada', when(r.created)], ['Primera visita medida', when(p?.firstSeen)],
+      ['Tiempo hasta registrarse', dur(r.signupWait)], ['Última actividad', `${when(r.last)} ${ago(r.last)}`], ['Días con actividad', r.days.length ? `${r.days.length}: ${r.days.map(d => d.slice(8) + '/' + d.slice(5, 7)).join(', ')}` : '—'],
+      ['Sesiones · páginas vistas', p ? `${p.sessions} · ${p.pageviews}` : '—'], ['Origen', r.origin], ['Campaña', r.ctx?.utm_campaign || '—'],
+      ['Referencia', p?.referrer || r.ctx?.host || '—'], ['Dispositivo', [p?.device, p?.os].filter(Boolean).join(' · ') || '—'], ['Ciudad', p?.city || '—'],
+      ['Llegó hasta', STEPS[r.step]], ['Lecciones aprobadas', pr.lessons], ['Sesiones de tipeo guardadas', `${pr.sessions} (${pr.minutes} min)`],
+      ['Mediciones de velocidad', `${pr.speedTests}${pr.bestPpm ? ` · mejor ${pr.bestPpm} ppm` : ''}`], ['Ninja mental', `${pr.cogDone} sesiones · ${pr.sims} simulacros · ${pr.ninjaRuns} desafíos${pr.bestIq ? ` · IQ ${pr.bestIq}` : ''}`],
+      ['Secciones (PostHog)', p?.sections.join(', ') || '—'], ['Minutos de práctica (PostHog)', p ? p.minutes : '—'], ['Prácticas hoy', r.playsToday],
+      ['Vio precios', p ? `${p.pricing} ${p.pricingReasons.length ? '(' + p.pricingReasons.join(', ') + ')' : ''}` : '—'], ['Clic en pagar · Mercado Pago', p ? `${p.checkoutClicked} · ${p.checkoutStarted}` : '—'],
+      ['Plan', r.premium ? (r.paid ? `Pagó ${r.paid.currency} ${r.paid.amount} el ${when(r.paid.date)}` : 'Suscripción activa') : r.gift ? 'Cortesía' : 'Gratis'], ['Retos aceptados', p?.challenges ?? '—'],
+    ];
+    $('detail').innerHTML = `<h3>${esc(r.display || r.name)}</h3><div class="dgrid">${f.map(([l, v]) => `<div><span>${l}</span><b>${esc(v)}</b></div>`).join('')}</div>${p ? '' : '<p class="sub" style="margin:12px 0 0">PostHog no tiene datos de esta cuenta: se creó antes de la medición (2/10/2026) y no volvió a entrar, o la persona bloquea la analítica.</p>'}`;
+  }
+
+  function renderHeat() {
+    const days = []; for (let i = 13; i >= 0; i--) days.push(dayOf(Date.now() - i * 864e5));
+    const list = visible().filter(r => r.days.some(d => d >= days[0])).sort((a, b) => (b.last || 0) - (a.last || 0));
+    $('heat').innerHTML = `<thead><tr><th>Usuario</th>${days.map(d => `<th>${d.slice(8)}/${d.slice(5, 7)}</th>`).join('')}</tr></thead><tbody>` +
+      (list.length ? list.map(r => `<tr><td><b>${esc(r.display || r.name)}</b></td>${days.map(d => `<td><span class="cell ${r.days.includes(d) ? 'on' : ''} ${r.created && dayOf(r.created) === d ? 'reg' : ''}" title="${d}${r.days.includes(d) ? ': activo' : ''}"></span></td>`).join('')}</tr>`).join('') : `<tr><td class="empty" colspan="15">Ninguna cuenta tuvo actividad en estos 14 días.</td></tr>`) + '</tbody>';
+  }
+
+  function csv() {
+    const cell = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    const head = ['usuario', 'nombre', 'registro', 'origen', 'dias_activos', 'regreso', 'ultima_actividad', 'llego_hasta', 'lecciones', 'sesiones_tipeo', 'mejor_ppm', 'sesiones_mentales', 'desafios', 'mejor_iq', 'vio_precios', 'clic_pagar', 'mercado_pago', 'pago', 'dispositivo', 'ciudad', 'prueba'];
+    const lines = visible().map(r => [r.name, r.display || '', r.created ? new Date(r.created).toISOString() : '', r.origin, r.days.length, r.days.length > 1 ? 'si' : 'no', r.last ? new Date(r.last).toISOString() : '', STEPS[r.step], r.practice.lessons, r.practice.sessions, r.practice.bestPpm || '', r.practice.cogDone, r.practice.ninjaRuns, r.practice.bestIq || '', r.ph?.pricing ?? '', r.ph?.checkoutClicked ?? '', r.ph?.checkoutStarted ?? '', r.premium ? 'si' : 'no', r.ph?.os || r.ph?.device || '', r.ph?.city || '', r.test ? 'si' : 'no']);
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob(['﻿' + [head, ...lines].map(l => l.map(cell).join(',')).join('\n')], { type: 'text/csv;charset=utf-8' }));
+    a.download = 'cuentas-templo-ninja.csv'; a.click(); URL.revokeObjectURL(a.href);
+  }
+
+  $('gate').onsubmit = e => { e.preventDefault(); if ($('key').value) load($('key').value); };
+  $('logout').onclick = () => { session.set(null); data = null; rows = []; $('panel').hidden = true; $('gate').hidden = false; $('key').focus(); };
+  $('reload').onclick = () => session.get() && load(session.get());
+  $('days').onchange = () => session.get() && load(session.get());
+  $('csv').onclick = csv;
+  for (const id of ['q', 'hideTest']) $(id).addEventListener('input', () => data && render());
+  if (session.get()) load(session.get());
+})();
+</script>
+</body>
+</html>

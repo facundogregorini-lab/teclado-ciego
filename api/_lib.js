@@ -53,6 +53,10 @@ function memoryCommand([cmd, key, ...args]) {
     case 'DEL': return memory.delete(key) ? 1 : 0;
     case 'INCR': { const n = Number(memory.get(key) || 0) + 1; memory.set(key, String(n)); return n; }
     case 'EXPIRE': return 1;
+    case 'SCAN': { // all at once: "SCAN 0 MATCH <glob> COUNT n"
+      const glob = new RegExp('^' + (args[1] || '*').replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*').replace(/\?/g, '.') + '$');
+      return ['0', [...memory.keys()].filter(k => glob.test(k))];
+    }
     case 'LPUSH': { const list = memory.get(key) || []; list.unshift(...args.reverse()); memory.set(key, list); return list.length; }
     case 'LTRIM': { const list = memory.get(key) || []; memory.set(key, list.slice(Number(args[0]), Number(args[1]) + 1)); return 'OK'; }
     case 'LRANGE': { const list = memory.get(key) || []; const end = Number(args[1]); return list.slice(Number(args[0]), end < 0 ? undefined : end + 1); }
