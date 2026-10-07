@@ -118,11 +118,11 @@ La app y `/profesional` cargan la etiqueta de Google (`gtag.js`) de la cuenta de
 
 Cada conversión lleva como `transaction_id` el mismo id del evento de Meta (en la compra, `pay_<id del pago>`), así Google no la cuenta dos veces. Si la visita viene de un anuncio (`gclid` en la dirección), la página guarda la cookie `_gcl_aw` apenas abre, igual que `_fbc`. A diferencia de Meta, Google no recibe los eventos desde el servidor: solo desde el navegador.
 
-**Configurar:** los ids están en Google Ads → Objetivos → Conversiones → cada acción → *Configurar etiqueta* → *Instalar la etiqueta por tu cuenta*. El fragmento de evento dice `send_to: 'AW-123456789/AbCdEf…'`. En Vercel van dos variables:
-- `GOOGLE_ADS_ID`: la parte `AW-…`, la misma para todas las conversiones.
-- `GOOGLE_ADS_LABELS`: las etiquetas de cada conversión, con este formato: `precios=…,registro=…,practica=…,pago=…,compra=…`.
+**Configuración:** el id de la cuenta (`AW-18500028132`) y la etiqueta de cada conversión están fijos en `api/_google.js`, como el id del píxel de Meta. Salen de Google Ads → Objetivos → Conversiones → cada acción → *Configurar etiqueta*, donde el fragmento de evento dice `send_to: 'AW-18500028132/…'`. Para usar otra cuenta sin tocar el código, en Vercel van dos variables:
+- `GOOGLE_ADS_ID`: la parte `AW-…`.
+- `GOOGLE_ADS_LABELS`: las etiquetas, con este formato: `precios=…,registro=…,practica=…,pago=…,compra=…`.
 
-Sin `GOOGLE_ADS_ID`, la etiqueta no se carga. Con `GOOGLE_ADS_ID=off` se apaga a propósito, como en las copias locales. También se pueden dejar fijos en `api/_google.js`, como el id del píxel de Meta.
+Con `GOOGLE_ADS_ID=off` la etiqueta se apaga, como en las copias locales.
 
 ### Analítica de producto (PostHog y Vercel)
 

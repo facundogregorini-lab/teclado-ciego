@@ -5,8 +5,15 @@
 //   CompleteRegistration → registro · Practica → practica · InitiateCheckout → pago · Purchase → compra (secondary)
 // GOOGLE_ADS_LABELS: "registro=AbC123,practica=DeF456,…" (the part after the slash in each event snippet's send_to).
 const env = name => (process.env[name] || '').trim();
-const DEFAULT_ID = ''; // AW-… of the "Growth Labs" account (5235658460), from Google Ads → Conversions → Tag setup
-const DEFAULT_LABELS = {};
+// The "Growth Labs" account (5235658460): its tag and each conversion's label, from Google Ads → Conversions → Tag setup.
+const DEFAULT_ID = 'AW-18500028132';
+const DEFAULT_LABELS = {
+  precios: 's80CCNyc0pQdEOSNwPVE',  // TN - Vio precios (ViewContent), primary
+  registro: 'XZvVCJeS2JQdEOSNwPVE', // TN - Cuenta creada (CompleteRegistration)
+  practica: 'KDhbCM6a0pQdEOSNwPVE', // TN - Práctica (Practica)
+  pago: '0yA9COWc0pQdEOSNwPVE',     // TN - Inició pago (InitiateCheckout)
+  compra: 'l_MyCP2u0pQdEOSNwPVE',   // TN - Compra acceso ilimitado (Purchase)
+};
 const EVENTS = ['registro', 'practica', 'precios', 'pago', 'compra'];
 
 function googleSettings() {
