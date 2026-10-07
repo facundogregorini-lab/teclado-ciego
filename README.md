@@ -152,6 +152,10 @@ Con cuenta, `posthog.identify()` usa el nombre de usuario (es el id de la cuenta
 
 **Leer métricas:** `node scripts/posthog-query.cjs funnel` (también `events`, `sources` o cualquier consulta HogQL entre comillas; `DAYS=30` cambia el período). Usa `POSTHOG_PERSONAL_API_KEY`, `POSTHOG_PROJECT_ID` y `POSTHOG_HOST` del entorno, con `api/_posthog.js`; la personal key nunca llega a la página. Variables en `.env.example`. Para las grabaciones, en PostHog tiene que estar activado *Settings → Session replay → Record user sessions*.
 
+**Pagar desde el celular.** En la computadora, la ventana del plan ofrece también *📱 Prefiero pagar desde el celular*: muestra un QR con el mismo link de pago de Mercado Pago (`vendor/qrcode.js`, licencia MIT, se carga solo al tocarlo). Mientras el QR está abierto, la página consulta el pago cada 5 segundos durante 15 minutos y, cuando entra, agradece y desbloquea sola. PostHog lo distingue con `via: 'qr'` en `checkout_clicked` y `checkout_started`.
+
+**Volver de Mercado Pago.** El plan de la cuenta manda sobre lo que dice la dirección: si alguien abandona el pago en la computadora (vuelve con `aporte=error`) pero ya pagó desde el celular, la página agradece y no registra `payment_failed`. Si Mercado Pago lo devuelve a un navegador sin la sesión (el predeterminado del celular), la página agradece, abre *Entrar* con el usuario ya escrito y registra `payment_return_signed_out`.
+
 ### Configurar Mercado Pago en Vercel
 
 1. En [Mercado Pago Developers](https://www.mercadopago.com.ar/developers/panel/app) creá una aplicación (producto: *Checkout Pro*) y copiá el **Access Token de producción**. Para probar sin cobrar, usá primero el de prueba con usuarios de prueba.

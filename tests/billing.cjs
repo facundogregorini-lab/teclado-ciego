@@ -220,6 +220,15 @@ const check = (name, ok) => { assert.ok(ok, name); console.log('PASS', name); };
     await ana2.click('#acctBtn'); await ana2.waitForFunction(() => document.querySelector('#planStatus').textContent.includes('para siempre'));
     check('The account shows access forever', await ana2.isHidden('#upgrade'));
     await ana2.click('#acctClose');
+    // A checkout abandoned on the computer comes back as "error" while the person already paid from the phone
+    await ana2.goto(SITE + '/?aporte=error'); await ana2.waitForFunction(() => document.querySelector('#toast').textContent.includes('Gracias'));
+    check('Coming back with "error" from a checkout that the account already paid thanks instead of failing', events(ana2, 'payment_failed').length === 0 && !ana2.url().includes('aporte'));
+    check('…and does not count the purchase again', fired(ana2, 'Purchase').length === 1 && conv(ana2, 'Comp1abc').length === 1);
+    // Mercado Pago sends the phone back to its default browser, where there is no session
+    const elsewhere = await open('/?aporte=ok&external_reference=ana');
+    await elsewhere.waitForSelector('#authDlg[open]');
+    check('Back from paying without a session: thanks, and the sign-in with the username filled in', (await elsewhere.inputValue('#user')) === 'ana'
+      && (await elsewhere.textContent('#toast')).includes('Entrá con tu usuario') && events(elsewhere, 'payment_return_signed_out').some(e => e.status === 'ok') && !elsewhere.url().includes('aporte'));
 
     // Server side
     const bob = await open(); await register(bob, 'bobo');
@@ -261,6 +270,20 @@ const check = (name, ok) => { assert.ok(ok, name); console.log('PASS', name); };
     await hook({ type: 'subscription_preapproval', data: { id: 'pre_1' } });
     const old = await planOf(carlaToken);
     check('An old monthly subscription lasts until its paid period ends', old.premium && !old.lifetime && old.subscription.status === 'cancelled');
+    // On a computer, paying from the phone: a QR with the same checkout, and the page unlocks by itself
+    const cami = await open(); await register(cami, 'cami');
+    await cami.click('#upgradeCta');
+    check('On a computer the plan also offers paying from the phone', await cami.isVisible('#planPhone') && await cami.isHidden('#planQrBox'));
+    await cami.click('#planPhone'); await cami.waitForSelector('#planQr svg');
+    check('Paying from the phone shows a QR, measured as checkout via qr', await cami.isVisible('#planQrBox') && events(cami, 'checkout_started').some(e => e.via === 'qr')
+      && events(cami, 'checkout_clicked').some(e => e.via === 'qr') && fired(cami, 'InitiateCheckout').length === 1);
+    await cami.waitForFunction(() => !document.querySelector('#planDlg').open, null, { timeout: 15000 });
+    check('Once the payment is in, the computer thanks and unlocks by itself', (await cami.textContent('#toast')).includes('Gracias') && await cami.isHidden('#planNote') && fired(cami, 'Purchase').length === 1);
+    const phonePage = await (await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true })).newPage();
+    await phonePage.goto(SITE); await phonePage.evaluate(t => localStorage.setItem('teclado-ciego-token', t), token); // bobo: free plan again after the refund
+    await phonePage.reload(); await phonePage.waitForSelector('#acctBtn .nm'); await phonePage.waitForSelector('#planNote:not([hidden])'); await phonePage.evaluate(() => document.querySelector('#upgradeCta').click());
+    await phonePage.waitForSelector('#planDlg[open]');
+    check('On a phone there is no "pay from the phone" option', await phonePage.isVisible('#planSubmit') && await phonePage.isHidden('#planPhone'));
     const gift = await open(); await register(gift, 'regalo');
     await gift.waitForFunction(() => document.querySelector('#planNote').hidden);
     check('Courtesy users are unlimited', true);
