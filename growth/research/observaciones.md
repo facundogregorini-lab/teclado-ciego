@@ -58,3 +58,24 @@ Tipos: **directa** (lo vimos), **declarado** (lo dice la empresa), **estimación
 - **En español,** "psicotécnico" es sobre todo numérico + verbal + lógico/abstracto ([redopositor](https://redopositor.com/blog/es-test-psicotecnicos-pdf-soluciones-gratis-2026/), [jobrise](https://jobrise.io/es/blog/tests-psicotecnicos-seleccion-como-superarlos-2026/), que suma personalidad). Atención, solo en exámenes específicos (conductores).
 - **Decisión de Facundo:** sección de psicotécnicos en `/profesional` (hecha); no mencionarlos en los anuncios por ahora. Hueco propio: verbal en español (BL-011).
 - **Limitación:** la Biblioteca devuelve títulos y anunciantes, no el texto completo del anuncio.
+
+## 2026-10-07 · Segunda ejecución
+### Empresas argentinas con tests online (pedido BL-006)
+- Mercado Libre · terceros (iProfesional 3-jun-2021, citando Glassdoor) · 40 preguntas de lógica y matemática en 30 min + entrevista grupal por Zoom. Fuente de 5 años. Brasil: "teste cognitivo online" 100% digital (sin fecha verificada).
+- Techint · terceros (resumen de Glassdoor AR, página 403) · comprensión (39 preg., 18 min), numérico (15 preg., 30 min) e inglés. La nota de iProfesional que el buscador fechaba en 2026 es de agosto de 2023 y no menciona tests.
+- YPF · prensa (EconoJournal, sin fecha; BAE 15-feb-2022) · "exámenes de razonamiento e idioma", dinámicas grupales.
+- Despegar · prensa (Economía Sustentable 10-jun-2022; BAE 2023) · prueba básica de programación + examen técnico: no es de aptitud.
+- Unilever · guía de JobTestPrep 2026 (global) · evaluación online (lógico, verbal, numérico, juicio situacional) y juegos de HireVue.
+- Accenture AR y BBVA AR · resumen de Glassdoor AR (403) · test online de lógica de 1 hora e IQ (eligo) / lógica de figuras. Sin fecha ni verificación.
+- Buscador (EE. UU.): para "test de lógica Mercado Libre ejemplos" no aparece ningún sitio dedicado. Sin volúmenes de búsqueda en AR.
+### Anuncios y precios
+- Biblioteca de Meta AR (activos, 2026-10-07): "test de IQ" 97 (eran 75 el 05-oct; búsquedas no idénticas); "test de velocidad de escritura" 0; "test psicotécnico entrevista de trabajo" 0; "mecanografía" 3 (ninguno competidor directo). Solo títulos, no texto completo.
+- Ratatype Plus · directa · US$49,99/año o US$9,99/mes; incluye certificados.
+- TypeQuicker y JobCannon · directa · certificado de velocidad gratis con link público.
+- 123test · directa · IQ gratis de 10 preguntas, profesional US$12,99 ofrecido después del resultado.
+- myiq · terceros (Which?, Trustpilot, Sikayetvar) · £1 por 7 días y £29,99/mes; quejas por cobros no entendidos en 2026.
+### Interno (PostHog, 14 días hasta 2026-10-07)
+- 249 usuarios con visita; 59 empiezan práctica; 44 la terminan; 20 ven precios; 4 hacen clic en pagar; 3 llegan a Mercado Pago. Vistas de precios por semana: 14 (28-sep) y 6 (5-oct, en curso).
+- **Medición:** el evento `payment_succeeded` y `pro_cta_clicked` no existen en el proyecto (taxonomía 2026-10-07). Las compras no se pueden ver en PostHog.
+### Calidad del proceso
+- El buscador devolvió fechas de 2026 para notas de 2021 y 2023. Regla: fechar siempre con la página abierta.
