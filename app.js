@@ -2022,7 +2022,7 @@ function paidWithoutSession() {
 }
 // Another layout of the same page (nueva.html → nueva.js) drives the app through these, and gets told of its moves
 // through window.tnLayout (start, quiz, cog, home). index.html sets no layout, so nothing changes there.
-window.tnApp = { start, startQuiz, goHome, goCog, nextLesson, drawChart, fcol, LESSONS, GROUPS, BELTS, BELT_LESSONS, beltState, currentBelt, state: S, NINJA_HASH,
+window.tnApp = { start, startQuiz, goHome, goCog, nextLesson, drawChart, fcol, LESSONS, GROUPS, BELTS, beltState, currentBelt, state: S, NINJA_HASH,
   key: k => MAP[k], mode: () => mode, chartShown: () => evoView === 'chart',
   userName: () => auth.name ? shownName() : null, bestPpm: () => Math.max(0, S.test?.ppm || 0, ...S.tests.map(t => t.ppm)) || null,
   bestIq: () => S.ninja.best?.iq || null, tierName: ppm => TIERS[tierFor(ppm)].name,
