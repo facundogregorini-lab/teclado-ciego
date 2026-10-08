@@ -1,5 +1,5 @@
 // The new layout of the home page (/nueva): one page with sections, the "Seguí acá" card, lessons and quizzes with the
-// shared engine, the belts, quick challenges, Mi dojo and its battles by link, dark mode, the phone and its bridge to the computer. Run: npm test (needs Playwright's Chromium).
+// shared engine, the belts, quick challenges, Mi dojo and its battles by link, progress checks, Agregar a mi inicio (PWA), dark mode, the phone and its bridge to the computer. Run: npm test (needs Playwright's Chromium).
 const assert = require('node:assert/strict');
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
 const { createServer } = require('./server.cjs');
@@ -216,6 +216,99 @@ const check = (name, ok) => { assert.ok(ok, name); console.log('PASS', name); };
     check('Anyone with the link sees names and scores only', viewed.battles[0].from === 'Facu' && viewed.battles[0].responses[0].name === 'Ana' && viewed.battles[0].responses[0].result === 'won' && !('user' in viewed.battles[0]));
     const mp = await open('/nueva', phone);
     check('On the phone, Mi dojo is in the tab bar', await mp.isVisible('.nv-tabbar [data-go="dojo"]'));
+
+    // Progress checks of the course: starting point, control at lesson 6, summary at 10, blocks, final measurement
+    const BASE_IDS = ['fj','dk','sl','añ','gh','rep1','ei','ru','ty','wo','qp','rep2','nm','vb','c,','x.','z','rep3','may','til','ref','cos','ofi','tec','coc','via'];
+    const seeded = async (n, extra = {}, path = '/nueva#teclado', opts = {}) => {
+      const ctx = await browser.newContext(opts);
+      await ctx.addInitScript(([ids, n, extra]) => { if (sessionStorage.getItem('seeded')) return; sessionStorage.setItem('seeded', '1'); localStorage.setItem('teclado-ciego-v1', JSON.stringify({ lessons: Object.fromEntries(ids.slice(0, n).map(id => [id, { stars: 2, ppm: 20, acc: 95 }])), tests: extra.tests || [] })); if (extra.ctl) localStorage.setItem('tn-controles', JSON.stringify(extra.ctl)); for (const [k, v] of Object.entries(extra.ls || {})) localStorage.setItem(k, v); }, [BASE_IDS, n, extra]);
+      await ctx.addInitScript(() => { window.tnEvents = { push: e => (window.__ev = window.__ev || []).push(e) }; });
+      const pg = await ctx.newPage(); pg.on('pageerror', e => errors.push(e.message));
+      await pg.goto(SITE + path); await pg.waitForLoadState('networkidle'); return pg;
+    };
+    const typeAll = pg => pg.evaluate(() => { const text = [...document.querySelectorAll('#inner .c')].map(s => s.textContent).join(''); for (const key of text) document.dispatchEvent(new KeyboardEvent('keydown', { key, shiftKey: key !== key.toLowerCase(), bubbles: true, cancelable: true })); });
+    const c0 = await open('/nueva#teclado');
+    check('Before lesson 1: an optional starting point', await c0.isVisible('#nvCheck') && (await c0.textContent('#nvCheckTitle')) === 'Medí tu punto de partida' && (await c0.textContent('#nvCheck')).includes('Empezar sin medir'));
+    await c0.click('#nvCheck [data-check="1"]');
+    check('…that can be skipped, and stays skipped', !(await c0.isVisible('#nvCheck')) && (await events(c0, 'checkpoint_action')).some(e => e.id === 'base' && e.action === 'skip'));
+    await c0.reload(); await c0.waitForLoadState('networkidle');
+    check('…after a reload too', !(await c0.isVisible('#nvCheck')));
+    const cb = await open('/nueva#teclado'); await cb.click('#nvCheck [data-check="0"]');
+    check('Measuring the starting point is the 1-minute test, as you type today', await cb.isVisible('#lesson') && (await cb.textContent('#lName')) === 'Mirando el teclado');
+    await cb.click('#back');
+    check('…and leaving it goes back to the checks, not to the tests', await onScreen(cb, 'teclado') && await cb.isVisible('#nvCheck'));
+    const c6 = await seeded(6);
+    check('At lesson 6: a short control with everything learned', (await c6.textContent('#nvCheckEyebrow')).includes('lección 6') && (await c6.textContent('#nvCheckStats')).includes('10 teclas dominadas') && (await c6.textContent('#nvCheckStats')).includes('6 de 26 lecciones'));
+    await c6.click('#nvCheck [data-check="0"]');
+    check('The control is a round with the keys learned, apart from the stars', (await c6.textContent('#lName')) === 'Control de la lección 6');
+    await typeAll(c6); await c6.waitForSelector('#result:not([hidden])');
+    check('…that ends as a control, with its numbers', (await c6.textContent('#result h3')) === 'Control completo' && (await c6.textContent('#result')).includes('Control listo'));
+    await c6.click('#rHome');
+    check('Back in Teclado: the control\'s speed, precision and keys mastered', await c6.isVisible('#nvCheck') && (await c6.textContent('#nvCheckTitle')).includes('palabras por minuto con') && (await c6.textContent('#nvCheckStats')).includes('10 teclas dominadas') && await c6.evaluate(() => !JSON.parse(localStorage.getItem('teclado-ciego-v1')).lessons.control));
+    await c6.click('#nvCheck [data-check="0"]');
+    check('…and Seguir puts it away', !(await c6.isVisible('#nvCheck')));
+    const c10 = await seeded(10);
+    check('At lesson 10: a summary and an optional measurement', (await c10.textContent('#nvCheckTitle')) === 'Vas 10 de 26: te faltan 16' && (await c10.textContent('#nvCheckStats')).includes('20 ppm promedio') && (await c10.textContent('#nvCheck')).includes('Medir mi velocidad'));
+    const c12 = await seeded(12, { ctl: { seen: { l10: 1 }, results: {} } });
+    check('A block finished: its summary', (await c12.textContent('#nvCheckTitle')).includes('Fila superior') && (await c12.textContent('#nvCheckText')).includes('6 lecciones'));
+    const c26 = await seeded(26, { tests: [{ method: 'mirando', ppm: 22, acc: 91, accents: 'strict', date: 1000 }] });
+    check('At 26: the final measurement, the same test as at the start', (await c26.textContent('#nvCheckTitle')) === 'Repetí la prueba del principio');
+    await c26.click('#nvCheck [data-check="0"]');
+    check('…taken blind', (await c26.textContent('#lName')) === 'A ciegas');
+    const cmp = (ppm, accents) => seeded(26, { tests: [{ method: 'mirando', ppm: 22, acc: 91, accents: 'strict', date: 1000 }, { method: 'ciegas', ppm, acc: 96, accents, date: 2000 }], ctl: { seen: {}, results: { final: { id: 'test', ppm, acc: 96, method: 'ciegas', accents, date: 2000 } }, show: 'final' } });
+    const up = await cmp(38, 'strict');
+    check('The final result compares with the starting point when it is the same test', (await up.textContent('#nvCheckText')).includes('+16 palabras por minuto') && (await up.textContent('#nvCheckText')).includes('Al empezar: 22 ppm mirando el teclado'));
+    const down = await cmp(18, 'strict');
+    check('A drop is said as it is', (await down.textContent('#nvCheckText')).includes('4 palabras por minuto menos'));
+    const other = await cmp(38, 'loose');
+    check('A different test is not compared', (await other.textContent('#nvCheckText')).includes('No la comparamos') && !(await other.textContent('#nvCheckText')).includes('+16'));
+
+    // Agregar a mi inicio (PWA)
+    const manifest = await (await fetch(SITE + '/manifest.webmanifest')).json();
+    check('The manifest opens Mi dojo as an app, with its icons', manifest.name === 'Templo Ninja' && manifest.start_url === '/nueva?app=1#dojo' && manifest.display === 'standalone' && manifest.icons.some(i => i.sizes === '512x512' && i.purpose === 'maskable'));
+    check('…and every icon and the service worker are served', (await Promise.all([...manifest.icons.map(i => i.src), '/icons/apple-touch-icon.png', '/sw.js'].map(u => fetch(SITE + u).then(r => r.ok)))).every(Boolean));
+    check('The page links the manifest and registers the service worker', await p.getAttribute('link[rel="manifest"]', 'href') === '/manifest.webmanifest' && await p.evaluate(() => Promise.race([navigator.serviceWorker.ready.then(() => true), new Promise(r => setTimeout(() => r(false), 5000))])));
+    const pw = await open('/nueva#dojo');
+    check('On a computer without the browser\'s offer, no card', !(await pw.isVisible('#nvInstall')));
+    await pw.evaluate(() => { const e = new Event('beforeinstallprompt'); e.prompt = () => { window.__prompted = true; }; e.userChoice = Promise.resolve({ outcome: 'accepted' }); dispatchEvent(e); });
+    check('When the browser offers installing, Mi dojo shows "Agregar a mi inicio"', await pw.isVisible('#nvInstall') && (await pw.textContent('#nvInstallBtn')).includes('Agregar a mi inicio'));
+    await pw.click('#nvInstallBtn');
+    await pw.waitForFunction(() => document.getElementById('nvInstall').hidden);
+    check('…which asks the browser for the confirmation', await pw.evaluate(() => window.__prompted) && (await events(pw, 'pwa_prompt_result')).some(e => e.outcome === 'accepted'));
+    const IPHONE = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
+    const iphone = { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, userAgent: IPHONE };
+    const ip = await open('/nueva#dojo', iphone);
+    check('On an iPhone, Mi dojo has the card', await ip.isVisible('#nvInstall'));
+    await ip.tap('#nvInstallBtn');
+    check('…and the steps: Compartir → Agregar a inicio → Abrir como app web → Agregar', await ip.isVisible('#nvInstallDlg') && /Compartir[\s\S]*Agregar a inicio[\s\S]*Abrir como app web[\s\S]*Agregar/.test(await ip.textContent('#nvInstallSteps')) && (await events(ip, 'pwa_guide_shown')).some(e => e.kind === 'ios'));
+    const ig = await open('/nueva#dojo', { ...iphone, userAgent: IPHONE + ' Instagram 340.0.0' });
+    await ig.tap('#nvInstallBtn');
+    check('From Instagram\'s browser: open it in Safari first, with the link to copy', (await ig.textContent('#nvInstallSteps')).includes('Abrir en el navegador') && (await ig.textContent('#nvInstallSteps')).includes('Safari') && await ig.isVisible('#nvInstallCopy'));
+    const an = await open('/nueva#dojo', { ...iphone, userAgent: 'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Mobile Safari/537.36' });
+    await an.tap('#nvInstallBtn');
+    check('On Android without the offer: the browser menu', (await an.textContent('#nvInstallSteps')).includes('Agregar a la pantalla de inicio'));
+    const appCtx = await browser.newContext(iphone); await appCtx.addInitScript(() => { Object.defineProperty(navigator, 'standalone', { get: () => true }); window.tnEvents = { push: e => (window.__ev = window.__ev || []).push(e) }; });
+    const app = await appCtx.newPage(); app.on('pageerror', e => errors.push(e.message)); await app.goto(SITE + '/nueva?app=1#dojo'); await app.waitForLoadState('networkidle');
+    check('Opened from the icon: Mi dojo, no install card, and it is measured', await onScreen(app, 'dojo') && !(await app.isVisible('#nvInstall')) && (await events(app, 'pwa_opened')).length === 1 && !app.url().includes('app=1'));
+    // The invitation: after an activity or on coming back, and "Ahora no" respected
+    const nv = await open('/nueva#desafios', iphone);
+    check('No invitation on the first visit before doing anything', !(await nv.isVisible('#nvNudge')));
+    await nv.tap('.nv-game[data-game="chimpance"]'); await nv.tap('#gameGo');
+    for (let i = 0; i < 3; i++) { await nv.waitForSelector('.gm-cell[data-n="2"]:not(.done):not(.wrong)'); await nv.tap('.gm-cell[data-n="2"]'); await nv.waitForTimeout(750); }
+    await nv.waitForSelector('.gm-result'); await nv.tap('#gameOut');
+    check('After finishing a challenge: the invitation to add it', await nv.isVisible('#nvNudge') && (await events(nv, 'pwa_nudge_shown')).some(e => e.reason === 'activity'));
+    await nv.tap('#nvNudgeNo');
+    check('"Ahora no" hides it', !(await nv.isVisible('#nvNudge')));
+    await nv.reload(); await nv.waitForLoadState('networkidle');
+    await nv.tap('.nv-game[data-game="chimpance"]'); await nv.tap('#gameGo');
+    for (let i = 0; i < 3; i++) { await nv.waitForSelector('.gm-cell[data-n="2"]:not(.done):not(.wrong)'); await nv.tap('.gm-cell[data-n="2"]'); await nv.waitForTimeout(750); }
+    await nv.waitForSelector('.gm-result'); await nv.tap('#gameOut');
+    check('…and keeps it quiet for seven days', !(await nv.isVisible('#nvNudge')));
+    const ret = await seeded(0, { ls: { 'tn-visit-days': JSON.stringify(['2020-01-01']) } }, '/nueva', iphone);
+    await ret.waitForSelector('#nvNudge:not([hidden])', { timeout: 6000 });
+    check('Coming back another day: the invitation', (await events(ret, 'pwa_nudge_shown')).some(e => e.reason === 'return'));
+    await ret.tap('#nvNudgeYes');
+    check('…whose button opens the steps', await ret.isVisible('#nvInstallDlg'));
 
     // Belts: after the 26 lessons of the base course
     const BASE = ['fj','dk','sl','añ','gh','rep1','ei','ru','ty','wo','qp','rep2','nm','vb','c,','x.','z','rep3','may','til','ref','cos','ofi','tec','coc','via'];

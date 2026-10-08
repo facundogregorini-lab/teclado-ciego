@@ -6,6 +6,13 @@
 <meta name="description" content="Templo Ninja: aprendé a escribir sin mirar el teclado y entrená para los tests de las entrevistas laborales, desafiando a tus amigos.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect x=%272%27 y=%272%27 width=%2728%27 height=%2728%27 rx=%276%27 fill=%27%23fff%27 stroke=%27%230B6E69%27 stroke-width=%273%27/%3E%3Ctext x=%2716%27 y=%2722%27 font-family=%27monospace%27 font-size=%2716%27 font-weight=%27700%27 text-anchor=%27middle%27 fill=%27%23141A21%27%3ET%3C/text%3E%3C/svg%3E">
 <title>Templo Ninja · versión nueva</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="theme-color" content="#F5F3ED">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Templo Ninja">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="robots" content="noindex, nofollow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -109,6 +116,11 @@
             <p class="nv-save-acct">Con una cuenta gratis, lo que practiques te espera en la compu. <button class="linkbtn" id="nvSaveAccount" type="button">Crear mi cuenta</button></p>
           </div>
           <p class="nv-bridge-more"><button class="linkbtn" id="nvHasKb" type="button">Tengo teclado físico</button> · <a href="#ninja" data-go="mente">Ninja mental se practica bien en el celu →</a></p>
+        </section>
+        <section class="nv-card nv-check" id="nvCheck" hidden aria-labelledby="nvCheckTitle">
+          <span class="eyebrow nv-acc" id="nvCheckEyebrow"></span><h2 id="nvCheckTitle"></h2><p id="nvCheckText"></p>
+          <div class="nv-check-stats" id="nvCheckStats"></div>
+          <div class="actions" id="nvCheckActions"></div>
         </section>
         <section class="nv-next" aria-labelledby="tkNextTitle">
           <div><span class="eyebrow nv-acc" id="tkNextEyebrow">Seguí acá</span><h2 id="tkNextTitle"></h2><p id="tkNextDesc"></p>
@@ -285,6 +297,11 @@
         <span class="nv-me-av" id="mdAv" aria-hidden="true">🥷</span>
         <div><span class="eyebrow">Mi dojo</span><h2 id="mdName">Ninja invitado</h2><p id="mdLevel"></p></div>
         <div class="nv-me-goal"><span>Tu próxima meta</span><b id="mdGoal"></b></div>
+      </section>
+      <section class="nv-card nv-install" id="nvInstall" hidden aria-labelledby="nvInstallTitle">
+        <img src="/icons/icon-192.png" alt="" width="56" height="56">
+        <div><h3 id="nvInstallTitle">Tu dojo en el bolsillo</h3><p>Entrá a tus marcas, batallas y desafíos tocando el ícono, como una app. Sin tiendas ni descargas.</p></div>
+        <button class="btn primary" id="nvInstallBtn" type="button">📲 Agregar a mi inicio</button>
       </section>
       <div class="nv-tabs" role="tablist" aria-label="Mi dojo">
         <button role="tab" data-sub="entrenamiento" aria-selected="true">Entrenamiento</button>
@@ -532,6 +549,20 @@
   </form>
 </dialog>
 
+<dialog id="nvInstallDlg" aria-labelledby="nvInstallDlgTitle">
+  <div class="dlg">
+    <h2 id="nvInstallDlgTitle">Agregá Templo Ninja a tu inicio</h2>
+    <div id="nvInstallSteps"></div>
+    <p class="nv-fine" id="nvInstallMsg" role="status"></p>
+    <div class="actions"><button type="button" class="btn" id="nvInstallClose">Listo</button></div>
+  </div>
+</dialog>
+<aside class="nv-nudge" id="nvNudge" hidden aria-labelledby="nvNudgeTitle">
+  <img src="/icons/icon-192.png" alt="" width="40" height="40">
+  <div><b id="nvNudgeTitle">¿Tu dojo en el inicio del celu?</b><span>Volvé con un toque, como una app.</span></div>
+  <button class="btn primary" id="nvNudgeYes" type="button">Agregar a mi inicio</button>
+  <button class="linkbtn" id="nvNudgeNo" type="button">Ahora no</button>
+</aside>
 <dialog id="challengeDlg" aria-labelledby="chTitle">
   <div class="dlg">
     <h2 id="chTitle">Desafiá a un amigo</h2>

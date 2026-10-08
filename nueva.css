@@ -300,3 +300,28 @@ body.nv-base-done:not(.nv-show-base) #learning .section-heading{display:none}
   .nv-battle{flex-wrap:wrap}
 }
 .gm-nick-opt{font-weight:600;font-size:.9rem;color:var(--muted)}
+
+/* Progress checks of the course */
+.nv-check{display:grid;gap:10px;justify-items:start;border:2px solid var(--accent)}
+.nv-check h2{font:800 1.6rem var(--display);letter-spacing:-.02em;margin:0;line-height:1.15}
+.nv-check p{margin:0;color:var(--muted);max-width:640px}
+.nv-check-stats{display:flex;flex-wrap:wrap;gap:8px}
+.nv-check-stats span{padding:6px 12px;border-radius:999px;background:var(--accent-soft);font-size:.9rem}
+.nv-check .actions{display:flex;flex-wrap:wrap;gap:10px}
+
+/* Agregar a mi inicio (PWA) */
+.nv-install{display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center;padding:18px 22px}
+.nv-install img{border-radius:14px;border:1px solid var(--line)}
+.nv-install h3{font:800 1.15rem var(--display);margin:0 0 2px}
+.nv-install p{margin:0;color:var(--muted);font-size:.92rem}
+.nv-steps{margin:0;padding-left:22px;display:grid;gap:10px}
+.nv-steps li{line-height:1.4}
+.nv-share-ico{vertical-align:-3px;color:#0A84FF}
+.nv-nudge{position:fixed;left:12px;right:12px;bottom:calc(76px + env(safe-area-inset-bottom));z-index:30;display:grid;grid-template-columns:auto 1fr;gap:6px 12px;align-items:center;padding:14px 16px;background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:0 10px 30px rgba(0,0,0,.18);max-width:520px;margin:auto}
+.nv-nudge img{border-radius:10px;grid-row:span 1}
+.nv-nudge div{display:grid}
+.nv-nudge span{font-size:.85rem;color:var(--muted)}
+.nv-nudge .btn{grid-column:1/-1}
+.nv-nudge .linkbtn{grid-column:1/-1;justify-self:center}
+body[data-view="game"] .nv-nudge,body[data-view="lesson"] .nv-nudge,body[data-view="quiz"] .nv-nudge{display:none}
+@media (max-width:760px){.nv-install{grid-template-columns:auto 1fr}.nv-install .btn{grid-column:1/-1}}

@@ -620,6 +620,7 @@ function finish() {
     if (!prev || st > prev.stars || (st === prev.stars && ppm > prev.ppm)) { S.lessons[cur.id] = { stars: st, ppm, acc }; better = !!prev; }
   }
   save();
+  window.tnLayout?.typed?.({ id: isTest ? 'test' : cur.id, ppm, acc, method: isTest ? testMethod : null, accents: S.tildes });
   tn.capture('practice_completed', { ...practiceInfo(false), wpm: ppm, accuracy: acc, stars: isTest ? null : st ?? null, duration_ms: Math.round(ms) });
   recordSession({ lesson: isTest ? 'test' : cur.id, name: isTest ? `Medición ${tm.as}` : belt ? `${BELTS[cur.belt].name} · ${cur.name}` : `Lección ${cur.n} · ${cur.name}`, method: isTest ? testMethod : undefined, stars: st, ppm, acc, ms })
     .then(saved => saved && loadRanking()).then(() => { if (isTest && auth.name) rankLine(ppm); });
@@ -633,6 +634,7 @@ function finish() {
       : `Primera medición ${tm.as}. Repetila en unos días para ver cómo evoluciona.`)
       + (acc < 90 ? ' Hubo muchos errores: la precisión viene primero.' : '');
   }
+  else if (cur.control) msg = `Control listo: ${ppm} palabras por minuto con ${acc}% de precisión. Lo ves resumido en Teclado, junto con tu progreso.`;
   else if (cur.review) msg = 'Repaso completo. Esta ronda refuerza tus teclas sin cambiar las estrellas de las lecciones. Buscá 95% de precisión antes de acelerar.';
   else if (st === 0) msg = 'La precisión quedó debajo del 90%. Repetila más despacio, sin mirar el teclado: la velocidad llega sola.';
   else if (st < 3 && acc < 95) msg = 'Aprobada. Con 95% de precisión o más ganás la segunda estrella.';
@@ -1915,6 +1917,12 @@ function renderDojo() {
   $('dojoChallenge').textContent = typing ? 'Reto de hoy · 60 s' : 'Simulacro de entrevista';
 }
 function trainDojo() { if (dojo.track === 'typing') start(recommendedLesson()); else { cogTrack = dojo.track; startQuiz(recommendedSession()); } }
+// A progress check (/nueva): a short round with every key learned so far, kept apart from the lessons' stars
+function startControl(name) {
+  const done = LESSONS.filter(l => S.lessons[l.id]?.stars >= 1), last = done.at(-1) || LESSONS[0], allowed = allowedFor(LESSONS.indexOf(last));
+  const letters = [...allowed].filter(isLetter), words = pickWords(allowed, [], 14);
+  start({ ...last, id: 'control', name, review: true, control: true, practiceText: (words || Array.from({ length: 10 }, () => group(letters, letters))).join(' ') });
+}
 function startDrill(keys = dojo.weak) {
   const base = recommendedLesson();
   const allowed = allowedFor(LESSONS.indexOf(base));
@@ -1935,7 +1943,7 @@ function coachTyping(ppm, acc, weak) {
   if (previous && Number.isFinite(previous.acc)) { const trend = document.createElement('small'); trend.textContent = `Precisión anterior: ${previous.acc}%. Actual: ${acc}%. Compará ejercicios de dificultad similar.`; box.append(trend); }
   if (weak.length) { const btn = document.createElement('button'); btn.className = 'btn primary'; btn.id = 'rDrill'; btn.textContent = 'Practicar mis errores'; btn.onclick = () => startDrill(weak.map(([k]) => k)); box.append(btn); }
   $('result').querySelector('.actions').before(box);
-  if (cur?.review) { $('result').querySelector('h3').textContent = 'Repaso completo'; $('result').querySelector('.bigstars')?.remove(); $('result').querySelector('.result-evo')?.remove(); }
+  if (cur?.review) { $('result').querySelector('h3').textContent = cur.control ? 'Control completo' : 'Repaso completo'; $('result').querySelector('.bigstars')?.remove(); $('result').querySelector('.result-evo')?.remove(); }
 }
 function coachQuiz() {
   const pct = Math.round(100 * quiz.ok / quiz.qs.length), box = document.createElement('aside');
@@ -2018,5 +2026,5 @@ window.tnApp = { start, startQuiz, goHome, goCog, nextLesson, drawChart, fcol, L
   key: k => MAP[k], mode: () => mode, chartShown: () => evoView === 'chart',
   userName: () => auth.name ? shownName() : null, bestPpm: () => Math.max(0, S.test?.ppm || 0, ...S.tests.map(t => t.ppm)) || null,
   bestIq: () => S.ninja.best?.iq || null, tierName: ppm => TIERS[tierFor(ppm)].name,
-  nextTier: ppm => TIERS[tierFor(ppm) + 1] || null, speedTests: () => S.tests.slice(), iqRuns: () => S.ninja.runs.slice() };
+  nextTier: ppm => TIERS[tierFor(ppm) + 1] || null, startControl, METHODS, speedTests: () => S.tests.slice(), iqRuns: () => S.ninja.runs.slice() };
 })();
