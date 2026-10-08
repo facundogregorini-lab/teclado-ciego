@@ -296,10 +296,14 @@ function renderHome() {
 // The belts, after the base course: one section each (current, done or still ahead), with its lessons.
 const beltSteps = bi => `<span class="evo-steps">${BELTS[bi].lessons.map(l => `<i class="${passed(l) ? 'on' : ''}"></i>`).join('')}</span>`;
 function beltSections(nl) {
-  const cb = currentBelt();
-  return BELTS.map((B, bi) => {
+  const graduated = LESSONS.every(passed), cb = graduated ? currentBelt() : -1;
+  // Before the 26 lessons are done, the course is the goal: the belts are one line, opened only on purpose.
+  const teaser = Object.assign(document.createElement('section'), { className: 'group belts-teaser' + (graduated ? ' graduated' : '') });
+  teaser.innerHTML = graduated ? '' : `<p>Después del curso podés seguir perfeccionando tu velocidad con cinco cinturones: puntuación, números, palabras frecuentes, textos de trabajo y velocidad.</p><button class="linkbtn" type="button">Ver los cinturones</button>`;
+  teaser.querySelector('button')?.addEventListener('click', e => { const shown = $('path').classList.toggle('show-belts'); e.target.textContent = shown ? 'Ocultar los cinturones' : 'Ver los cinturones'; tn.capture('belts_preview', { shown }); });
+  return [teaser, ...BELTS.map((B, bi) => {
     const st = beltState(bi), sec = document.createElement('section');
-    sec.className = 'group belt ' + (st.complete ? 'done' : bi === cb ? 'current' : 'ahead'); sec.dataset.belt = B.id;
+    sec.className = 'group belt ' + (st.complete ? 'done' : bi === cb ? 'current' : 'ahead') + (graduated ? '' : ' preview'); sec.dataset.belt = B.id;
     sec.innerHTML = `<div class="group-head"><div><h2><span class="belt-badge" style="--bc:${B.color}" aria-hidden="true"></span>${B.name} · ${B.theme}</h2><p>${B.desc} Meta para 3 estrellas: ${B.goal} palabras por minuto con 95% de precisión${bi === BELTS.length - 1 ? ', cada vez más alta' : ''}.</p></div><figure class="belt-card"><figcaption><b>${st.complete ? (st.gold ? '¡Conseguido, con 3 estrellas!' : '¡Conseguido!') : `${st.done} de ${st.total} lecciones`}</b><span>${st.complete ? 'Cinturón completo.' : `Aprobá las ${st.total} para conseguirlo.`}</span>${beltSteps(bi)}</figcaption></figure></div>`;
     const cards = document.createElement('div'); cards.className = 'cards';
     for (const l of B.lessons) {
@@ -311,7 +315,7 @@ function beltSections(nl) {
     }
     sec.append(cards);
     return sec;
-  });
+  })];
 }
 
 /* ---------- Speed by method: cards, chart and table ---------- */
@@ -652,7 +656,11 @@ function finish() {
   } else {
     const after = evoState(cur.g), fin = evoState(FINAL), P = tierShort(cur.g);
     let gi = cur.g, st2 = after, fresh = false, title = `Nivel ${P}`, txt = evoText(cur.g, after);
-    if (fin.tier > finalBefore.tier || (fin.complete && !finalBefore.complete)) {
+    if (fin.complete && !finalBefore.complete) {
+      gi = FINAL; st2 = fin; fresh = true;
+      title = '🎓 ¡Terminaste el curso!'; txt = `Aprobaste las ${LESSONS.length} lecciones: ya sos premio Nobel del teclado. Hacé la medición final para comparar con tu punto de partida y, cuando quieras, seguí con el ${BELTS[0]?.name.toLowerCase() || 'próximo desafío'}.`;
+      tn.capture('course_completed', { lessons: LESSONS.length });
+    } else if (fin.tier > finalBefore.tier) {
       gi = FINAL; st2 = fin; fresh = true;
       title = fin.gold ? '¡Evolucionaste a alien!' : '¡Evolucionaste a premio Nobel!'; txt = evoText(FINAL, fin);
     } else if (after.complete && !evoBefore.complete) {

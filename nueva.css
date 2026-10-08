@@ -29,10 +29,8 @@ body{background:var(--bg)}
 .nv .upgrade-cta{background:var(--gold-soft);color:var(--gold);border:0}
 
 /* Views and sub-tabs */
-.nv-view{display:none}
-body[data-tab="inicio"] [data-view-of="inicio"],body[data-tab="teclado"] [data-view-of="teclado"],
-body[data-tab="mente"] [data-view-of="mente"],body[data-tab="ranking"] [data-view-of="ranking"]{display:grid;gap:28px}
-#home{display:block}
+.nv-view{display:grid;gap:28px;scroll-margin-top:84px}
+#home:not([hidden]){display:grid;gap:56px}
 .nv-tabs{display:flex;gap:26px;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}
 .nv-tabs button,.nv-tab-link{background:none;border:0;padding:12px 0;color:var(--muted);font-weight:700;white-space:nowrap;text-decoration:none}
 .nv-tabs button[aria-selected="true"]{color:var(--ink);box-shadow:inset 0 -3px 0 var(--accent)}
@@ -199,10 +197,38 @@ body[data-view="game"] .nv-tabbar{display:none!important}
 .nv-beltrow li.current{border:2px solid var(--ink);background:var(--card)}
 .nv-beltrow li.done{border-style:solid;background:var(--accent-soft)}
 .nv-beltrow li.done b::after{content:" ✓";color:var(--accent)}
-.nv .group.belt.done,.nv .group.belt.ahead{display:none}
-body:not(.nv-base-done) .nv .group.belt{display:none}
+body.nv-base-done .nv .group.belt.done,body.nv-base-done .nv .group.belt.ahead{display:none}
 .nv-belt-big{width:96px;height:34px;margin:0;border-radius:6px}
 @media (max-width:760px){.nv-beltrow{grid-template-columns:repeat(3,1fr)}}
 body.nv-base-done:not(.nv-show-base) #path>.group:not(.belt){display:none}
 body.nv-base-done .nv-beltrow li:first-child{cursor:pointer}
 body.nv-base-done:not(.nv-show-base) #learning .section-heading{display:none}
+
+/* One page that scrolls: the header stays at hand */
+.nv-top{position:sticky;top:0;z-index:15;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(8px);margin-inline:calc(-1 * clamp(16px,4vw,32px));padding:8px clamp(16px,4vw,32px)}
+[data-view-of="desafios"] .nv-why{display:grid;gap:16px}
+.nv-hero-save{justify-self:start;margin-top:12px;text-align:left;font-size:.95rem;color:var(--accent)}
+/* Phone → computer */
+.nv-bridge{display:grid;gap:12px;border-color:var(--gold);background:var(--gold-soft)}
+.nv-bridge h2{font:800 1.45rem/1.15 var(--display);letter-spacing:-.02em;margin:0}
+.nv-bridge p{margin:0;color:var(--muted)}
+.nv-bridge .actions{display:flex;flex-wrap:wrap;gap:10px}
+.nv-save{display:grid;gap:10px;padding-top:6px;border-top:1px dashed var(--line)}
+.nv-save-msg{font-weight:700;color:var(--accent)!important;word-break:break-all}
+.nv-save-msg:empty{display:none}
+.nv-bridge-more{font-size:.9rem}
+.nv-welcome{border-color:var(--accent);background:var(--accent-soft)}
+/* Compact groups on the phone */
+.nv-fold-btn{display:none;border:0;background:none;color:var(--accent);font-weight:700;padding:6px 0;margin-top:4px}
+@media (max-width:760px){
+  .nv-fold-btn{display:inline-block}
+  .group.nv-folded .cards,.group.nv-folded .evo-card,.group.nv-folded .belt-card{display:none}
+  .group.nv-folded .group-head p{display:none}
+  #cogKinds{display:none}
+}
+/* Phone typing challenge */
+.gm-celu{display:grid;gap:14px;width:100%;max-width:640px}
+.gm-celu-text{font:500 1.25rem/1.7 var(--mono);text-align:left;max-height:7em;overflow:hidden;color:var(--muted)}
+.gm-celu-text .ok{color:#2f9e5b}.gm-celu-text .no{color:var(--bad);text-decoration:underline}.gm-celu-text .cur{box-shadow:inset 0 -3px 0 var(--accent);color:var(--ink)}
+.gm-celu-in{font-size:1.2rem;width:100%;text-align:left;letter-spacing:0}
+.nv-bridge a,.nv-welcome a{color:var(--accent);font-weight:700}
