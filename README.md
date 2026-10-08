@@ -204,7 +204,8 @@ Si falta la base, la práctica funciona igual sin cuenta y el formulario avisa q
 - **Estética sobria** (papel claro, verde y dorado) con **modo oscuro opcional** (botón de la luna, queda guardado en el navegador). En los caminos se ven los niveles sin los dibujos de los personajes.
 - `nueva.html` es `index.html` con otra portada (las pantallas de lección y de preguntas y los diálogos son los mismos); `nueva.js` arma las pestañas. `app.js` le avisa a dónde va por `window.tnLayout` (lección, medición, sesión, Ninja mental) y le presta lo que necesita por `window.tnApp`; en `index.html` no hay `tnLayout` y nada cambia.
 - **Medición:** cada evento de `/nueva` lleva `site_version: nueva` (propiedad de la persona en PostHog); además `nav_tab` (`tab`, `sub`) al cambiar de sección, `quick_start` (`kind`: `speed`, `iq`, `sim`) desde los desafíos rápidos y `theme_changed`.
-- Los desafíos "Test del chimpancé" y "Memoria de números" figuran como *Muy pronto*; los cinturones de teclado vienen después.
+- **Desafíos rápidos** (`desafios.js`), gratis y sin cuenta, en Inicio y en la pestaña *Desafíos rápidos* de Mente, cada uno con su pantalla: **Test del chimpancé** (números en una grilla que se esconden al tocar el 1; 3 vidas), **Memoria de números** (un dígito más cada vez), **Memoria visual** (cuadros que se iluminan; la grilla crece; 3 vidas) y **Reflejos** (5 intentos, promedio en ms). Al final: el puntaje, una referencia real para comparar (7 ± 2 dígitos, 200–300 ms, Ayumu y sus 9 números) y la mejor marca de este navegador (`tn-desafios`). Se comparten por WhatsApp con un link que abre el mismo desafío (`/nueva#juego-chimpance`, `#juego-numeros`, `#juego-visual`, `#juego-reflejos`). Eventos: `game_opened`, `game_started`, `game_completed` (`game`, `score`, `record`) y `game_shared`. Todavía no tienen ranking.
+- Los cinturones de teclado vienen después.
 
 ## Desarrollo
 

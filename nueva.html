@@ -82,11 +82,9 @@
       <section class="nv-quick" aria-labelledby="quickTitle">
         <div class="nv-sh"><div><span class="eyebrow">Desafíos rápidos · gratis</span><h2 id="quickTitle">Probate en pocos minutos</h2></div></div>
         <div class="nv-games">
-          <button class="nv-game" id="nvGameSpeed"><span class="nv-vis"><span class="nv-vis-txt mono">58 <small>ppm</small></span></span><b>Velocidad de tipeo</b><span>¿A quién te parecés? · 1 min</span></button>
           <button class="nv-game" id="nvGameIq"><span class="nv-vis"><span class="nv-vis-txt">IQ <i>?</i></span></span><b>Desafío IQ ninja</b><span>Figuras, números e inglés · 5 min</span></button>
           <button class="nv-game" id="nvGameSim"><span class="nv-vis"><span class="nv-vis-txt">11<small>/11</small></span></span><b>Simulacro de entrevista</b><span>Como el día del test · 11 min</span></button>
-          <div class="nv-game soon" aria-disabled="true"><span class="nv-vis"><svg viewBox="0 0 120 70" width="104" aria-hidden="true"><g font-family="JetBrains Mono" font-weight="700" font-size="14" text-anchor="middle"><rect x="7" y="7" width="22" height="22" rx="5" fill="var(--card)" stroke="var(--line)"/><text x="18" y="23" fill="var(--ink)">1</text><rect x="51" y="3" width="22" height="22" rx="5" fill="var(--card)" stroke="var(--line)"/><text x="62" y="19" fill="var(--ink)">2</text><rect x="87" y="19" width="22" height="22" rx="5" fill="var(--card)" stroke="var(--line)"/><text x="98" y="35" fill="var(--ink)">3</text><rect x="23" y="41" width="22" height="22" rx="5" fill="var(--card)" stroke="var(--line)"/><text x="34" y="57" fill="var(--ink)">4</text></g></svg></span><b>Test del chimpancé</b><span class="nv-soon">Muy pronto</span></div>
-          <div class="nv-game soon" aria-disabled="true"><span class="nv-vis"><span class="nv-vis-txt mono">4 8 1 9</span></span><b>Memoria de números</b><span class="nv-soon">Muy pronto</span></div>
+          <span data-games hidden></span>
         </div>
       </section>
       <section class="nv-duo">
@@ -205,6 +203,7 @@
       <div class="nv-tabs" role="tablist" aria-label="Ninja mental">
         <button role="tab" data-sub="entrenar" aria-selected="true">Entrenar</button>
         <button role="tab" data-sub="desafio" aria-selected="false">Desafío de 5 minutos</button>
+        <button role="tab" data-sub="rapidos" aria-selected="false">Desafíos rápidos</button>
         <a class="nv-tab-link" href="/profesional">Preparación por empresa ↗</a>
       </div>
       <div class="nv-sub" data-sub-of="entrenar">
@@ -259,6 +258,10 @@
         <p class="rank-note" id="ninjaRankNote"></p>
       </div>
     </section>
+      </div>
+      <div class="nv-sub" data-sub-of="rapidos" hidden>
+        <section class="nv-quick" aria-labelledby="quickTitle2"><div class="nv-sh"><div><span class="eyebrow">Un minuto, sin cuenta</span><h2 id="quickTitle2">Memoria y reflejos</h2></div></div>
+          <div class="nv-games"><span data-games hidden></span></div></section>
       </div>
     </div>
 
@@ -334,6 +337,17 @@
       </div>
       <div class="result" id="qResult" hidden aria-live="polite"></div>
     </div>
+  </main>
+
+  <main id="game" class="lesson nv-gamescreen" hidden>
+    <div class="lbar">
+      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+        <button class="back" id="gameBack">← Desafíos</button>
+        <div class="ltitle"><small>Desafío rápido</small><h2 id="gameTitle"></h2></div>
+      </div>
+      <div class="gm-live" id="gameLive" aria-live="polite"></div>
+    </div>
+    <div class="gm-stage" id="gameStage"></div>
   </main>
 
   <main id="lesson" class="lesson" hidden>
@@ -497,6 +511,7 @@
 <script src="numeric.js"></script>
 <script src="english.js"></script>
 <script src="logic.js"></script>
+<script src="desafios.js"></script>
 <script src="nueva.js"></script>
 <script src="app.js"></script>
 <script src="monk.js"></script>
