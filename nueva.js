@@ -1,14 +1,16 @@
 // /nueva: the new layout of the home page (a candidate for an A/B test against index.html). Same engine (app.js).
-// One page that scrolls: Inicio → Teclado (with its lessons) → Mente (with its paths) → Desafíos → Mi dojo → Ranking; the
-// header and the phone's tab bar take you to each section. It also adds the "Seguí acá" card, compact groups on
-// the phone, the bridge from the phone to the computer and the optional dark mode. Loaded before app.js, so that
-// app.js finds window.tnLayout and tells it where it goes; the buttons are wired once the page is ready.
+// One thing per screen: Mi dojo (your home: the next training, your marks and battles; someone new sees "¿Qué querés
+// entrenar?" instead), Ninja del teclado (the current block of lessons), Ninja mental (what follows and the four
+// tracks) and Desafíos (the quick games and the ranking). The header and the phone's tab bar switch between them,
+// and the avatar takes you to Mi dojo. It also adds the bridge from the phone to the computer and the optional dark
+// mode. Loaded before app.js, so that app.js finds window.tnLayout and tells it where it goes; the buttons are wired
+// once the page is ready.
 (() => {
   const $id = id => document.getElementById(id);
-  const SECTIONS = ['inicio', 'teclado', 'mente', 'desafios', 'dojo', 'ranking'];
-  const HASH = { inicio: '', teclado: '#teclado', mente: '#ninja', desafios: '#desafios', dojo: '#dojo', ranking: '#ranking' };
+  const SECTIONS = ['inicio', 'dojo', 'teclado', 'mente', 'desafios'];
+  const HASH = { inicio: '', dojo: '#dojo', teclado: '#teclado', mente: '#ninja', desafios: '#desafios' };
   const gameOf = hash => (/^#juego-(\w+)$/.exec(hash) || [])[1];
-  const secOf = hash => hash === '#teclado' ? 'teclado' : /^#(ninja|entrevistas)$/.test(hash) ? 'mente' : hash === '#desafios' ? 'desafios' : hash === '#dojo' ? 'dojo' : hash === '#ranking' ? 'ranking' : 'inicio';
+  const secOf = hash => hash === '#teclado' ? 'teclado' : /^#(ninja|entrevistas)$/.test(hash) ? 'mente' : hash === '#desafios' ? 'desafios' : hash === '#dojo' ? 'dojo' : hash === '#ranking' ? 'ranking' : 'dojo';
   const capture = (e, p) => window.tn?.capture?.(e, p);
   const anchor = sec => document.querySelector(`[data-view-of="${sec}"]`);
   // A phone or tablet without a physical keyboard ("Tengo teclado físico" turns this off, remembered).
@@ -21,19 +23,29 @@
     view.querySelectorAll('[data-sub-of]').forEach(s => { s.hidden = s.dataset.subOf !== sub; });
     view.querySelectorAll('[role="tab"][data-sub]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.sub === sub)));
     if (sec === 'teclado' && sub === 'medir' && window.tnApp?.chartShown()) tnApp.drawChart(); // the chart sizes itself to a visible box
-    if (sec === 'dojo' && sub === 'batallas') renderBattles(true);
   }
-  let holdMark = 0; // while the page scrolls to a section by itself, the sections it passes don't light up
   function markCurrent(sec) { document.querySelectorAll('[data-go]').forEach(a => a.toggleAttribute('aria-current', a.dataset.go === sec)); }
-  // Go to a section: scroll there (instantly when coming back from a lesson), say where we are in the address.
-  function goTo(sec, { sub, scroll = true, smooth = true } = {}) {
-    if (!SECTIONS.includes(sec)) sec = 'inicio';
+  // Someone who hasn't trained anything yet: "Mi dojo" greets them with "¿Qué querés entrenar?"
+  const isNew = () => {
+    const S = window.tnApp?.state; if (!S) return true;
+    return !Object.keys(S.lessons).length && !S.tests.length && !Object.keys(S.cog || {}).length && !(S.ninja?.runs || []).length && !(S.sims || []).length
+      && !Object.keys(Desafios.bests()).length && !Desafios.known().length;
+  };
+  // Go to a section: only that one shows, from its top; the address says where we are. "dojo" is the home: the
+  // dojo itself, or the start screen for someone new (force: the dojo anyway, e.g. for a battle's message).
+  function goTo(sec, { sub, scroll = true, force = false } = {}) {
+    if (sec === 'ranking') { sec = 'desafios'; showRanking(true); }
+    if (!SECTIONS.includes(sec) || sec === 'inicio' || sec === 'dojo') sec = isNew() && !force ? 'inicio' : 'dojo';
+    document.querySelectorAll('#home > .nv-view').forEach(v => { v.hidden = v.dataset.viewOf !== sec; });
+    document.body.dataset.tab = sec;
     if (sub) setSub(sec, sub);
-    markCurrent(sec); if (scroll) holdMark = performance.now() + 1200;
+    markCurrent(sec === 'inicio' ? 'dojo' : sec);
     const want = location.pathname + location.search + HASH[sec];
     if (location.pathname + location.search + location.hash !== want) history.replaceState(null, '', want);
-    if (scroll) sec === 'inicio' ? scrollTo({ top: 0, behavior: smooth ? 'smooth' : 'auto' }) : anchor(sec).scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' });
+    if (sec === 'teclado' && window.tnApp?.chartShown() && !anchor('teclado').querySelector('[data-sub-of="medir"]').hidden) tnApp.drawChart();
+    if (scroll) scrollTo({ top: 0 });
   }
+  function showRanking(full) { $id('ranking').classList.toggle('full', full); $id('rankMore').setAttribute('aria-expanded', String(full)); $id('rankMore').textContent = full ? 'Ver solo el podio' : 'Ver el ranking completo'; }
 
   // Desafíos rápidos (desafios.js): their tiles, and their own screen next to the lesson and quiz ones.
   const TILE_ART = {
@@ -61,8 +73,8 @@
   function openGame(id, opts = {}) {
     if (!Desafios.GAMES[id]) return;
     if (tnApp.mode() !== 'home') tnApp.goHome();
-    gameFrom = opts.battle || opts.from === 'dojo' ? 'dojo' : id === 'celu' ? 'teclado' : 'desafios';
-    gameSub = opts.battle ? 'batallas' : opts.from === 'dojo' ? 'marcas' : undefined;
+    gameFrom = opts.battle || opts.from === 'dojo' ? 'dojo' : id === 'celu' ? 'teclado' : opts.from === 'inicio' ? 'inicio' : 'desafios';
+    gameSub = undefined;
     $id('home').hidden = true; $id('game').hidden = false; document.body.dataset.view = 'game';
     history.replaceState(null, '', location.pathname + location.search + '#juego-' + id);
     scrollTo({ top: 0 });
@@ -71,7 +83,7 @@
   function closeGame() {
     $id('game').hidden = true;
     tnApp.goHome(); renderTiles(); renderDojo(); renderBattles(true);
-    goTo(gameFrom, { sub: gameSub, smooth: false });
+    goTo(gameFrom === 'inicio' ? 'dojo' : gameFrom, { sub: gameSub, force: gameFrom === 'dojo' });
     if (activityDone) maybeNudge('activity');
   }
 
@@ -99,6 +111,17 @@
     document.body.classList.toggle('nv-base-done', baseAll);
     const white = $id('tkBelts').firstElementChild; // finished, the course hides; its belt shows it again
     if (baseAll) { white.tabIndex = 0; white.setAttribute('role', 'button'); white.title = 'Ver las lecciones del curso'; white.onclick = white.onkeydown = e => { if (e.type === 'keydown' && e.key !== 'Enter') return; document.body.classList.toggle('nv-show-base'); }; }
+    // The current block (a group of the course, or the belt after it): only its lessons, the next one marked
+    const blockLs = allDone ? [] : inBelt ? tnApp.BELT_LESSONS.filter(l => l.belt === nl.belt) : LESSONS.filter(l => l.g === nl.g);
+    $id('tkBlockName').textContent = allDone ? 'Cinturón negro completo 🥋' : inBelt ? B.name.replace(/^./, c => c.toUpperCase()) : GROUPS[nl.g].name;
+    $id('tkBlockBar').style.width = Math.round((inBelt ? bs.done / bs.total : baseDone / LESSONS.length) * 100) + '%';
+    $id('tkBlockCount').textContent = inBelt ? `${bs.done} de ${bs.total} del ${B.name.toLowerCase()}` : `${baseDone} de ${LESSONS.length} lecciones`;
+    $id('tkBlock').innerHTML = blockLs.map(l => {
+      const rec = S.lessons[l.id], ok = rec?.stars >= 1, cur = l === nl;
+      const label = l.type === 'keys' ? [...l.keys].map(k => `<kbd>${esc(k.toUpperCase())}</kbd>`).join(' ') : esc(l.name);
+      return `<li class="${ok ? 'done' : ''}${cur ? ' cur' : ''}"><button type="button" data-lesson="${esc(l.id)}"><span class="nv-st" aria-hidden="true">${ok ? '✓' : cur ? '▶' : '○'}</span><span class="nv-nm">${l.n} · ${label}</span>${cur ? `<span class="btn primary nv-go">${done || baseAll ? 'Continuar' : 'Empezar'}</span>` : ok ? `<span class="nv-stars" aria-label="${rec.stars} estrellas">${'★'.repeat(rec.stars)}${'☆'.repeat(3 - rec.stars)}</span>` : ''}</button></li>`;
+    }).join('') || '<li class="cur"><button type="button" data-lesson="test"><span class="nv-nm">Repasá cualquier lección o medí tu velocidad</span></button></li>';
+    $id('tkBlock').querySelectorAll('[data-lesson]').forEach(b => b.onclick = () => { const l = blockLs.find(x => x.id === b.dataset.lesson); l ? tnApp.start(l) : tnApp.start('test'); });
     fold(); renderDojo(); renderCheck();
   }
 
@@ -113,20 +136,18 @@
     const inBelt = nl.belt != null, B = inBelt ? BELTS[nl.belt] : null;
     const allDone = baseAll && BELTS.every((_, bi) => tnApp.beltState(bi).complete);
     const name = tnApp.userName() || nickName();
-    $id('mdName').textContent = name || 'Ninja invitado';
-    $id('mdAv').textContent = name ? [...name][0].toUpperCase() : '🥷';
-    const ppm = tnApp.bestPpm(), next = ppm ? tnApp.nextTier(ppm) : null;
+    $id('mdHello').textContent = `Hola, ${name || 'ninja'} 🥷`;
+    $id('mdSettings').hidden = !tnApp.userName();
+    const ppm = tnApp.bestPpm();
     const belt = baseAll ? (inBelt ? B.name : 'Cinturón negro') : 'Cinturón blanco';
     $id('mdLevel').textContent = `${belt} · ${ppm ? `escribís como ${tnApp.tierName(ppm)} (${ppm} ppm)` : 'todavía sin medir tu velocidad'}`;
     // The block in progress: the group of lessons of the course, or the belt after it
     const block = inBelt ? { name: B.name, ...tnApp.beltState(nl.belt) } : (() => { const ls = LESSONS.filter(l => l.g === nl.g); return { name: GROUPS[nl.g].name, done: ls.filter(passed).length, total: ls.length }; })();
-    const left = block.total - block.done;
-    $id('mdGoal').textContent = allDone ? (ppm && next ? `Llegar a ${next.min} ppm` : 'Superar tu mejor marca') : !ppm ? 'Medir tu velocidad (1 min)' : `Terminar «${block.name}»: ${left === 1 ? 'te falta 1 lección' : `te faltan ${left} lecciones`}`;
-    $id('mdBlock').textContent = allDone ? 'Curso y cinturones completos' : `Bloque actual · ${block.name}`;
-    $id('mdNextTitle').textContent = allDone ? 'Repasá o medí tu velocidad' : `Lección ${nl.n}: ${nl.name}`;
+    $id('mdBlock').textContent = allDone ? 'Curso y cinturones completos 🥋' : 'Tu próximo entrenamiento';
+    $id('mdNextTitle').innerHTML = allDone ? 'Repasá o medí tu velocidad' : `Lección ${nl.n} · ${nl.type === 'keys' ? [...nl.keys].map(k => `<kbd>${esc(k.toUpperCase())}</kbd>`).join(' ') : esc(nl.name)}`;
     $id('mdBar').style.width = Math.round(block.done / block.total * 100) + '%';
-    $id('mdCount').textContent = `${block.done} de ${block.total} del bloque` + (inBelt || baseAll ? '' : ` · ${baseDone} de ${LESSONS.length} del curso`);
-    renderMarks();
+    $id('mdCount').textContent = `${block.name.replace(/^./, c => c.toUpperCase())} · ${block.done} de ${block.total}`;
+    renderTiles2(); renderMarks();
     renderBattles();
   }
   const bars = (vals, lower) => {
@@ -136,6 +157,20 @@
   };
   const evolution = (vals, unit, lower) => vals.length < 2 ? (vals.length ? 'Una sola vez: jugá de nuevo para ver tu evolución.' : '')
     : `${vals.length} intentos · el primero: ${vals[0]} ${unit}` + ((lower ? vals.at(-1) < vals[0] : vals.at(-1) > vals[0]) ? ` · el último: ${vals.at(-1)} ${unit}` : '');
+  // Three marks at a glance (speed, IQ ninja and the best quick game); "Ver todas" opens each one with its evolution
+  function renderTiles2() {
+    const ppm = tnApp.bestPpm(), iq = tnApp.bestIq(), best = Desafios.bests(), tests = tnApp.speedTests(), runs = tnApp.iqRuns();
+    const first = tests[0], up = first && ppm && tests.every(t => t.accents === first.accents) ? ppm - first.ppm : 0;
+    const gid = ['chimpance', 'numeros', 'visual', 'reflejos', 'celu'].find(id => best[id] != null), g = gid && Desafios.GAMES[gid];
+    const tile = (key, label, value, unit, foot) => `<button class="nv-tile" type="button" data-tile="${key}"><span>${label}</span><b>${value ?? '—'}${value != null && unit ? `<small> ${unit}</small>` : ''}</b><em>${foot}</em></button>`;
+    $id('mdTiles').innerHTML = tile('speed', 'Velocidad', ppm, 'ppm', !ppm ? 'Medila en 1 min' : up > 0 ? `↑ ${up} desde la primera` : `${tests.length} ${tests.length === 1 ? 'medición' : 'mediciones'}`)
+      + tile('iq', 'IQ ninja', iq, '', iq ? `${runs.length} ${runs.length === 1 ? 'intento' : 'intentos'}` : 'Desafío de 5 min')
+      + tile(gid || 'chimpance', g ? g.name.replace('Test del ', '').replace(/^./, c => c.toUpperCase()) : 'Desafíos', g ? best[gid] : null, g ? g.unit : '', g ? 'tu mejor marca' : 'Jugá uno');
+    $id('mdTiles').querySelectorAll('[data-tile]').forEach(b => b.onclick = () => {
+      const k = b.dataset.tile; capture('dojo_beat', { mark: k, from: 'tile' });
+      if (k === 'speed') tnApp.start('test'); else if (k === 'iq') tnApp.startQuiz('ninja'); else openGame(k, { from: 'dojo' });
+    });
+  }
   function renderMarks() {
     const ppm = tnApp.bestPpm(), iq = tnApp.bestIq(), best = Desafios.bests(), hist = Desafios.history();
     const speeds = tnApp.speedTests().map(t => t.ppm), iqs = tnApp.iqRuns().map(r => r.iq).filter(Boolean);
@@ -179,13 +214,16 @@
         done.push({ game, res, html: `<b>${esc(from)}</b> ${target} vs <b>vos</b> ${my} ${g.unit}`, rival: { id, from, score: target } });
       }
     }
-    const RES = { won: '🏆 Ganaste', lost: 'Perdiste', tie: '🤝 Empate' };
-    const row = (it, i, kind) => `<li class="nv-battle ${it.res || ''}"><div><span class="nv-battle-game">${Desafios.GAMES[it.game].name}${it.res ? ` · <b>${RES[it.res]}</b>` : ''}</span><span>${it.html}</span></div>${kind === 'turn' ? `<button class="btn primary" data-play="${i}">Jugar</button>` : kind === 'done' ? `<button class="btn" data-revenge="${i}">Revancha</button>` : ''}</li>`;
+    const RES = { won: '🏆 Ganaste', lost: 'Perdiste', tie: '🤝 Empate' }, KIND = { turn: 'Tu turno', wait: 'Esperando rival', done: '' };
+    const row = (it, i, kind) => `<li class="nv-battle ${it.res || ''}"><div><span class="nv-battle-game">${KIND[kind] ? KIND[kind] + ' · ' : ''}${Desafios.GAMES[it.game].name}${it.res ? ` · <b>${RES[it.res]}</b>` : ''}</span><span>${it.html}</span></div>${kind === 'turn' ? `<button class="btn primary" data-play="${i}">Jugar</button>` : kind === 'done' ? `<button class="btn" data-revenge="${i}">Revancha</button>` : ''}</li>`;
     const list = (title, arr, kind) => arr.length ? `<section class="nv-blist"><h3>${title} <span>${arr.length}</span></h3><ul>${arr.map((it, i) => row(it, i, kind)).join('')}</ul></section>` : '';
-    $id('mdBattles').innerHTML = turn.length + waiting.length + done.length
-      ? list('Tu turno', turn, 'turn') + list('Esperando rival', waiting, 'wait') + list('Finalizadas', done, 'done')
-      : `<div class="nv-card nv-bempty"><span aria-hidden="true">⚔️</span><p>Tu primera batalla empieza con una marca. Jugá un desafío corto y compartilo con alguien que creas que puede superarte.</p><button class="btn primary" id="mdFirstBattle">Jugar y desafiar</button></div>`;
-    $id('mdNewBattle').parentElement.hidden = !(turn.length + waiting.length + done.length);
+    const total = turn.length + waiting.length + done.length, all = $id('mdBattlesMore').getAttribute('aria-expanded') === 'true';
+    const flat = [...turn.map((it, i) => row(it, i, 'turn')), ...done.map((it, i) => row(it, i, 'done')), ...waiting.map((it, i) => row(it, i, 'wait'))];
+    $id('mdBattles').innerHTML = !total
+      ? `<div class="nv-card nv-bempty"><p>⚔️ Tu primera batalla empieza con una marca. Jugá un desafío corto y compartilo con alguien que creas que puede superarte.</p><button class="btn primary" id="mdFirstBattle">Jugar y desafiar</button></div>`
+      : all ? list('Tu turno', turn, 'turn') + list('Esperando rival', waiting, 'wait') + list('Finalizadas', done, 'done') : `<ul class="nv-bflat">${flat.slice(0, 3).join('')}</ul>`;
+    $id('mdBattlesMore').hidden = total <= 3; $id('mdBattlesMore').textContent = all ? 'Ver menos' : `Ver todas (${total})`;
+    $id('mdNewBattleRow').hidden = !total;
     $id('mdTurnCount').hidden = !turn.length; $id('mdTurnCount').textContent = turn.length;
     if ($id('mdFirstBattle')) $id('mdFirstBattle').onclick = newBattle;
     $id('mdBattles').querySelectorAll('[data-play]').forEach(b => b.onclick = () => { const it = turn[b.dataset.play]; capture('battle_play_turn', { game: it.game }); openGame(it.game, { battle: it.battle }); });
@@ -195,6 +233,9 @@
     });
   }
   function newBattle() { capture('battle_new', { from: 'dojo' }); goTo('desafios'); }
+
+  // Ninja mental: what follows and the four tracks; a track opens its sessions, and "Todas las pistas" goes back
+  function setPista(on) { anchor('mente').classList.toggle('nv-pista', on); if (on) scrollTo({ top: 0 }); }
 
   // Progress checks of the course: an optional starting point before lesson 1, a short control at lesson 6, a
   // summary (and an optional measurement) at lesson 10, one at the end of each block, and the final measurement at
@@ -272,6 +313,7 @@
   }
   // What app.js reports when a lesson or a measurement ends: the result of the check that started it
   function typed(r) {
+    announceCheck(r);
     const C = ctl(), when = Date.now();
     if (r.id === 'control' && C.pending) { C.results[C.pending] = { ...r, date: when }; C.show = C.pending; C.pending = null; }
     else if (r.id === 'test' && C.measure) {
@@ -279,6 +321,19 @@
       const cmp = compare(C.results[C.show]); capture('checkpoint_result', { id: C.show, ppm: r.ppm, acc: r.acc, compared: cmp.compared, diff: cmp.diff ?? null });
     } else return;
     saveCtl(C);
+  }
+
+  // On a lesson's result, the next check is announced when it is one or two lessons away
+  function announceCheck(r) {
+    if (!tnApp.LESSONS.some(l => l.id === r.id)) return;
+    const C = ctl(), done = courseStats().done, m = [[6, 'l6', 'un desafío corto para ver cómo venís'], [10, 'l10', 'un resumen de cómo venís'], [tnApp.LESSONS.length, 'final', 'la medición final del curso']].find(([n, id]) => n - done >= 1 && n - done <= 2 && !C.seen[id]);
+    if (!m) return;
+    setTimeout(() => {
+      const res = $id('result'); if (!res || res.querySelector('.nv-next-check')) return;
+      const box = document.createElement('aside'); box.className = 'nv-next-check';
+      box.innerHTML = `<b>🎯 Control de progreso</b><span>${m[0] - done === 1 ? 'En 1 lección' : `En ${m[0] - done} lecciones`}: ${m[2]}.</span>`;
+      (res.querySelector('.actions') || res).after(box);
+    }, 0);
   }
 
   // "Agregar a mi inicio" (PWA: manifest.webmanifest + sw.js): Templo Ninja with its icon on the phone's home
@@ -356,7 +411,7 @@
   function renderBridge() {
     const on = touchOnly();
     $id('nvBridge').hidden = !on;
-    $id('nvHeroSpeed').innerHTML = on ? '⚡ Desafío de celular <small>30 s</small>' : '⌨ Medir mi velocidad <small>1 min</small>';
+    $id('nvHeroSpeed').innerHTML = on ? '⚡ Mi velocidad en el celu' : '⚡ Mi velocidad';
     $id('nvHeroSave').hidden = !on;
     if (on && !renderBridge.seen) { renderBridge.seen = true; capture('mobile_bridge_shown'); }
   }
@@ -384,7 +439,7 @@
     cog: () => { if (window.tnApp) goTo('mente', { sub: 'entrenar' }); else returnTo = { sec: 'mente', sub: 'entrenar' }; },
     home: () => {
       renderNext();
-      if (returnTo && window.tnApp) { const r = returnTo; returnTo = null; requestAnimationFrame(() => { goTo(r.sec, { sub: r.sub, smooth: false }); if (activityDone) maybeNudge('activity'); }); }
+      if (returnTo && window.tnApp) { const r = returnTo; returnTo = null; requestAnimationFrame(() => { goTo(r.sec, { sub: r.sub }); if (activityDone) maybeNudge('activity'); }); }
     },
   };
 
@@ -404,6 +459,26 @@
     $id('nvGameSim').onclick = () => { capture('quick_start', { kind: 'sim' }); tnApp.startQuiz('sim'); };
     $id('tkContinue').onclick = $id('mdContinue').onclick = () => tnApp.start(tnApp.nextLesson());
     $id('mdNewBattle').onclick = newBattle;
+    // The start screen: the two paths, or a minute to try
+    $id('nvGoTeclado').onclick = () => { capture('path_chosen', { path: 'teclado' }); goTo('teclado'); };
+    $id('nvGoMente').onclick = () => { capture('path_chosen', { path: 'mente' }); goTo('mente'); };
+    $id('nvHeroQuick').onclick = () => { capture('quick_start', { kind: 'game' }); openGame('chimpance', { from: 'inicio' }); };
+    // Mi dojo: the avatar takes you there (signed in); its gear opens the account's settings
+    const acct = $id('acctBtn'), openAccount = acct.onclick;
+    acct.onclick = e => {
+      if (!tnApp.userName()) return openAccount.call(acct, e);
+      if (tnApp.mode() !== 'home' || !$id('game').hidden) { Desafios.close(); tnApp.goHome(); }
+      goTo('dojo', { force: true }); capture('nav_section', { section: 'dojo', from: 'avatar' });
+    };
+    $id('mdSettings').onclick = e => { capture('account_settings_opened', { from: 'dojo' }); openAccount.call(acct, e); };
+    $id('homeBtn').addEventListener('click', () => goTo('dojo'));
+    $id('mdMarksMore').onclick = () => { const open = $id('mdMarks').hidden; $id('mdMarks').hidden = !open; $id('mdMarksMore').setAttribute('aria-expanded', String(open)); $id('mdMarksMore').textContent = open ? 'Ocultar' : 'Ver todas'; };
+    $id('mdBattlesMore').onclick = () => { $id('mdBattlesMore').setAttribute('aria-expanded', String($id('mdBattlesMore').getAttribute('aria-expanded') !== 'true')); renderBattles(true); };
+    $id('rankMore').onclick = () => showRanking(!$id('ranking').classList.contains('full'));
+    // Teclado: the whole path, on request
+    $id('tkAll').onclick = () => { const open = !document.body.classList.contains('nv-all-path'); document.body.classList.toggle('nv-all-path', open); $id('tkAll').setAttribute('aria-expanded', String(open)); $id('tkAll').textContent = open ? 'Ocultar el camino ▴' : 'Ver todo el camino ▾'; capture('path_opened', { open }); };
+    $id('cogTracks').addEventListener('click', e => { if (e.target.closest('button')) setPista(true); });
+    $id('cogBackList').onclick = () => setPista(false);
 
     // The bridge from the phone
     $id('nvCelu').onclick = () => { capture('mobile_bridge_action', { action: 'celu' }); openGame('celu'); };
@@ -441,7 +516,7 @@
     if (battleId) {
       q.delete('batalla'); history.replaceState(null, '', location.pathname + (q.toString() ? '?' + q : '') + location.hash);
       capture('battle_link_opened');
-      const gone = text => { $id('mdMsg').textContent = text; $id('mdMsg').hidden = false; goTo('dojo', { sub: 'batallas', smooth: false }); };
+      const gone = text => { $id('mdMsg').textContent = text; $id('mdMsg').hidden = false; goTo('dojo', { force: true }); $id('mdBattlesBox').scrollIntoView(); };
       Desafios.loadBattle(battleId).then(b => {
         if (!b) return gone('Esa batalla ya no existe (duran 60 días). Jugá un desafío y mandá la tuya.');
         if (b.role === 'sent' || Desafios.known().some(r => r.id === b.id && r.role === 'sent')) return gone('Esa batalla la creaste vos: cuando tu amigo la juegue, la ves acá.');
@@ -461,20 +536,14 @@
     };
     paintTheme();
 
-    // The section on screen lights up in the header and the tab bar
-    const seen = new IntersectionObserver(entries => {
-      if (tnApp.mode() !== 'home' || performance.now() < holdMark) return;
-      const vis = entries.filter(e => e.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
-      if (vis) markCurrent(vis.target.dataset.viewOf);
-    }, { rootMargin: '-35% 0px -60% 0px' });
-    SECTIONS.forEach(s => anchor(s) && seen.observe(anchor(s)));
     // The paths are drawn again when something changes (a track, an account): keep them compact
     for (const p of [$id('path'), $id('cogPath')]) new MutationObserver(fold).observe(p, { childList: true });
 
     $id('gameBack').onclick = () => Desafios.close();
     renderTiles(); renderNext(); renderBridge();
     const linkedGame = gameOf(location.hash);
-    if (tnApp.mode() === 'home' && !battleId) { if (linkedGame) openGame(linkedGame); else if (location.hash) goTo(secOf(location.hash), { smooth: false }); else markCurrent('inicio'); }
+    if (tnApp.mode() === 'home' && !battleId) { if (linkedGame) { goTo('desafios', { scroll: false }); openGame(linkedGame); } else goTo(location.hash ? secOf(location.hash) : 'dojo', { force: location.hash === '#dojo' }); }
+    else goTo('dojo', { scroll: false });
     addEventListener('hashchange', () => { if (tnApp.mode() !== 'home' || !$id('game').hidden) return; if (gameOf(location.hash)) openGame(gameOf(location.hash)); else goTo(secOf(location.hash)); });
   });
 })();
