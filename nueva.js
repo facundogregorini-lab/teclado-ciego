@@ -72,6 +72,7 @@
     $id('game').hidden = true;
     tnApp.goHome(); renderTiles(); renderDojo(); renderBattles(true);
     goTo(gameFrom, { sub: gameSub, smooth: false });
+    if (activityDone) maybeNudge('activity');
   }
 
   // "Seguí acá": the next lesson (of the course, then of the current belt), how far it goes and its keys. Until
@@ -98,7 +99,7 @@
     document.body.classList.toggle('nv-base-done', baseAll);
     const white = $id('tkBelts').firstElementChild; // finished, the course hides; its belt shows it again
     if (baseAll) { white.tabIndex = 0; white.setAttribute('role', 'button'); white.title = 'Ver las lecciones del curso'; white.onclick = white.onkeydown = e => { if (e.type === 'keydown' && e.key !== 'Enter') return; document.body.classList.toggle('nv-show-base'); }; }
-    fold(); renderDojo();
+    fold(); renderDojo(); renderCheck();
   }
 
   // Mi dojo: who you are and your next goal; the training in its current block (not the whole mountain of
@@ -195,6 +196,139 @@
   }
   function newBattle() { capture('battle_new', { from: 'dojo' }); goTo('desafios'); }
 
+  // Progress checks of the course: an optional starting point before lesson 1, a short control at lesson 6, a
+  // summary (and an optional measurement) at lesson 10, one at the end of each block, and the final measurement at
+  // 26. Speed, precision and keys mastered; a measurement is compared only with an equivalent one (the same
+  // 1-minute test with the same accents setting), and a drop is said as it is: no improvement is made up.
+  const CKEY = 'tn-controles';
+  const ctl = () => { try { const c = JSON.parse(localStorage.getItem(CKEY)) || {}; return { seen: {}, results: {}, ...c }; } catch { return { seen: {}, results: {} }; } };
+  const saveCtl = c => { try { localStorage.setItem(CKEY, JSON.stringify(c)); } catch {} };
+  function courseStats() {
+    const { LESSONS, state: S } = tnApp, passed = LESSONS.filter(l => S.lessons[l.id]?.stars >= 1);
+    const keys = new Set(passed.filter(l => l.type === 'keys').flatMap(l => [...l.keys]));
+    const marks = passed.map(l => S.lessons[l.id]).filter(m => Number.isFinite(m.ppm) && Number.isFinite(m.acc));
+    const avg = k => marks.length ? Math.round(marks.reduce((a, m) => a + m[k], 0) / marks.length) : null;
+    return { done: passed.length, total: LESSONS.length, keys: keys.size, ppm: avg('ppm'), acc: avg('acc') };
+  }
+  const methodAs = id => tnApp.METHODS.find(m => m.id === id)?.as || '';
+  // A measurement against the starting point: only the same test with the same accents setting counts
+  function compare(r) {
+    const base = tnApp.speedTests()[0];
+    if (!base || (base.ppm === r.ppm && base.acc === r.acc && Math.abs(base.date - r.date) < 5000)) return { text: 'Es tu primera medición: queda como tu punto de partida.', compared: false };
+    if (base.accents !== r.accents) return { text: 'No la comparamos con tu punto de partida: cambiaste la configuración de las tildes, así que no es la misma prueba.', compared: false };
+    const d = r.ppm - base.ppm, both = `Al empezar: ${base.ppm} ppm ${methodAs(base.method)} (${base.acc}% de precisión). Hoy: ${r.ppm} ppm ${methodAs(r.method)} (${r.acc}%).`;
+    return { compared: true, diff: d, text: d > 0 ? `+${d} palabras por minuto desde tu punto de partida. ${both}` : d === 0 ? `La misma velocidad que al empezar. ${both}` : `${-d} palabras por minuto menos que al empezar: es normal mientras cambiás de método, primero llega la precisión. ${both}` };
+  }
+  const chips = (st, r) => [r ? `⚡ <b>${r.ppm}</b> ppm` : st.ppm != null ? `⚡ <b>${st.ppm}</b> ppm promedio` : '', r ? `🎯 <b>${r.acc}%</b> de precisión` : st.acc != null ? `🎯 <b>${st.acc}%</b> de precisión` : '', `⌨ <b>${st.keys}</b> teclas dominadas`, `📘 <b>${st.done}</b> de ${st.total} lecciones`].filter(Boolean).map(c => `<span>${c}</span>`).join('');
+  let checkShown = '';
+  function renderCheck() {
+    const box = $id('nvCheck'); if (!box || !window.tnApp) return;
+    const C = ctl(), st = courseStats(), tests = tnApp.speedTests(), { GROUPS, LESSONS, state: S } = tnApp;
+    const btn = (label, action, primary) => ({ label, action, primary });
+    let card = null;
+    if (C.show && C.results[C.show]) {
+      const r = C.results[C.show], isControl = r.id === 'control', cmp = isControl ? null : compare(r);
+      card = { id: C.show + '-result', eyebrow: isControl ? 'Control de la lección 6' : C.show === 'final' ? 'Medición final' : C.show === 'base' ? 'Tu punto de partida' : 'Medición de la lección 10',
+        title: isControl ? `${r.ppm} palabras por minuto con ${r.acc}% de precisión` : C.show === 'base' ? `Arrancás en ${r.ppm} palabras por minuto` : `${r.ppm} palabras por minuto con ${r.acc}% de precisión`,
+        text: isControl ? 'Un control corto con todas las teclas que aprendiste. Seguí con la próxima lección: la precisión primero, la velocidad llega sola.' : cmp.text,
+        stats: chips(st, r), actions: [btn('Seguir →', 'ack', true)] };
+    } else if (st.done === 0 && !tests.length && !C.seen.base) {
+      card = { id: 'base', eyebrow: 'Antes de empezar · opcional', title: 'Medí tu punto de partida', text: 'Un minuto escribiendo como escribís hoy. Al terminar el curso repetís la misma prueba y ves cuánto cambiaste, con números reales.',
+        actions: [btn('⏱ Medir cómo escribo hoy · 1 min', 'measure', true), btn('Empezar sin medir', 'skip')] };
+    } else if (st.done >= st.total && !C.seen.final) {
+      card = { id: 'final', eyebrow: '¡Curso completo! · Medición final', title: 'Repetí la prueba del principio', text: tests.length ? 'El mismo test de 1 minuto, ahora a ciegas. Lo comparamos con tu punto de partida solo si es la misma prueba.' : 'El test de 1 minuto: como no mediste al empezar, queda como tu marca de referencia.',
+        stats: chips(st), actions: [btn('⏱ Hacer la medición final · 1 min', 'measure', true), btn('Ahora no', 'skip')] };
+    } else if (st.done >= 10 && st.done < st.total && !C.seen.l10) {
+      card = { id: 'l10', eyebrow: 'Control de progreso · lección 10', title: `Vas ${st.done} de ${st.total}: te faltan ${st.total - st.done}`, text: 'Así venís en las lecciones. Si querés, medí tu velocidad en el test de 1 minuto (opcional).',
+        stats: chips(st), actions: [btn('⏱ Medir mi velocidad · 1 min', 'measure', true), btn('Seguir con las lecciones', 'skip')] };
+    } else if (st.done >= 6 && st.done < 10 && !C.seen.l6) {
+      card = { id: 'l6', eyebrow: 'Control de progreso · lección 6', title: 'Un desafío corto con todo lo que aprendiste', text: 'Unas palabras con las teclas que ya sabés, sin mirar. No cambia tus estrellas: es para ver cómo venís.',
+        stats: chips(st), actions: [btn('Hacer el control', 'control', true), btn('Ahora no', 'skip')] };
+    } else {
+      // the block of the latest lesson passed, when it is complete (the first one is the control at lesson 6)
+      const last = LESSONS.filter(l => S.lessons[l.id]?.stars >= 1).at(-1), gi = last ? last.g : -1;
+      if (gi > 0 && st.done < st.total && !C.seen['g' + gi] && LESSONS.filter(l => l.g === gi).every(l => S.lessons[l.id]?.stars >= 1)) {
+        const ls = LESSONS.filter(l => l.g === gi), ms = ls.map(l => S.lessons[l.id]).filter(m => Number.isFinite(m.ppm));
+        const bppm = ms.length ? Math.round(ms.reduce((a, m) => a + m.ppm, 0) / ms.length) : null, bacc = ms.length ? Math.round(ms.reduce((a, m) => a + m.acc, 0) / ms.length) : null;
+        card = { id: 'g' + gi, eyebrow: 'Bloque completo', title: `«${GROUPS[gi].name}»: listo ✓`, text: `${ls.length} lecciones${bppm != null ? `, con ${bppm} palabras por minuto y ${bacc}% de precisión en promedio` : ''}. Vas ${st.done} de ${st.total}.`,
+          stats: chips(st), actions: [btn('Seguir →', 'skip', true)] };
+      }
+    }
+    box.hidden = !card;
+    if (!card) return;
+    $id('nvCheckEyebrow').textContent = card.eyebrow; $id('nvCheckTitle').textContent = card.title; $id('nvCheckText').textContent = card.text;
+    $id('nvCheckStats').innerHTML = card.stats || ''; $id('nvCheckStats').hidden = !card.stats;
+    $id('nvCheckActions').innerHTML = card.actions.map((a, i) => `<button class="btn${a.primary ? ' primary' : ''}" type="button" data-check="${i}">${a.label}</button>`).join('');
+    $id('nvCheckActions').querySelectorAll('[data-check]').forEach(b => b.onclick = () => checkAction(card, card.actions[b.dataset.check].action));
+    if (checkShown !== card.id) { checkShown = card.id; capture('checkpoint_shown', { id: card.id }); }
+  }
+  function checkAction(card, action) {
+    const C = ctl(); capture('checkpoint_action', { id: card.id, action });
+    if (action === 'ack') { C.seen[C.show] = 1; if (C.show === 'control') C.seen.l6 = 1; C.show = null; }
+    else if (action === 'skip') C.seen[card.id] = 1;
+    else if (action === 'measure') { C.measure = card.id; saveCtl(C); tnApp.start('test', card.id === 'base' ? 'mirando' : card.id === 'final' ? 'ciegas' : undefined); return; }
+    else if (action === 'control') { C.pending = card.id; saveCtl(C); tnApp.startControl('Control de la lección 6'); return; }
+    saveCtl(C); renderCheck();
+  }
+  // What app.js reports when a lesson or a measurement ends: the result of the check that started it
+  function typed(r) {
+    const C = ctl(), when = Date.now();
+    if (r.id === 'control' && C.pending) { C.results[C.pending] = { ...r, date: when }; C.show = C.pending; C.pending = null; }
+    else if (r.id === 'test' && C.measure) {
+      C.results[C.measure] = { ...r, date: when }; C.show = C.measure; C.seen[C.measure] = 1; C.measure = null;
+      const cmp = compare(C.results[C.show]); capture('checkpoint_result', { id: C.show, ppm: r.ppm, acc: r.acc, compared: cmp.compared, diff: cmp.diff ?? null });
+    } else return;
+    saveCtl(C);
+  }
+
+  // "Agregar a mi inicio" (PWA: manifest.webmanifest + sw.js): Templo Ninja with its icon on the phone's home
+  // screen, opening Mi dojo. Android (with a browser that offers it) asks for the confirmation; on an iPhone, or
+  // inside the browser of Instagram or Facebook, a short guide. A permanent card in Mi dojo, and an invitation
+  // after an activity or on coming back another day; "Ahora no" keeps it quiet for seven days.
+  const UA = navigator.userAgent;
+  const standalone = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  const isIOS = () => /iPhone|iPad|iPod/.test(UA) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const isAndroid = () => /Android/i.test(UA);
+  const inApp = () => /Instagram|FBAN|FBAV|FB_IAB|Line\/|TikTok|musical_ly|Bytedance|LinkedInApp/i.test(UA);
+  const osName = () => isIOS() ? 'ios' : isAndroid() ? 'android' : 'other';
+  let installEvt = null, nudged = false;
+  addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; renderInstall(); });
+  addEventListener('appinstalled', () => { store('tn-installed', '1'); capture('pwa_installed', { os: osName() }); installEvt = null; renderInstall(); $id('nvNudge').hidden = true; });
+  const canOffer = () => !standalone() && store('tn-installed') !== '1' && !!(installEvt || isIOS() || isAndroid());
+  function renderInstall() {
+    const card = $id('nvInstall'); if (!card) return;
+    const was = card.hidden; card.hidden = !canOffer();
+    if (was && !card.hidden) capture('pwa_card_shown', { os: osName() });
+  }
+  async function install(from) {
+    capture('pwa_install_click', { from, os: osName(), prompt: !!installEvt && !inApp(), in_app: inApp() });
+    if (installEvt && !inApp()) {
+      const e = installEvt; installEvt = null;
+      try { e.prompt(); const { outcome } = await e.userChoice; capture('pwa_prompt_result', { outcome }); if (outcome === 'accepted') store('tn-installed', '1'); } catch {}
+      renderInstall(); return;
+    }
+    const link = `${location.origin}/nueva#dojo`, ol = items => `<ol class="nv-steps">${items.map(i => `<li>${i}</li>`).join('')}</ol>`;
+    const kind = inApp() ? 'in_app' : isIOS() ? 'ios' : isAndroid() ? 'android' : 'other';
+    $id('nvInstallSteps').innerHTML = kind === 'in_app'
+      ? `<p>Estás en el navegador de otra app (como Instagram o Facebook), que no puede agregarlo a tu inicio. Abrilo en ${isIOS() ? 'Safari' : 'Chrome'}:</p>${ol([`Tocá <b>•••</b> o <b>⋮</b>, arriba a la derecha.`, `Elegí <b>Abrir en el navegador</b> (o <b>Abrir en ${isIOS() ? 'Safari' : 'Chrome'}</b>).`, 'Ahí, en <b>Mi dojo</b>, tocá <b>Agregar a mi inicio</b>.'])}<button class="btn" type="button" id="nvInstallCopy">Copiar el link</button>`
+      : kind === 'ios'
+      ? `${/CriOS|FxiOS|EdgiOS/.test(UA) ? '<p>Si no te aparece la opción, abrí esta página en Safari.</p>' : ''}${ol(['Tocá <b>Compartir</b> <svg class="nv-share-ico" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="el ícono de compartir"><path d="M12 3v12M8 7l4-4 4 4M6 11H5v10h14V11h-1"/></svg> (el cuadrado con la flecha hacia arriba).', 'Bajá y elegí <b>Agregar a inicio</b>.', 'Si aparece <b>Abrir como app web</b>, dejalo activado.', 'Tocá <b>Agregar</b>. Listo: Templo Ninja queda con su ícono.'])}`
+      : kind === 'android'
+      ? ol(['Tocá el menú <b>⋮</b> del navegador.', 'Elegí <b>Instalar app</b> o <b>Agregar a la pantalla de inicio</b>.', 'Confirmá con <b>Instalar</b> o <b>Agregar</b>.'])
+      : ol(['En Chrome o Edge, tocá el ícono de instalar en la barra de direcciones.', 'Confirmá con <b>Instalar</b>.']);
+    $id('nvInstallMsg').textContent = '';
+    if ($id('nvInstallCopy')) $id('nvInstallCopy').onclick = async () => { capture('pwa_link_copied'); try { await navigator.clipboard.writeText(link); $id('nvInstallMsg').textContent = '✓ Link copiado: pegalo en Safari o Chrome.'; } catch { $id('nvInstallMsg').textContent = link; } };
+    capture('pwa_guide_shown', { kind });
+    $id('nvInstallDlg').showModal();
+  }
+  function maybeNudge(reason) {
+    if (nudged || !(isIOS() || isAndroid()) || !canOffer() || tnApp.mode() !== 'home' || !$id('game').hidden) return;
+    if (Date.now() - Number(store('tn-install-snooze') || 0) < 7 * 864e5) return;
+    nudged = true; $id('nvNudge').hidden = false; capture('pwa_nudge_shown', { reason, os: osName() });
+  }
+  const snoozeNudge = () => { store('tn-install-snooze', String(Date.now())); $id('nvNudge').hidden = true; };
+  let activityDone = false;
+
   // On the phone, the groups of a path are compact: the one in progress open, the others one line each.
   function fold() {
     for (const path of [$id('path'), $id('cogPath')]) {
@@ -244,12 +378,13 @@
   // app.js tells where it goes; coming back from a lesson or a session, the page returns to that section.
   let returnTo = null;
   window.tnLayout = {
-    start: l => { returnTo = { sec: 'teclado', sub: l === 'test' ? 'medir' : 'entrenar' }; },
+    start: l => { returnTo = { sec: 'teclado', sub: l === 'test' && !ctl().measure ? 'medir' : 'entrenar' }; },
+    typed: r => { activityDone = true; typed(r); },
     quiz: sess => { returnTo = { sec: 'mente', sub: sess === 'ninja' ? 'desafio' : 'entrenar' }; },
     cog: () => { if (window.tnApp) goTo('mente', { sub: 'entrenar' }); else returnTo = { sec: 'mente', sub: 'entrenar' }; },
     home: () => {
       renderNext();
-      if (returnTo && window.tnApp) { const r = returnTo; returnTo = null; requestAnimationFrame(() => goTo(r.sec, { sub: r.sub, smooth: false })); }
+      if (returnTo && window.tnApp) { const r = returnTo; returnTo = null; requestAnimationFrame(() => { goTo(r.sec, { sub: r.sub, smooth: false }); if (activityDone) maybeNudge('activity'); }); }
     },
   };
 
@@ -279,9 +414,23 @@
     $id('nvMail').onclick = () => saveCourse('mail');
     $id('nvSaveAccount').onclick = () => { capture('mobile_bridge_action', { action: 'account' }); $id('acctBtn').click(); document.querySelector('#authMode [data-v="register"]')?.click(); };
     $id('nvHasKb').onclick = () => { store('tn-has-keyboard', '1'); capture('mobile_bridge_action', { action: 'has_keyboard' }); renderBridge(); renderTiles(); };
+    Desafios.setOnFinish(() => { activityDone = true; });
+    // Agregar a mi inicio
+    $id('nvInstallBtn').onclick = () => install('dojo');
+    $id('nvNudgeYes').onclick = () => { snoozeNudge(); install('nudge'); };
+    $id('nvNudgeNo').onclick = () => { snoozeNudge(); capture('pwa_nudge_dismissed'); };
+    $id('nvInstallClose').onclick = () => $id('nvInstallDlg').close();
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
+    if (standalone()) { store('tn-installed', '1'); capture('pwa_opened', { os: osName() }); window.tn?.people?.({ pwa_installed: true }); }
+    renderInstall();
+    { // coming back another day
+      const today = new Date().toISOString().slice(0, 10); let days = []; try { days = JSON.parse(store('tn-visit-days')) || []; } catch {}
+      if (!days.includes(today)) { days = [...days, today].slice(-30); store('tn-visit-days', JSON.stringify(days)); if (days.length >= 2) setTimeout(() => maybeNudge('return'), 2500); }
+    }
     Desafios.setCta('celu', '💻 Guardarme el curso para la compu', () => { Desafios.close(); openSave(); });
     // Arriving on the computer from the link saved on the phone
     const q = new URLSearchParams(location.search);
+    if (q.has('app')) { q.delete('app'); history.replaceState(null, '', location.pathname + (q.toString() ? '?' + q : '') + location.hash); }
     if (q.get('desde') === 'celu') {
       q.delete('desde'); history.replaceState(null, '', location.pathname + (q.toString() ? '?' + q : '') + location.hash);
       if (!touchOnly()) { capture('continued_from_phone'); window.tn?.people?.({ came_from_phone: true }); $id('nvWelcome').hidden = false; }

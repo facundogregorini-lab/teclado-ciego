@@ -50,6 +50,7 @@ window.Desafios = (() => {
 
   let cur = null, timers = [], keyHandler = null, onExit = () => {}, lastAcc = 100, battle = null;
   const CTA = {}; // an extra button for a game's result (setCta)
+  let onFinish = null; // told of every finished game (setOnFinish)
   const later = (fn, ms) => { const t = setTimeout(fn, ms); timers.push(t); return t; };
   const clear = () => { timers.forEach(clearTimeout); timers = []; if (keyHandler) removeEventListener('keydown', keyHandler); keyHandler = null; };
   const stage = () => $id('gameStage');
@@ -89,6 +90,7 @@ window.Desafios = (() => {
     clear();
     const g = GAMES[cur], { best, record } = saveBest(cur, score, g.lower);
     capture('game_completed', { game: cur, score, record, battle: !!battle });
+    try { onFinish?.(cur, score); } catch {}
     if (battle) return battleResult(score);
     stage().className = 'gm-stage';
     stage().innerHTML = `<div class="gm-result"><span class="eyebrow">Tu resultado</span><div class="gm-score">${score}<small> ${g.unit}</small></div>
@@ -291,6 +293,7 @@ window.Desafios = (() => {
   };
 
   const setCta = (id, label, fn) => { CTA[id] = { label, fn }; };
+  const setOnFinish = fn => { onFinish = fn; };
   // The battles this browser knows, with their latest state from the server (and the account's, when signed in)
   async function battles() {
     const mine = known(), ids = [...new Set(mine.map(r => r.id))];
@@ -299,5 +302,5 @@ window.Desafios = (() => {
     return { mine, remote };
   }
   const loadBattle = id => api('GET', null, '?ids=' + encodeURIComponent(id)).then(r => r.battles?.[0] || null);
-  return { open, close, setCta, dare, battles, loadBattle, known, GAMES, bests, history };
+  return { open, close, setCta, setOnFinish, dare, battles, loadBattle, known, GAMES, bests, history };
 })();
