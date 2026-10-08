@@ -29,6 +29,7 @@
       <a href="#" data-go="inicio">Inicio</a>
       <a href="#teclado" id="tcCta" data-go="teclado">Teclado</a>
       <a href="#ninja" id="cogCta" data-go="mente">Mente</a>
+      <a href="#desafios" data-go="desafios">Desafíos</a>
       <a href="#ranking" data-go="ranking">Ranking</a>
     </nav>
     <div class="nv-right">
@@ -55,6 +56,7 @@
             <button class="btn primary" id="nvHeroSpeed">⌨ Medir mi velocidad <small>1 min</small></button>
             <button class="btn" id="nvHeroIq">◎ Desafío IQ ninja <small>5 min</small></button>
           </div>
+          <button class="linkbtn nv-hero-save" id="nvHeroSave" type="button" hidden>💻 ¿Querés aprender a escribir con los 10 dedos? Guardate el curso para la compu →</button>
           <ul class="nv-trust"><li><b>Gratis</b> para empezar</li><li>Sin descargar nada</li><li>Celu o compu</li></ul>
           <span class="plan-note" id="planNote" hidden></span>
         </div>
@@ -79,22 +81,6 @@
           <div class="actions"><button class="btn primary" id="scNinja">Empezar a entrenar →</button><button class="btn" id="scMax">Desafío de 5 minutos</button></div>
         </article>
       </section>
-      <section class="nv-quick" aria-labelledby="quickTitle">
-        <div class="nv-sh"><div><span class="eyebrow">Desafíos rápidos · gratis</span><h2 id="quickTitle">Probate en pocos minutos</h2></div></div>
-        <div class="nv-games">
-          <button class="nv-game" id="nvGameIq"><span class="nv-vis"><span class="nv-vis-txt">IQ <i>?</i></span></span><b>Desafío IQ ninja</b><span>Figuras, números e inglés · 5 min</span></button>
-          <button class="nv-game" id="nvGameSim"><span class="nv-vis"><span class="nv-vis-txt">11<small>/11</small></span></span><b>Simulacro de entrevista</b><span>Como el día del test · 11 min</span></button>
-          <span data-games hidden></span>
-        </div>
-      </section>
-      <section class="nv-duo">
-        <div class="nv-card nv-why"><span class="eyebrow">Por qué funciona</span>
-          <div><i>✓</i><div><b>10 minutos por día</b><span>Sesiones cortas que entran en cualquier rato.</span></div></div>
-          <div><i>✓</i><div><b>Te explica cada error</b><span>Cada ejercicio trae su técnica y su explicación.</span></div></div>
-          <div><i>✓</i><div><b>Medís tu avance</b><span>Velocidad, precisión e IQ ninja, con tu evolución.</span></div></div>
-        </div>
-        <div class="nv-card nv-rank-teaser"><span class="eyebrow">Ranking</span><h3>¿Quién escribe más rápido?</h3><p>Medite, entrá con tu cuenta y aparecé en el ranking. Los rivales 🤖 son bots de práctica, para que siempre tengas a quién superar.</p><a class="btn" href="#ranking" data-go="ranking">Ver el ranking →</a></div>
-      </section>
     </div>
 
     <!-- ============ TECLADO ============ -->
@@ -110,13 +96,26 @@
         <button role="tab" data-sub="ajustes" aria-selected="false">Ajustes</button>
       </div>
       <div class="nv-sub" data-sub-of="entrenar">
+        <section class="nv-card nv-welcome" id="nvWelcome" hidden role="status"><b>¡Hola de nuevo! 💻</b> Acá seguís el curso con el teclado de la compu: apoyá los índices en la F y la J y tocá Empezar.</section>
+        <section class="nv-card nv-bridge" id="nvBridge" hidden aria-labelledby="nvBridgeTitle">
+          <span class="eyebrow">Estás en el celular</span>
+          <h2 id="nvBridgeTitle">Para aprender con los 10 dedos hace falta un teclado físico</h2>
+          <p>El curso se hace en una compu (o con un teclado conectado). Mientras tanto, probá tu velocidad en el celu o guardate el curso para seguir en la compu.</p>
+          <div class="actions"><button class="btn primary" id="nvCelu">⚡ Desafío de celular <small>30 s</small></button><button class="btn" id="nvSave">💻 Guardarme el curso para la compu</button></div>
+          <div class="nv-save" id="nvSavePanel" hidden>
+            <div class="actions"><button class="btn" id="nvShare">Compartir…</button><button class="btn" id="nvWa">WhatsApp</button><button class="btn" id="nvMail">Mail</button><button class="btn" id="nvCopy">Copiar el link</button></div>
+            <p class="nv-save-msg" id="nvSaveMsg" role="status"></p>
+            <p class="nv-save-acct">Con una cuenta gratis, lo que practiques te espera en la compu. <button class="linkbtn" id="nvSaveAccount" type="button">Crear mi cuenta</button></p>
+          </div>
+          <p class="nv-bridge-more"><button class="linkbtn" id="nvHasKb" type="button">Tengo teclado físico</button> · <a href="#ninja" data-go="mente">Ninja mental se practica bien en el celu →</a></p>
+        </section>
         <section class="nv-next" aria-labelledby="tkNextTitle">
           <div><span class="eyebrow nv-acc" id="tkNextEyebrow">Seguí acá</span><h2 id="tkNextTitle"></h2><p id="tkNextDesc"></p>
             <div class="nv-prog"><div class="nv-bar"><i id="tkBar"></i></div><span id="tkCount"></span></div>
             <button class="btn primary" id="tkContinue">Continuar →</button></div>
           <div class="nv-keys" id="tkKeys" aria-hidden="true"></div>
         </section>
-        <section class="nv-card nv-belts" aria-labelledby="tkBeltsTitle"><div class="nv-sh"><div><span class="eyebrow">Tu camino</span><h2 id="tkBeltsTitle">Curso base y cinturones</h2></div></div>
+        <section class="nv-card nv-belts" id="tkBeltsBox" hidden aria-labelledby="tkBeltsTitle"><div class="nv-sh"><div><span class="eyebrow">Tu camino</span><h2 id="tkBeltsTitle">¡Curso completo! Seguí con los cinturones</h2></div></div>
           <ol class="nv-beltrow" id="tkBelts"></ol></section>
         <section class="progress-summary" aria-label="Tu progreso">
       <div class="summary-intro"><span class="eyebrow">PASO A PASO</span><p>Cada tecla cuenta.</p></div>
@@ -205,7 +204,6 @@
       <div class="nv-tabs" role="tablist" aria-label="Ninja mental">
         <button role="tab" data-sub="entrenar" aria-selected="true">Entrenar</button>
         <button role="tab" data-sub="desafio" aria-selected="false">Desafío de 5 minutos</button>
-        <button role="tab" data-sub="rapidos" aria-selected="false">Desafíos rápidos</button>
         <a class="nv-tab-link" href="/profesional">Preparación por empresa ↗</a>
       </div>
       <div class="nv-sub" data-sub-of="entrenar">
@@ -261,10 +259,23 @@
       </div>
     </section>
       </div>
-      <div class="nv-sub" data-sub-of="rapidos" hidden>
-        <section class="nv-quick" aria-labelledby="quickTitle2"><div class="nv-sh"><div><span class="eyebrow">Un minuto, sin cuenta</span><h2 id="quickTitle2">Memoria y reflejos</h2></div></div>
-          <div class="nv-games"><span data-games hidden></span></div></section>
-      </div>
+    </div>
+
+    <!-- ============ DESAFÍOS RÁPIDOS ============ -->
+    <div class="nv-view" data-view-of="desafios" id="desafios">
+      <section class="nv-quick" aria-labelledby="quickTitle">
+        <div class="nv-sh"><div><span class="eyebrow">Desafíos rápidos · gratis</span><h2 id="quickTitle">Probate en pocos minutos</h2></div></div>
+        <div class="nv-games">
+          <button class="nv-game" id="nvGameIq"><span class="nv-vis"><span class="nv-vis-txt">IQ <i>?</i></span></span><b>Desafío IQ ninja</b><span>Figuras, números e inglés · 5 min</span></button>
+          <button class="nv-game" id="nvGameSim"><span class="nv-vis"><span class="nv-vis-txt">11<small>/11</small></span></span><b>Simulacro de entrevista</b><span>Como el día del test · 11 min</span></button>
+          <span data-games hidden></span>
+        </div>
+      </section>
+      <section class="nv-card nv-why"><span class="eyebrow">Por qué funciona</span>
+          <div><i>✓</i><div><b>10 minutos por día</b><span>Sesiones cortas que entran en cualquier rato.</span></div></div>
+          <div><i>✓</i><div><b>Te explica cada error</b><span>Cada ejercicio trae su técnica y su explicación.</span></div></div>
+          <div><i>✓</i><div><b>Medís tu avance</b><span>Velocidad, precisión e IQ ninja, con tu evolución.</span></div></div>
+      </section>
     </div>
 
     <!-- ============ RANKING ============ -->
@@ -406,6 +417,7 @@
   <a href="#" data-go="inicio"><span aria-hidden="true">⌂</span>Inicio</a>
   <a href="#teclado" data-go="teclado"><span aria-hidden="true">⌨</span>Teclado</a>
   <a href="#ninja" data-go="mente"><span aria-hidden="true">◎</span>Mente</a>
+  <a href="#desafios" data-go="desafios"><span aria-hidden="true">⚡</span>Desafíos</a>
   <a href="#ranking" data-go="ranking"><span aria-hidden="true">★</span>Ranking</a>
 </nav>
 

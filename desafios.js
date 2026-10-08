@@ -24,11 +24,14 @@ window.Desafios = (() => {
       compare: s => `${s >= 10 ? 'Memoria de ninja 🧠' : s >= 8 ? '¡Muy por encima de lo habitual!' : s >= 6 ? 'Bien: en el rango de la mayoría.' : 'Arrancaste. Se entrena agrupando los dígitos de a dos o tres.'} La mayoría de los adultos recuerda entre 5 y 9 dígitos (el famoso "7 ± 2").` },
     chimpance: { name: 'Test del chimpancé', unit: 'números', lead: 'Memorizá dónde está cada número. Tocá el 1: los demás se esconden y tenés que seguir en orden. Tenés 3 vidas.',
       compare: s => `${s >= 9 ? '¡Le ganaste al chimpancé! 🐒' : 'El chimpancé todavía te gana. 🐒'} Ayumu, un chimpancé de la Universidad de Kioto, recordaba 9 números de un vistazo (Inoue y Matsuzawa, 2007).` },
+    celu: { name: 'Desafío de celular', unit: 'ppm', lead: 'Escribí el texto con el teclado del celular, lo más rápido y prolijo que puedas. Tenés 30 segundos: el reloj arranca con la primera letra.',
+      compare: s => `${s >= 40 ? '¡Rapidísimo con el pulgar! 📱' : s >= 25 ? '¡Muy bien para un celular!' : 'Bien: escribir en una pantalla es lento para todos.'} Es tu velocidad en el celular, aparte de la de la compu (tu precisión: ${lastAcc}%). En la compu la mediana es de 40 palabras por minuto, y con el curso aprendés a escribir sin mirar.` },
     visual: { name: 'Memoria visual', unit: 'nivel', lead: 'Se iluminan algunos cuadros: memorizalos y tocá los mismos. Cada nivel suma uno y la grilla crece. Tenés 3 vidas.',
       compare: s => `${s >= 12 ? 'Memoria fotográfica 📸' : s >= 8 ? '¡Muy buena memoria visual!' : 'Buen comienzo.'} Ayuda mirar el dibujo que forman los cuadros, no cada cuadro suelto.` },
   };
 
-  let cur = null, timers = [], keyHandler = null, onExit = () => {};
+  let cur = null, timers = [], keyHandler = null, onExit = () => {}, lastAcc = 100;
+  const CTA = {}; // an extra button for a game's result (setCta)
   const later = (fn, ms) => { const t = setTimeout(fn, ms); timers.push(t); return t; };
   const clear = () => { timers.forEach(clearTimeout); timers = []; if (keyHandler) removeEventListener('keydown', keyHandler); keyHandler = null; };
   const stage = () => $id('gameStage');
@@ -61,7 +64,9 @@ window.Desafios = (() => {
     stage().innerHTML = `<div class="gm-result"><span class="eyebrow">Tu resultado</span><div class="gm-score">${score}<small> ${g.unit}</small></div>
       ${record ? '<p class="gm-record">🏅 ¡Nueva mejor marca!</p>' : `<p class="gm-best">Tu mejor marca: <b>${best} ${g.unit}</b></p>`}
       <p class="gm-compare">${g.compare(score)}</p>
-      <div class="actions"><button class="btn primary" id="gameAgain">Otra vez</button><button class="btn" id="gameShare">Desafiar a un amigo</button><button class="btn" id="gameOut">Más desafíos</button></div></div>`;
+      ${CTA[cur] ? `<div class="actions"><button class="btn primary" id="gameCta">${CTA[cur].label}</button></div>` : ''}
+      <div class="actions"><button class="btn${CTA[cur] ? '' : ' primary'}" id="gameAgain">Otra vez</button><button class="btn" id="gameShare">Desafiar a un amigo</button><button class="btn" id="gameOut">Más desafíos</button></div></div>`;
+    if (CTA[cur]) $id('gameCta').onclick = () => { capture('game_cta', { game: cur }); CTA[cur].fn(); };
     $id('gameAgain').onclick = () => { capture('game_started', { game: cur, again: true }); RUN[cur](); };
     $id('gameOut').onclick = close;
     $id('gameShare').onclick = async () => {
@@ -70,11 +75,39 @@ window.Desafios = (() => {
       if (navigator.share) { try { await navigator.share({ text: shareText, url }); return; } catch {} }
       open_(`https://wa.me/?text=${encodeURIComponent(shareText + ' ' + url)}`);
     };
-    $id('gameAgain').focus();
+    ($id('gameCta') || $id('gameAgain')).focus();
   }
   const open_ = url => window.open(url, '_blank', 'noopener');
 
+  const CELU_WORDS = 'hola como estas bien gracias nos vemos manana te llamo luego ya llegue estoy en camino que bueno dale perfecto todo listo cuando puedas avisame mas tarde un abrazo buen dia hoy no puedo el lunes si quiero ir con vos tengo que salir ahora mismo despues te cuento'.split(' ');
   const RUN = {
+    // ---------- Typing on the phone: 30 seconds with the screen keyboard (its own history, not the course's) ----------
+    celu() {
+      clear();
+      const text = Array.from({ length: 40 }, () => CELU_WORDS[rnd(CELU_WORDS.length)]).join(' ');
+      stage().className = 'gm-stage';
+      stage().innerHTML = `<div class="gm-celu"><div class="gm-celu-text" id="gmCeluText"></div><input id="gmCeluIn" class="gm-input gm-celu-in" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" aria-label="Escribí el texto acá" placeholder="Tocá acá y empezá a escribir"><div class="gm-timer"><i id="gmCeluBar" style="width:100%"></i></div></div>`;
+      const inp = $id('gmCeluIn'), box = $id('gmCeluText'), SECS = 30;
+      let t0 = 0, done = false;
+      const paint = () => {
+        const typed = inp.value.toLowerCase(); let html = '';
+        for (let i = 0; i < Math.min(text.length, typed.length + 60); i++) html += `<span class="${i < typed.length ? (typed[i] === text[i] ? 'ok' : 'no') : i === typed.length ? 'cur' : ''}">${text[i] === ' ' ? ' ' : text[i]}</span>`;
+        box.innerHTML = html;
+        const curEl = box.querySelector('.cur'); if (curEl) box.scrollTop = Math.max(0, curEl.offsetTop - box.offsetTop - 30);
+      };
+      const end = () => {
+        if (done) return; done = true;
+        const typed = inp.value.toLowerCase(); let ok = 0;
+        for (let i = 0; i < typed.length; i++) if (typed[i] === text[i]) ok++;
+        lastAcc = typed.length ? Math.round(100 * ok / typed.length) : 100;
+        finish(Math.round(ok / 5 / (SECS / 60)));
+      };
+      const tickBar = () => { if (done) return; const left = Math.max(0, SECS - (performance.now() - t0) / 1000); $id('gmCeluBar').style.width = (100 * left / SECS) + '%'; live(`${Math.ceil(left)} s`); if (left > 0) later(tickBar, 200); };
+      inp.addEventListener('input', () => { if (!t0) { t0 = performance.now(); later(end, SECS * 1000); tickBar(); } paint(); if (inp.value.length >= text.length) end(); });
+      onKey(e => { if (e.key === 'Escape') close(); });
+      live(`${SECS} s`); paint(); inp.focus();
+    },
+
     // ---------- Reaction time ----------
     reflejos() {
       clear();
@@ -184,5 +217,6 @@ window.Desafios = (() => {
     },
   };
 
-  return { open, close, GAMES, bests };
+  const setCta = (id, label, fn) => { CTA[id] = { label, fn }; };
+  return { open, close, setCta, GAMES, bests };
 })();
