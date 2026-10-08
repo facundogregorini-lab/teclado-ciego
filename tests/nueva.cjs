@@ -73,6 +73,53 @@ const check = (name, ok) => { assert.ok(ok, name); console.log('PASS', name); };
     await m.tap('.nv-tabbar [data-go="mente"]');
     check('The tab bar changes the section', await tab(m) === 'mente' && await m.getAttribute('.nv-tabbar [data-go="mente"]', 'aria-current') !== null);
 
+    // Desafíos rápidos
+    const g = await open();
+    check('Inicio lists the four quick challenges', (await g.$$('[data-view-of="inicio"] .nv-game[data-game]')).length === 4);
+    await g.click('.nv-links [data-go="mente"]'); await g.click('[data-view-of="mente"] [role="tab"][data-sub="rapidos"]');
+    check('…and so does a tab of Mente', await g.isVisible('[data-view-of="mente"] .nv-game[data-game="chimpance"]'));
+    // Chimp test: the first round right, then three mistakes
+    await g.click('[data-view-of="mente"] .nv-game[data-game="chimpance"]');
+    check('A challenge opens its own screen, without the tab bar', await g.isVisible('#game') && !(await g.isVisible('#home')) && g.url().endsWith('#juego-chimpance'));
+    await g.click('#gameGo');
+    for (let n = 1; n <= 4; n++) await g.click(`.gm-cell[data-n="${n}"]`);
+    await g.waitForFunction(() => document.querySelectorAll('.gm-cell').length === 5);
+    check('Getting the round right adds a number', true);
+    for (let i = 0; i < 3; i++) { await g.waitForSelector('.gm-cell[data-n="2"]:not(.done)'); await g.click('.gm-cell[data-n="2"]'); await g.waitForTimeout(800); }
+    await g.waitForSelector('.gm-result');
+    check('Three mistakes end it with the score and the chimp to beat', (await g.textContent('.gm-score')).trim().startsWith('4') && (await g.textContent('.gm-compare')).includes('Ayumu') && (await events(g, 'game_completed')).some(e => e.game === 'chimpance' && e.score === 4));
+    await g.click('#gameOut');
+    check('Leaving goes back to the same tab, with the best score on the tile', await tab(g) === 'mente' && (await g.textContent('[data-view-of="mente"] .nv-game[data-game="chimpance"]')).includes('Tu mejor: 4'));
+    // Number memory: one right, one wrong
+    await g.evaluate(() => { Math.random = () => 0; });
+    await g.click('[data-view-of="mente"] .nv-game[data-game="numeros"]'); await g.click('#gameGo');
+    check('The number shows first', (await g.textContent('.gm-digits')) === '100');
+    await g.waitForSelector('#gmNumIn'); await g.fill('#gmNumIn', '100'); await g.press('#gmNumIn', 'Enter');
+    check('Typing it right says so', (await g.textContent('.gm-check')).includes('Bien'));
+    await g.click('#gmNumNext'); await g.waitForSelector('#gmNumIn', { timeout: 8000 }); await g.fill('#gmNumIn', '9'); await g.press('#gmNumIn', 'Enter');
+    await g.click('#gmNumNext');
+    check('A mistake ends it: the score is the longest number remembered', (await g.textContent('.gm-score')).trim().startsWith('3'));
+    // Reaction time: too early, then five tries (with the shortest waits)
+    await g.click('#gameOut'); await g.click('[data-view-of="mente"] .nv-game[data-game="reflejos"]'); await g.click('#gameGo');
+    await g.click('.gm-react');
+    check('Tapping before green does not count', (await g.textContent('.gm-react')).includes('Muy pronto'));
+    await g.click('.gm-react');
+    for (let i = 0; i < 5; i++) { await g.waitForSelector('.gm-react.go', { timeout: 6000 }); await g.click('.gm-react'); if (i < 4) await g.click('.gm-react'); }
+    await g.waitForSelector('.gm-result');
+    check('Five tries give the average in milliseconds', /\d+/.test(await g.textContent('.gm-score')) && (await g.textContent('.gm-score')).includes('ms'));
+    // Visual memory: clicking the lit squares passes the level
+    await g.evaluate(() => { Math.random = (() => { let x = 7; return () => (x = (x * 9301 + 49297) % 233280) / 233280; })(); }); // varied, but repeatable
+    await g.click('#gameOut'); await g.click('[data-view-of="mente"] .nv-game[data-game="visual"]'); await g.click('#gameGo');
+    const lit = await g.$$eval('.gm-sq.lit', els => els.map(e => [...e.parentNode.children].indexOf(e)));
+    await g.waitForFunction(() => !document.querySelector('.gm-vis.show'));
+    for (const i of lit) await g.click(`.gm-sq:nth-child(${i + 1})`);
+    await g.waitForFunction(() => document.querySelector('#gameLive').textContent.includes('Nivel 2'));
+    check('Visual memory moves to the next level', true);
+    await g.click('#gameBack');
+    check('The back button leaves the challenge', await g.isVisible('#home'));
+    const dl = await open('/nueva#juego-reflejos');
+    check('A link to a challenge (for sharing) opens it', await dl.isVisible('#game') && (await dl.textContent('#gameTitle')) === 'Reflejos');
+
     // The current home keeps working as before with the shared engine
     const h = await open('/');
     check('The current home still has no layout of its own and opens as always', await h.evaluate(() => !window.tnLayout && !!window.tnApp) && await visible(h, '#continue') && await visible(h, '#path'));

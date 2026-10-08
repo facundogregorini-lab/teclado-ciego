@@ -6,6 +6,7 @@
   const $id = id => document.getElementById(id);
   const TABS = ['inicio', 'teclado', 'mente', 'ranking'];
   const HASH = { inicio: '', teclado: '#teclado', mente: '#ninja', ranking: '#ranking' };
+  const gameOf = hash => (/^#juego-(\w+)$/.exec(hash) || [])[1];
   const tabOf = hash => hash === '#teclado' ? 'teclado' : /^#(ninja|entrevistas)$/.test(hash) ? 'mente' : hash === '#ranking' ? 'ranking' : 'inicio';
   const capture = (e, p) => window.tn?.capture?.(e, p);
 
@@ -26,6 +27,43 @@
     if (location.pathname + location.search + location.hash !== want) history.replaceState(null, '', want);
     if (scroll) scrollTo({ top: 0 });
     if (changed) capture('nav_tab', { tab, sub: sub || null });
+  }
+
+  // Desafíos rápidos (desafios.js): their tiles, and their own screen next to the lesson and quiz ones.
+  const TILE_ART = {
+    reflejos: '<span class="nv-react-dot">¡Ya!</span>',
+    numeros: '<span class="nv-vis-txt mono">4 8 1 9</span>',
+    chimpance: '<svg viewBox="0 0 120 70" width="104" aria-hidden="true"><g font-family="JetBrains Mono" font-weight="700" font-size="14" text-anchor="middle">' + [[18, 18, 1], [62, 14, 2], [98, 30, 3], [34, 52, 4], [80, 54, 5]].map(([x, y, n]) => `<rect x="${x - 11}" y="${y - 11}" width="22" height="22" rx="5" fill="var(--card)" stroke="var(--line)"/><text x="${x}" y="${y + 5}" fill="var(--ink)">${n}</text>`).join('') + '</g></svg>',
+    visual: '<svg viewBox="0 0 70 70" width="64" aria-hidden="true">' + Array.from({ length: 16 }, (_, i) => `<rect x="${(i % 4) * 17 + 1}" y="${Math.floor(i / 4) * 17 + 1}" width="15" height="15" rx="3" fill="${[1, 6, 11, 12].includes(i) ? 'var(--accent)' : 'var(--card)'}" stroke="var(--line)"/>`).join('') + '</svg>',
+  };
+  const TILE_SUB = { reflejos: 'Tiempo de reacción · 30 s', numeros: 'Como en los psicotécnicos · 1 min', chimpance: '¿Le ganás a un chimpancé? · 1 min', visual: 'Recordá el patrón · 1 min' };
+  function renderTiles() {
+    const best = Desafios.bests();
+    document.querySelectorAll('[data-games]').forEach(slot => {
+      slot.parentElement.querySelectorAll('.nv-game[data-game]').forEach(t => t.remove());
+      slot.before(...['chimpance', 'numeros', 'visual', 'reflejos'].map(id => {
+        const g = Desafios.GAMES[id], b = document.createElement('button');
+        b.className = 'nv-game'; b.dataset.game = id;
+        b.innerHTML = `<span class="nv-vis">${TILE_ART[id]}</span><b>${g.name}</b><span>${best[id] != null ? `Tu mejor: ${best[id]} ${g.unit}` : TILE_SUB[id]}</span>`;
+        b.onclick = () => openGame(id);
+        return b;
+      }));
+    });
+  }
+  let gameFrom = { tab: 'inicio' };
+  function openGame(id) {
+    if (!Desafios.GAMES[id]) return;
+    if (tnApp.mode() !== 'home') tnApp.goHome();
+    gameFrom = { tab: document.body.dataset.tab || 'inicio', sub: document.body.dataset.tab === 'mente' ? 'rapidos' : undefined };
+    $id('home').hidden = true; $id('game').hidden = false; document.body.dataset.view = 'game';
+    history.replaceState(null, '', location.pathname + location.search + '#juego-' + id);
+    scrollTo({ top: 0 });
+    Desafios.open(id, closeGame);
+  }
+  function closeGame() {
+    $id('game').hidden = true;
+    tnApp.goHome(); renderTiles();
+    setTab(gameFrom.tab, { sub: gameFrom.sub });
   }
 
   // "Seguí acá": the next lesson, how far the course goes and its keys.
@@ -60,7 +98,7 @@
     document.querySelectorAll('[role="tab"][data-sub]').forEach(b => b.onclick = () => { const tab = b.closest('[data-view-of]').dataset.viewOf; setSub(tab, b.dataset.sub); capture('nav_tab', { tab, sub: b.dataset.sub }); });
     document.querySelectorAll('[data-sub-go]').forEach(b => b.onclick = () => setSub(b.closest('[data-view-of]').dataset.viewOf, b.dataset.subGo));
     $id('testBtn').onclick = () => { goHome(); setTab('teclado', { sub: 'medir' }); };
-    $id('nvHeroSpeed').onclick = $id('nvGameSpeed').onclick = () => { capture('quick_start', { kind: 'speed' }); tnApp.start('test'); };
+    $id('nvHeroSpeed').onclick = () => { capture('quick_start', { kind: 'speed' }); tnApp.start('test'); };
     $id('nvHeroIq').onclick = $id('nvGameIq').onclick = () => { capture('quick_start', { kind: 'iq' }); tnApp.startQuiz('ninja'); };
     $id('nvGameSim').onclick = () => { capture('quick_start', { kind: 'sim' }); tnApp.startQuiz('sim'); };
     $id('tkContinue').onclick = () => tnApp.start(tnApp.nextLesson());
@@ -77,8 +115,10 @@
     };
     paintTheme();
 
-    renderNext();
-    if (tnApp.mode() === 'home') setTab(tabOf(location.hash), { scroll: false });
-    addEventListener('hashchange', () => { if (tnApp.mode() === 'home') setTab(tabOf(location.hash)); });
+    $id('gameBack').onclick = () => Desafios.close();
+    renderTiles(); renderNext();
+    const linkedGame = gameOf(location.hash);
+    if (tnApp.mode() === 'home') { if (linkedGame) { setTab('inicio', { scroll: false }); openGame(linkedGame); } else setTab(tabOf(location.hash), { scroll: false }); }
+    addEventListener('hashchange', () => { if (tnApp.mode() !== 'home' || !$id('game').hidden) return; if (gameOf(location.hash)) openGame(gameOf(location.hash)); else setTab(tabOf(location.hash)); });
   });
 })();
