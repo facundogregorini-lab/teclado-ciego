@@ -2,6 +2,7 @@
   "rewrites": [
     { "source": "/profesional", "destination": "/profesional.html" },
     { "source": "/admin", "destination": "/admin.html" },
+    { "source": "/nueva", "destination": "/nueva.html" },
     { "source": "/ingest/static/:path(.*)", "destination": "https://us-assets.i.posthog.com/static/:path" },
     { "source": "/ingest/:path(.*)", "destination": "https://us.i.posthog.com/:path" }
   ]
