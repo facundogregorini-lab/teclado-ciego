@@ -66,18 +66,29 @@
     setTab(gameFrom.tab, { sub: gameFrom.sub });
   }
 
-  // "Seguí acá": the next lesson, how far the course goes and its keys.
+  // "Seguí acá": the next lesson (of the base course, then of the current belt), how far it goes and its keys,
+  // and the row of belts. Only the current belt shows its lessons, so the road never looks endless.
   function renderNext() {
     if (!window.tnApp) return;
-    const { LESSONS, GROUPS, state: S } = tnApp, nl = tnApp.nextLesson();
-    const done = LESSONS.filter(l => S.lessons[l.id]?.stars >= 1).length, all = done === LESSONS.length;
-    $id('tkNextEyebrow').textContent = all ? 'Curso base completo 🥋' : `Seguí acá · ${GROUPS[nl.g].name}`;
-    $id('tkNextTitle').textContent = all ? 'Repasá o medí tu velocidad' : `Lección ${nl.n}: ${nl.name}`;
-    $id('tkNextDesc').textContent = all ? `Terminaste las ${LESSONS.length} lecciones. Volvé a cualquiera para sumar estrellas.` : GROUPS[nl.g].desc;
-    $id('tkBar').style.width = Math.round(done / LESSONS.length * 100) + '%';
-    $id('tkCount').textContent = `${done} de ${LESSONS.length}`;
-    $id('tkContinue').textContent = all ? 'Repasar →' : done ? 'Continuar →' : 'Empezar →';
-    $id('tkKeys').innerHTML = nl.type === 'keys' ? [...nl.keys].map(k => `<kbd style="--fc:${tnApp.fcol(tnApp.key(k)?.f || 'th')}">${k.toUpperCase()}</kbd>`).join('') : '';
+    const { LESSONS, GROUPS, BELTS, state: S } = tnApp, nl = tnApp.nextLesson();
+    const passed = l => S.lessons[l.id]?.stars >= 1;
+    const baseDone = LESSONS.filter(passed).length, baseAll = baseDone === LESSONS.length;
+    const inBelt = nl.belt != null, B = inBelt ? BELTS[nl.belt] : null, bs = inBelt ? tnApp.beltState(nl.belt) : null;
+    const allDone = baseAll && BELTS.every((_, bi) => tnApp.beltState(bi).complete);
+    $id('tkNextEyebrow').textContent = allDone ? 'Cinturón negro completo 🥋' : inBelt ? `Seguí acá · ${B.name}` : `Seguí acá · ${GROUPS[nl.g].name}`;
+    $id('tkNextTitle').textContent = allDone ? 'Repasá o medí tu velocidad' : `${inBelt ? 'Lección ' + nl.n : 'Lección ' + nl.n}: ${nl.name}`;
+    $id('tkNextDesc').textContent = allDone ? 'Terminaste el curso y los cinco cinturones. Volvé a cualquier lección para sumar estrellas.' : inBelt ? `${B.theme}. Meta: ${nl.goal} palabras por minuto.` : GROUPS[nl.g].desc;
+    const done = inBelt ? bs.done : baseDone, total = inBelt ? bs.total : LESSONS.length;
+    $id('tkBar').style.width = Math.round(done / total * 100) + '%';
+    $id('tkCount').textContent = `${done} de ${total}`;
+    $id('tkContinue').textContent = allDone ? 'Repasar →' : done || baseAll ? 'Continuar →' : 'Empezar →';
+    $id('tkKeys').innerHTML = inBelt ? `<span class="belt-badge nv-belt-big" style="--bc:${B.color}"></span>` : nl.type === 'keys' ? [...nl.keys].map(k => `<kbd style="--fc:${tnApp.fcol(tnApp.key(k)?.f || 'th')}">${k.toUpperCase()}</kbd>`).join('') : '';
+    const cb = baseAll ? tnApp.currentBelt() : -1;
+    $id('tkBelts').innerHTML = [`<li class="${baseAll ? 'done' : 'current'}" style="--bc:#F3F1EA"><b>Blanco</b><span>Curso base · ${baseDone}/${LESSONS.length}</span></li>`,
+      ...BELTS.map((b, bi) => { const st = tnApp.beltState(bi); return `<li class="${st.complete ? 'done' : bi === cb ? 'current' : 'ahead'}" style="--bc:${b.color}"><b>${b.name.replace('Cinturón ', '').replace(/^./, c => c.toUpperCase())}</b><span>${b.theme}</span></li>`; })].join('');
+    document.body.classList.toggle('nv-base-done', baseAll);
+    const white = $id('tkBelts').firstElementChild; // finished, the base course hides; its belt shows it again
+    if (baseAll) { white.tabIndex = 0; white.setAttribute('role', 'button'); white.title = 'Ver las lecciones del curso base'; white.onclick = white.onkeydown = e => { if (e.type === 'keydown' && e.key !== 'Enter') return; document.body.classList.toggle('nv-show-base'); }; }
   }
 
   // app.js tells where it goes: a lesson or a measurement opens the keyboard dojo, a session the mental one.

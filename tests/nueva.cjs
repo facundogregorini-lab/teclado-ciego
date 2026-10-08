@@ -120,6 +120,36 @@ const check = (name, ok) => { assert.ok(ok, name); console.log('PASS', name); };
     const dl = await open('/nueva#juego-reflejos');
     check('A link to a challenge (for sharing) opens it', await dl.isVisible('#game') && (await dl.textContent('#gameTitle')) === 'Reflejos');
 
+    // Belts: after the 26 lessons of the base course
+    const BASE = ['fj','dk','sl','añ','gh','rep1','ei','ru','ty','wo','qp','rep2','nm','vb','c,','x.','z','rep3','may','til','ref','cos','ofi','tec','coc','via'];
+    const graduate = async (ctx, extra = {}) => ctx.addInitScript(([ids, extra]) => { localStorage.setItem('teclado-ciego-v1', JSON.stringify({ lessons: Object.fromEntries([...ids.map(id => [id, { stars: 2, ppm: 30, acc: 96 }]), ...Object.entries(extra)]) })); }, [BASE, extra]);
+    const bctx = await browser.newContext(); await graduate(bctx);
+    const bp = await bctx.newPage(); bp.on('pageerror', e => errors.push(e.message));
+    await bp.goto(SITE + '/nueva#teclado'); await bp.waitForLoadState('networkidle');
+    check('After the base course, "Seguí acá" goes on with the yellow belt', (await bp.textContent('#tkNextEyebrow')).includes('Cinturón amarillo') && (await bp.textContent('#tkNextTitle')) === 'Lección 1: Comas' && (await bp.textContent('#tkCount')) === '0 de 8');
+    check('The belt row marks the base course done and the yellow belt as current', await bp.getAttribute('#tkBelts li:nth-child(1)', 'class') === 'done' && await bp.getAttribute('#tkBelts li:nth-child(2)', 'class') === 'current' && (await bp.$$('#tkBelts li')).length === 6);
+    check('Only the current belt shows its lessons (the base course hides)', await bp.isVisible('#path [data-belt="amarillo"]') && !(await bp.isVisible('#path [data-belt="naranja"]')) && !(await bp.isVisible('#path > .group:not(.belt)')));
+    await bp.click('#tkBelts li:nth-child(1)');
+    check('The white belt shows the base course again', await bp.isVisible('#path > .group:not(.belt)'));
+    await bp.click('#tkContinue');
+    check('A belt lesson opens with its belt and its own text', (await bp.textContent('#lGroup')).includes('Cinturón amarillo · lección 1 de 8') && (await bp.textContent('#inner')).includes(','));
+    await bp.evaluate(() => { const text = [...document.querySelectorAll('#inner .c')].map(s => s.textContent).join(''); for (const key of text) { const up = key !== key.toLowerCase(); document.dispatchEvent(new KeyboardEvent('keydown', { key, shiftKey: up, bubbles: true, cancelable: true })); } });
+    await bp.waitForSelector('#result:not([hidden])');
+    check('Passing it counts for the belt and offers the next lesson', (await bp.textContent('#result')).includes('Cinturón amarillo: 1 de 8') && (await bp.textContent('#rNext')).includes('Punto y mayúscula'));
+    await bp.click('#rHome');
+    check('…and "Seguí acá" moves on', (await bp.textContent('#tkNextTitle')) === 'Lección 2: Punto y mayúscula' && (await bp.textContent('#tkCount')) === '1 de 8');
+    // The last lesson of a belt wins it
+    const wctx = await browser.newContext(); await graduate(wctx, Object.fromEntries(['b1a','b1b','b1c','b1d','b1e','b1f','b1g'].map(id => [id, { stars: 2, ppm: 30, acc: 96 }])));
+    const wp = await wctx.newPage(); wp.on('pageerror', e => errors.push(e.message));
+    await wp.goto(SITE + '/nueva#teclado'); await wp.waitForLoadState('networkidle'); await wp.click('#tkContinue');
+    await wp.evaluate(() => { const text = [...document.querySelectorAll('#inner .c')].map(s => s.textContent).join(''); for (const key of text) document.dispatchEvent(new KeyboardEvent('keydown', { key, shiftKey: key !== key.toLowerCase(), bubbles: true, cancelable: true })); });
+    await wp.waitForSelector('#result:not([hidden])');
+    check('Passing the last lesson of a belt wins it and points to the next one', (await wp.textContent('#result')).includes('¡Conseguiste el cinturón amarillo!') && (await wp.textContent('#result')).includes('cinturón naranja'));
+    await wp.click('#rHome');
+    check('The row shows the yellow belt done and the orange one current', await wp.getAttribute('#tkBelts li:nth-child(2)', 'class') === 'done' && await wp.getAttribute('#tkBelts li:nth-child(3)', 'class') === 'current' && await wp.isVisible('#path [data-belt="naranja"]'));
+    const hb = await open('/');
+    check('The current home lists the five belts after the base course', (await hb.$$('#path .group.belt')).length === 5 && (await hb.$$('#path .group.belt .lc')).length === 40);
+
     // The current home keeps working as before with the shared engine
     const h = await open('/');
     check('The current home still has no layout of its own and opens as always', await h.evaluate(() => !window.tnLayout && !!window.tnApp) && await visible(h, '#continue') && await visible(h, '#path'));

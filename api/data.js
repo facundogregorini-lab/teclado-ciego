@@ -12,7 +12,7 @@ const record = r => ({ stars: num(r?.stars, 3), ppm: num(r?.ppm, 400), acc: num(
 function cleanProgress(p) {
   if (!p || typeof p !== 'object') throw new HttpError(400, 'Progreso inválido.');
   const lessons = {};
-  for (const [id, r] of Object.entries(p.lessons || {}).slice(0, 60)) {
+  for (const [id, r] of Object.entries(p.lessons || {}).slice(0, 100)) { // 26 lessons + 40 of the belts
     if (/^[a-zñ0-9,.]{1,6}$/.test(id)) lessons[id] = record(r);
   }
   return {

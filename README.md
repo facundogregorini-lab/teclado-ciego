@@ -205,7 +205,18 @@ Si falta la base, la práctica funciona igual sin cuenta y el formulario avisa q
 - `nueva.html` es `index.html` con otra portada (las pantallas de lección y de preguntas y los diálogos son los mismos); `nueva.js` arma las pestañas. `app.js` le avisa a dónde va por `window.tnLayout` (lección, medición, sesión, Ninja mental) y le presta lo que necesita por `window.tnApp`; en `index.html` no hay `tnLayout` y nada cambia.
 - **Medición:** cada evento de `/nueva` lleva `site_version: nueva` (propiedad de la persona en PostHog); además `nav_tab` (`tab`, `sub`) al cambiar de sección, `quick_start` (`kind`: `speed`, `iq`, `sim`) desde los desafíos rápidos y `theme_changed`.
 - **Desafíos rápidos** (`desafios.js`), gratis y sin cuenta, en Inicio y en la pestaña *Desafíos rápidos* de Mente, cada uno con su pantalla: **Test del chimpancé** (números en una grilla que se esconden al tocar el 1; 3 vidas), **Memoria de números** (un dígito más cada vez), **Memoria visual** (cuadros que se iluminan; la grilla crece; 3 vidas) y **Reflejos** (5 intentos, promedio en ms). Al final: el puntaje, una referencia real para comparar (7 ± 2 dígitos, 200–300 ms, Ayumu y sus 9 números) y la mejor marca de este navegador (`tn-desafios`). Se comparten por WhatsApp con un link que abre el mismo desafío (`/nueva#juego-chimpance`, `#juego-numeros`, `#juego-visual`, `#juego-reflejos`). Eventos: `game_opened`, `game_started`, `game_completed` (`game`, `score`, `record`) y `game_shared`. Todavía no tienen ranking.
-- Los cinturones de teclado vienen después.
+- **Cinturones** en Teclado: después del curso base (cinturón blanco) aparecen la fila de cinturones y solo las lecciones del actual; el curso base se oculta (el cinturón blanco lo vuelve a mostrar). "Seguí acá" sigue con el cinturón actual (`3 de 8`).
+
+## Cinturones de teclado (`belts.js`)
+
+Después de las 26 lecciones del curso base, cinco cinturones de 8 lecciones, en las dos versiones de la portada (en `/` aparecen en el camino después de "La cima"):
+- **Amarillo · Mayúsculas y puntuación** (meta 25 ppm): comas, punto y mayúscula, ¿preguntas? y ¡exclamaciones!, comillas y paréntesis, dos puntos y punto y coma, nombres propios.
+- **Naranja · Números y símbolos** (20 ppm): la fila de números, precios, fechas y horas, porcentajes, teléfonos y códigos, cuentas.
+- **Verde · Palabras frecuentes** (30 ppm): las 100 palabras más usadas del español, conectores, verbos de todos los días y frases cortas.
+- **Azul · Textos de trabajo** (32 ppm): mails, pedidos, datos de clientes, direcciones, planillas, mensajes y reportes (con datos inventados al azar).
+- **Negro · Velocidad**: metas de 35 a 70 ppm.
+
+Cada lección arma su texto al azar en cada intento, solo con caracteres de los teclados latinoamericano y español (sin @ ni #). Las estrellas son las de siempre (90% de precisión para aprobar, 95% para la segunda y la meta de ppm para la tercera). El progreso va con las lecciones (`b1a`…`b5h` en `lessons`; el servidor guarda hasta 100). El ranking de avance sigue contando solo el curso base.
 
 ## Desarrollo
 

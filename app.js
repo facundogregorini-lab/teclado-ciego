@@ -72,6 +72,12 @@ const LESSONS = [
   ['may', 3, 'shift', '', 'Mayúsculas'], ['til', 3, 'accents', '', 'Tildes'],
   ['ref', 4, 'text', 'r', 'Refranes'], ['cos', 4, 'text', '0', 'La costa'], ['ofi', 4, 'text', '1', 'La oficina'], ['tec', 4, 'text', '2', 'La técnica'], ['coc', 4, 'text', '3', 'En la cocina'], ['via', 4, 'text', '4', 'De viaje'],
 ].map(([id, g, type, keys, name], i) => ({ id, g, type, keys, name: name || [...keys].map(k => k.toUpperCase()).join(' · '), n: i + 1 }));
+// After the base course, the belts (belts.js): 5 × 8 lessons with their own texts and speed goals.
+const BELTS = window.Belts?.list || [], BELT_LESSONS = window.Belts?.lessons || [];
+const passed = l => S.lessons[l.id]?.stars >= 1;
+function beltState(bi) { const ls = BELTS[bi].lessons, done = ls.filter(passed).length; return { done, total: ls.length, complete: done === ls.length, gold: ls.every(l => S.lessons[l.id]?.stars === 3) }; }
+const currentBelt = () => { const i = BELTS.findIndex((_, bi) => !beltState(bi).complete); return i < 0 ? BELTS.length - 1 : i; };
+const lessonPlace = l => l.belt != null ? `${BELTS[l.belt].name} · lección ${l.n} de ${BELTS[l.belt].lessons.length}` : `Lección ${l.n}`;
 
 /* ---------- Storage ---------- */
 const STORE = 'teclado-ciego-v1';
@@ -110,6 +116,7 @@ function sprinkle(tokens, mark, every) {
   return tokens.map((t, i) => (i % every === every - 1 && i < tokens.length - 1 && isLetter(t.slice(-1))) ? t + mark : t);
 }
 function genLesson(l) {
+  if (l.type === 'belt') return l.gen();
   const idx = LESSONS.indexOf(l);
   if (l.type === 'text') return l.keys === 'r' ? shuffle(REFRANES).slice(0, 5).join(' ') : TEXTS[+l.keys];
   if (l.type === 'accents') return ['á é í ó ú', 'á é í ó ú', ...shuffle(ACCENT_WORDS).slice(0, 14)].join(' ');
@@ -253,10 +260,10 @@ function applyLayout() {
 
 /* ---------- Home ---------- */
 function stars(n, cls = 'stars') { return `<span class="${cls}" aria-label="${n} de 3 estrellas">${[0, 1, 2].map(i => `<span class="${i < n ? 'on' : ''}">★</span>`).join('')}</span>`; }
-function nextLesson() { return LESSONS.find(l => !(S.lessons[l.id]?.stars >= 1)) || LESSONS[LESSONS.length - 1]; }
+function nextLesson() { return LESSONS.find(l => !passed(l)) || BELT_LESSONS.find(l => !passed(l)) || BELT_LESSONS[BELT_LESSONS.length - 1] || LESSONS[LESSONS.length - 1]; }
 function renderHome() {
   const nl = nextLesson();
-  $('continue').innerHTML = `${Object.keys(S.lessons).length ? 'Seguir' : 'Empezar'}: lección ${nl.n} <small>${nl.name}</small>`;
+  $('continue').innerHTML = `${Object.keys(S.lessons).length ? 'Seguir' : 'Empezar'}: ${nl.belt != null ? BELTS[nl.belt].name.toLowerCase() : 'lección ' + nl.n} <small>${nl.name}</small>`;
   const total = LESSONS.reduce((s, l) => s + (S.lessons[l.id]?.stars || 0), 0);
   $('hStars').textContent = `${total}/${LESSONS.length * 3}`;
   $('hDone').textContent = `${LESSONS.filter(l => S.lessons[l.id]?.stars >= 1).length}/${LESSONS.length}`;
@@ -281,9 +288,30 @@ function renderHome() {
     }
     sec.append(cards);
     return sec;
-  }), Object.assign(document.createElement('section'), { className: 'group final', innerHTML: `<div class="group-head"><div><h2>La cima</h2><p>Después de los textos, el último salto de la evolución.</p></div>${evoCard(FINAL)}</div>` }));
+  }), Object.assign(document.createElement('section'), { className: 'group final', innerHTML: `<div class="group-head"><div><h2>La cima</h2><p>Después de los textos, el último salto de la evolución.</p></div>${evoCard(FINAL)}</div>` }), ...beltSections(nl));
   renderCog();
   window.tnLayout?.home?.();
+}
+
+// The belts, after the base course: one section each (current, done or still ahead), with its lessons.
+const beltSteps = bi => `<span class="evo-steps">${BELTS[bi].lessons.map(l => `<i class="${passed(l) ? 'on' : ''}"></i>`).join('')}</span>`;
+function beltSections(nl) {
+  const cb = currentBelt();
+  return BELTS.map((B, bi) => {
+    const st = beltState(bi), sec = document.createElement('section');
+    sec.className = 'group belt ' + (st.complete ? 'done' : bi === cb ? 'current' : 'ahead'); sec.dataset.belt = B.id;
+    sec.innerHTML = `<div class="group-head"><div><h2><span class="belt-badge" style="--bc:${B.color}" aria-hidden="true"></span>${B.name} · ${B.theme}</h2><p>${B.desc} Meta para 3 estrellas: ${B.goal} palabras por minuto con 95% de precisión${bi === BELTS.length - 1 ? ', cada vez más alta' : ''}.</p></div><figure class="belt-card"><figcaption><b>${st.complete ? (st.gold ? '¡Conseguido, con 3 estrellas!' : '¡Conseguido!') : `${st.done} de ${st.total} lecciones`}</b><span>${st.complete ? 'Cinturón completo.' : `Aprobá las ${st.total} para conseguirlo.`}</span>${beltSteps(bi)}</figcaption></figure></div>`;
+    const cards = document.createElement('div'); cards.className = 'cards';
+    for (const l of B.lessons) {
+      const rec = S.lessons[l.id], b = document.createElement('button');
+      b.className = 'lc' + (l === nl ? ' next' : '');
+      b.innerHTML = `<span class="meta"><span>Lección ${l.n}</span>${l === nl ? '<span class="pill">Sigue</span>' : stars(rec?.stars || 0)}</span><span class="caps"><span class="name">${l.name}</span></span><span class="best">${rec ? `Mejor: ${rec.ppm} ppm · ${rec.acc}%` : `Meta: ${l.goal} ppm`}</span>`;
+      b.onclick = () => start(l);
+      cards.append(b);
+    }
+    sec.append(cards);
+    return sec;
+  });
 }
 
 /* ---------- Speed by method: cards, chart and table ---------- */
@@ -410,8 +438,8 @@ function start(l, method, seed) {
   text = l === 'test' ? Dojo.seededText(testSeed, SHARED_TEXTS) : l.practiceText || genLesson(l);
   idx = 0; errors = 0; errBy = {}; missed = new Set(); deadPending = false; hintOn = false; holdIdx = -1; pendingMark = ''; $('accentHelp').hidden = true;
   running = false; accMs = 0; clearInterval(timer); timer = setInterval(tick, 200);
-  const g = l === 'test' ? null : GROUPS[l.g];
-  $('lGroup').textContent = l === 'test' ? 'Medición de velocidad · 1 minuto' : `Lección ${l.n} · ${g.name}`;
+  const g = l === 'test' ? null : l.belt != null ? BELTS[l.belt] : GROUPS[l.g];
+  $('lGroup').textContent = l === 'test' ? 'Medición de velocidad · 1 minuto' : l.belt != null ? lessonPlace(l) : `Lección ${l.n} · ${g.name}`;
   $('lName').textContent = l === 'test' ? tm.name : l.name;
   $('tip').textContent = l === 'test' ? `${tm.desc} Escribí todo lo que puedas en 60 segundos.` : g.tip;
   $('sTimeLbl').textContent = l === 'test' ? 'restante' : 'tiempo';
@@ -571,11 +599,11 @@ function finish() {
   tick();
   const ppm = ms > 0 ? Math.round(idx / 5 / (ms / 60000)) : 0;
   const acc = idx + errors ? Math.round(100 * idx / (idx + errors)) : 100;
-  const isTest = cur === 'test', goal = isTest ? 0 : GROUPS[cur.g].goal;
+  const isTest = cur === 'test', belt = !isTest && cur.belt != null, goal = isTest ? 0 : cur.goal || GROUPS[cur.g].goal;
   let st = 0, better = false;
   const tm = METHODS.find(m => m.id === testMethod);
   let prevSame = null;
-  const evoBefore = isTest ? null : evoState(cur.g), finalBefore = isTest ? null : evoState(FINAL), prevStars = isTest ? 0 : S.lessons[cur.id]?.stars || 0;
+  const evoBefore = isTest || belt ? null : evoState(cur.g), finalBefore = isTest || belt ? null : evoState(FINAL), beltBefore = belt ? beltState(cur.belt) : null, prevStars = isTest ? 0 : S.lessons[cur.id]?.stars || 0;
   if (isTest) {
     prevSame = [...S.tests].reverse().find(t => t.method === testMethod) || null;
     S.tests.push({ method: testMethod, ppm, acc, seed: testSeed, accents: S.tildes, date: Date.now() });
@@ -589,7 +617,7 @@ function finish() {
   }
   save();
   tn.capture('practice_completed', { ...practiceInfo(false), wpm: ppm, accuracy: acc, stars: isTest ? null : st ?? null, duration_ms: Math.round(ms) });
-  recordSession({ lesson: isTest ? 'test' : cur.id, name: isTest ? `Medición ${tm.as}` : `Lección ${cur.n} · ${cur.name}`, method: isTest ? testMethod : undefined, stars: st, ppm, acc, ms })
+  recordSession({ lesson: isTest ? 'test' : cur.id, name: isTest ? `Medición ${tm.as}` : belt ? `${BELTS[cur.belt].name} · ${cur.name}` : `Lección ${cur.n} · ${cur.name}`, method: isTest ? testMethod : undefined, stars: st, ppm, acc, ms })
     .then(saved => saved && loadRanking()).then(() => { if (isTest && auth.name) rankLine(ppm); });
   const weak = Object.entries(errBy).sort((a, b) => b[1] - a[1]).slice(0, 4);
   const keyTxt = c => c === ' ' ? 'espacio' : c;
@@ -606,7 +634,7 @@ function finish() {
   else if (st < 3 && acc < 95) msg = 'Aprobada. Con 95% de precisión o más ganás la segunda estrella.';
   else if (st < 3) msg = `Muy preciso. Llegá a ${goal} palabras por minuto para la tercera estrella.`;
   else msg = 'Excelente: precisa y a buen ritmo.';
-  const idxL = isTest ? -1 : LESSONS.indexOf(cur), next = !isTest && !cur.review && st > 0 ? LESSONS[idxL + 1] : null;
+  const list = belt ? BELT_LESSONS : LESSONS, idxL = isTest ? -1 : list.indexOf(cur), next = !isTest && !cur.review && st > 0 ? list[idxL + 1] || (belt ? null : BELT_LESSONS[0]) || null : null;
   let extra = '';
   if (isTest) {
     const ti = tierFor(ppm);
@@ -615,6 +643,12 @@ function finish() {
       <p class="joke">${rnd(TIERS[ti].jokes)}</p>
       <p>${medianText(ppm)}${acc < 90 ? ' Y ojo: con tantos errores, parecés un chimpancé con guantes.' : ''}</p>
       ${speedScale(ppm)}${challengeResult(ppm)}<p id="rankLine">${auth.name ? '' : 'Entrá con tu cuenta para aparecer en el ranking de velocidad.'}</p></div></div>`;
+  } else if (belt) {
+    const B = BELTS[cur.belt], after = beltState(cur.belt), won = after.complete && !beltBefore.complete, nb = BELTS[cur.belt + 1];
+    const title = won ? `¡Conseguiste el ${B.name.toLowerCase()}! 🥋` : `${B.name}: ${after.done} de ${after.total}`;
+    const txt = won ? (nb ? `Sigue el ${nb.name.toLowerCase()}: ${nb.theme.toLowerCase()}.` : '¡Completaste todos los cinturones! Sos cinturón negro de Templo Ninja.')
+      : !st && prevStars < 1 ? `Aprobala con 90% de precisión para avanzar en el ${B.name.toLowerCase()}.` : `${B.theme}. Aprobá las ${after.total} lecciones para conseguirlo.`;
+    extra = `<div class="result-evo result-belt"><span class="belt-badge${won ? ' fresh' : ''}" style="--bc:${B.color}" aria-hidden="true"></span><div><b>${title}</b><p>${txt}</p>${beltSteps(cur.belt)}</div></div>`;
   } else {
     const after = evoState(cur.g), fin = evoState(FINAL), P = tierShort(cur.g);
     let gi = cur.g, st2 = after, fresh = false, title = `Nivel ${P}`, txt = evoText(cur.g, after);
@@ -1972,6 +2006,6 @@ function paidWithoutSession() {
 }
 // Another layout of the same page (nueva.html → nueva.js) drives the app through these, and gets told of its moves
 // through window.tnLayout (start, quiz, cog, home). index.html sets no layout, so nothing changes there.
-window.tnApp = { start, startQuiz, goHome, goCog, nextLesson, drawChart, fcol, LESSONS, GROUPS, state: S, NINJA_HASH,
+window.tnApp = { start, startQuiz, goHome, goCog, nextLesson, drawChart, fcol, LESSONS, GROUPS, BELTS, beltState, currentBelt, state: S, NINJA_HASH,
   key: k => MAP[k], mode: () => mode, chartShown: () => evoView === 'chart' };
 })();
