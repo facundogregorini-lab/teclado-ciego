@@ -12,8 +12,8 @@ function createServer() {
     const url = new URL(req.url, 'http://localhost');
     const match = /^\/api\/([a-z]+)$/.exec(url.pathname);
     if (!match) {
-      const publicFiles = new Set(['/analytics.js', '/dojo.css', '/dojo.js', '/scenery.css', '/scenery.js', '/typists.css', '/typists.js', '/cognitive.css', '/figures.js', '/numeric.js', '/english.js', '/logic.js', '/legal.css', '/monk.js', '/monk.css', '/comentarios.html', '/admin.html', '/vendor/qrcode.js', '/precios.html', '/profesional.html', '/terminos.html', '/privacidad.html', '/reembolsos.html', '/demo/teclado-ciego-demo.mp4', ...['beach', 'mountains', 'forest'].flatMap(name => ['/assets/' + name + '.jpg', '/assets/' + name + '-thumb.jpg'])]);
-      const pathname = url.pathname === '/' ? '/index.html' : url.pathname === '/profesional' ? '/profesional.html' : url.pathname === '/admin' ? '/admin.html' : url.pathname; // as vercel.json
+      const publicFiles = new Set(['/analytics.js', '/app.js', '/app.css', '/nueva.html', '/nueva.css', '/nueva.js', '/dojo.css', '/dojo.js', '/scenery.css', '/scenery.js', '/typists.css', '/typists.js', '/cognitive.css', '/figures.js', '/numeric.js', '/english.js', '/logic.js', '/legal.css', '/monk.js', '/monk.css', '/comentarios.html', '/admin.html', '/vendor/qrcode.js', '/precios.html', '/profesional.html', '/terminos.html', '/privacidad.html', '/reembolsos.html', '/demo/teclado-ciego-demo.mp4', ...['beach', 'mountains', 'forest'].flatMap(name => ['/assets/' + name + '.jpg', '/assets/' + name + '-thumb.jpg'])]);
+      const pathname = url.pathname === '/' ? '/index.html' : url.pathname === '/profesional' ? '/profesional.html' : url.pathname === '/admin' ? '/admin.html' : url.pathname === '/nueva' ? '/nueva.html' : url.pathname; // as vercel.json
       if (pathname !== '/index.html' && !publicFiles.has(pathname)) { res.statusCode = 404; return res.end('Not found'); }
       const types = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.jpg': 'image/jpeg', '.mp4': 'video/mp4' };
       res.setHeader('Content-Type', types[path.extname(pathname)]);
