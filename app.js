@@ -686,7 +686,7 @@ function finish() {
     <div class="weak">${weak.length ? 'Teclas para practicar: ' + weak.map(([c, n]) => `<kbd title="${n} errores">${keyTxt(c)}</kbd>`).join('') : 'Sin errores.'}</div>
     <div class="actions">
       ${!isTest && next ? `<button class="btn primary" id="rNext">Siguiente: ${next.name} <small>Enter</small></button>` : ''}
-      <button class="btn${isTest || !next ? ' primary' : ''}" id="rAgain">${isTest ? 'Medir de nuevo' : 'Repetir'}${isTest || !next ? ' <small>Enter</small>' : ''}</button>
+      <button class="btn${isTest || !next ? ' primary' : ''}" id="rAgain">${isTest || st ? 'Superar mi marca' : 'Repetir'}${isTest || !next ? ' <small>Enter</small>' : ''}</button>
       ${isTest ? '<button class="btn" id="rChallenge">Desafiar a un amigo</button>' : ''}
       <button class="btn" id="rHome">${isTest ? 'Ver mi evolución' : 'Lecciones'}</button>
     </div>`;
@@ -2015,5 +2015,8 @@ function paidWithoutSession() {
 // Another layout of the same page (nueva.html → nueva.js) drives the app through these, and gets told of its moves
 // through window.tnLayout (start, quiz, cog, home). index.html sets no layout, so nothing changes there.
 window.tnApp = { start, startQuiz, goHome, goCog, nextLesson, drawChart, fcol, LESSONS, GROUPS, BELTS, beltState, currentBelt, state: S, NINJA_HASH,
-  key: k => MAP[k], mode: () => mode, chartShown: () => evoView === 'chart' };
+  key: k => MAP[k], mode: () => mode, chartShown: () => evoView === 'chart',
+  userName: () => auth.name ? shownName() : null, bestPpm: () => Math.max(0, S.test?.ppm || 0, ...S.tests.map(t => t.ppm)) || null,
+  bestIq: () => S.ninja.best?.iq || null, tierName: ppm => TIERS[tierFor(ppm)].name,
+  nextTier: ppm => TIERS[tierFor(ppm) + 1] || null, speedTests: () => S.tests.slice(), iqRuns: () => S.ninja.runs.slice() };
 })();

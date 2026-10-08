@@ -30,6 +30,7 @@
       <a href="#teclado" id="tcCta" data-go="teclado">Teclado</a>
       <a href="#ninja" id="cogCta" data-go="mente">Mente</a>
       <a href="#desafios" data-go="desafios">Desafíos</a>
+      <a href="#dojo" data-go="dojo">Mi dojo</a>
       <a href="#ranking" data-go="ranking">Ranking</a>
     </nav>
     <div class="nv-right">
@@ -278,6 +279,36 @@
       </section>
     </div>
 
+    <!-- ============ MI DOJO ============ -->
+    <div class="nv-view" data-view-of="dojo">
+      <section class="nv-card nv-me" id="midojo" aria-labelledby="mdName">
+        <span class="nv-me-av" id="mdAv" aria-hidden="true">🥷</span>
+        <div><span class="eyebrow">Mi dojo</span><h2 id="mdName">Ninja invitado</h2><p id="mdLevel"></p></div>
+        <div class="nv-me-goal"><span>Tu próxima meta</span><b id="mdGoal"></b></div>
+      </section>
+      <div class="nv-tabs" role="tablist" aria-label="Mi dojo">
+        <button role="tab" data-sub="entrenamiento" aria-selected="true">Entrenamiento</button>
+        <button role="tab" data-sub="marcas" aria-selected="false">Mis marcas</button>
+        <button role="tab" data-sub="batallas" aria-selected="false">Batallas <span class="nv-pill" id="mdTurnCount" hidden></span></button>
+      </div>
+      <div class="nv-sub" data-sub-of="entrenamiento">
+        <section class="nv-card nv-train" aria-labelledby="mdNextTitle">
+          <span class="eyebrow nv-acc" id="mdBlock"></span><h3 id="mdNextTitle"></h3>
+          <div class="nv-prog"><div class="nv-bar"><i id="mdBar"></i></div><span id="mdCount"></span></div>
+          <button class="btn primary" id="mdContinue">Continuar entrenamiento →</button>
+        </section>
+      </div>
+      <div class="nv-sub" data-sub-of="marcas" hidden>
+        <div class="nv-marks" id="mdMarks"></div>
+        <p class="nv-fine"><a href="#ranking" data-go="ranking">Ver el ranking →</a></p>
+      </div>
+      <div class="nv-sub" data-sub-of="batallas" hidden>
+        <p class="nv-card nv-dojo-msg" id="mdMsg" role="status" hidden></p>
+        <div class="nv-battles" id="mdBattles" aria-live="polite"></div>
+        <div class="actions"><button class="btn primary" id="mdNewBattle">⚔️ Crear batalla</button></div>
+      </div>
+    </div>
+
     <!-- ============ RANKING ============ -->
     <div class="nv-view" data-view-of="ranking">
       <section class="ranking" id="ranking" aria-labelledby="rankTitle">
@@ -418,7 +449,7 @@
   <a href="#teclado" data-go="teclado"><span aria-hidden="true">⌨</span>Teclado</a>
   <a href="#ninja" data-go="mente"><span aria-hidden="true">◎</span>Mente</a>
   <a href="#desafios" data-go="desafios"><span aria-hidden="true">⚡</span>Desafíos</a>
-  <a href="#ranking" data-go="ranking"><span aria-hidden="true">★</span>Ranking</a>
+  <a href="#dojo" data-go="dojo"><span aria-hidden="true">⛩</span>Mi dojo</a>
 </nav>
 
 <dialog id="authDlg" aria-labelledby="authTitle">

@@ -1,5 +1,5 @@
 // The new layout of the home page (/nueva): one page with sections, the "Seguí acá" card, lessons and quizzes with the
-// shared engine, the belts, quick challenges, dark mode, the phone and its bridge to the computer. Run: npm test (needs Playwright's Chromium).
+// shared engine, the belts, quick challenges, Mi dojo and its battles by link, dark mode, the phone and its bridge to the computer. Run: npm test (needs Playwright's Chromium).
 const assert = require('node:assert/strict');
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
 const { createServer } = require('./server.cjs');
@@ -26,7 +26,7 @@ const check = (name, ok) => { assert.ok(ok, name); console.log('PASS', name); };
     check('/nueva is not indexed', await p.getAttribute('meta[name="robots"]', 'content') === 'noindex, nofollow');
     check('Page IDs are unique', await p.evaluate(() => { const ids = [...document.querySelectorAll('[id]')].map(e => e.id); return new Set(ids).size === ids.length; }));
     check('One page: hero, dojos, the lessons of Teclado, the paths of Mente, challenges and ranking, all while scrolling', await visible(p, '#heroTitle') && await visible(p, '#continue') && await visible(p, '#path .lc') && await visible(p, '#cogPath .lc') && await visible(p, '#nvGameIq') && await visible(p, '#rankList'));
-    check('The order is Inicio → Teclado → Mente → Desafíos → Ranking', await p.evaluate(() => ['inicio', 'teclado', 'mente', 'desafios', 'ranking'].map(s => document.querySelector(`[data-view-of="${s}"]`).getBoundingClientRect().top).every((t, i, a) => !i || t > a[i - 1])));
+    check('The order is Inicio → Teclado → Mente → Desafíos → Mi dojo → Ranking', await p.evaluate(() => ['inicio', 'teclado', 'mente', 'desafios', 'dojo', 'ranking'].map(s => document.querySelector(`[data-view-of="${s}"]`).getBoundingClientRect().top).every((t, i, a) => !i || t > a[i - 1])));
     check('"Seguí acá" points to the first lesson, out of the 26 of the course', (await p.textContent('#tkNextTitle')).includes('Lección 1') && (await p.textContent('#tkCount')) === '26 lecciones cortas' && (await p.$$('#tkKeys kbd')).length === 2);
     check('Before graduating, the belts are one discreet line', await visible(p, '#path .belts-teaser') && !(await visible(p, '#path .group.belt')) && !(await visible(p, '#tkBeltsBox')));
     await p.click('#path .belts-teaser button');
@@ -149,6 +149,73 @@ const check = (name, ok) => { assert.ok(ok, name); console.log('PASS', name); };
     check('The back button leaves the challenge', await g.isVisible('#home'));
     const dl = await open('/nueva#juego-reflejos');
     check('A link to a challenge (for sharing) opens it', await dl.isVisible('#game') && (await dl.textContent('#gameTitle')) === 'Reflejos');
+
+    // Mi dojo and the battles: my mark → a challenge by link → the friend's result → the revenge
+    const chimp = async (pg, rounds) => { // rounds right from 4 numbers on, then three mistakes: the score is 3 + rounds
+      for (let n = 4; n < 4 + rounds; n++) { await pg.waitForFunction(k => document.querySelectorAll('.gm-cell').length === k && !document.querySelector('.gm-cell.done'), n); for (let i = 1; i <= n; i++) await pg.click(`.gm-cell[data-n="${i}"]`); }
+      for (let i = 0; i < 3; i++) { await pg.waitForSelector('.gm-cell[data-n="2"]:not(.done):not(.wrong)'); await pg.click('.gm-cell[data-n="2"]'); await pg.waitForTimeout(750); }
+      await pg.waitForSelector('.gm-result');
+    };
+    const A = await open('/nueva#dojo');
+    check('Mi dojo: a guest ninja, its level and the next reachable goal', await onScreen(A, 'dojo') && (await A.textContent('#mdName')) === 'Ninja invitado' && (await A.textContent('#mdGoal')).includes('Medir tu velocidad') && (await A.textContent('#mdBlock')).includes('Bloque actual'));
+    check('Entrenamiento shows the current block, not all the lessons', (await A.textContent('#mdNextTitle')).includes('Lección 1') && (await A.textContent('#mdCount')).includes('del bloque') && await visible(A, '#mdContinue'));
+    await A.click('[data-view-of="dojo"] [role="tab"][data-sub="batallas"]');
+    await A.waitForSelector('.nv-bempty');
+    check('Without battles: the first one starts with a mark', (await A.textContent('.nv-bempty')).includes('Tu primera batalla empieza con una marca') && (await A.textContent('#mdFirstBattle')) === 'Jugar y desafiar' && !(await visible(A, '#mdNewBattle')));
+    await A.click('#mdFirstBattle');
+    check('…which takes you to the quick challenges', await onScreen(A, 'desafios'));
+    await A.click('.nv-game[data-game="chimpance"]'); await A.click('#gameGo'); await chimp(A, 1);
+    check('The result asks for a friend who can beat you, and offers beating your mark', (await A.textContent('.gm-dare')).includes('¿Tenés un amigo que pueda superarte?') && (await A.textContent('#gameAgain')) === 'Superar mi marca');
+    await A.click('#gameDare');
+    check('Challenging asks once for the name the friend sees', await visible(A, '#gmNickIn'));
+    await A.fill('#gmNickIn', 'Facu'); await A.press('#gmNickIn', 'Enter');
+    await A.waitForSelector('#gmBWa');
+    const battleId = await A.evaluate(() => JSON.parse(localStorage.getItem('tn-batallas'))[0].id);
+    check('…then creates the battle and offers WhatsApp and the link', /^[a-z0-9]{8}$/.test(battleId) && await visible(A, '#gmBCopy') && (await events(A, 'battle_created')).some(e => e.game === 'chimpance' && e.score === 4));
+    const waBattle = new Promise(res => A.context().once('page', pg => res(pg.url())));
+    await A.click('#gmBWa');
+    const waText = decodeURIComponent(await waBattle).replace(/\+/g, ' '); // wa.me may forward to api.whatsapp.com, with + for spaces
+    check('The WhatsApp message carries the score and the link', waText.includes('hice 4 números') && waText.includes('/nueva?batalla=' + battleId) && (await events(A, 'battle_shared')).some(e => e.how === 'whatsapp'));
+    // The friend, without an account
+    const B = await open('/nueva?batalla=' + battleId);
+    await B.waitForSelector('.gm-invite');
+    check('The link opens the invitation: who challenges, in what and the score to beat', (await B.textContent('.gm-invite h3')).includes('Facu te desafía en Test del chimpancé') && (await B.textContent('.gm-target')).includes('4 números') && (await B.textContent('.gm-invite')).includes('Sin cuenta') && !B.url().includes('batalla='));
+    await B.fill('#gmInvNick', 'Ana'); await B.click('#gameGo'); await chimp(B, 2);
+    await B.waitForSelector('.gm-battle-title');
+    check('Beating the mark: "¡Superaste a Facu!", both scores, and the account offered (not required)', (await B.textContent('.gm-battle-title')).includes('¡Superaste a Facu!') && (await B.textContent('.gm-vs')).includes('5') && (await B.textContent('.gm-acct')).includes('mandale la revancha') && (await B.textContent('#gameAcct')) === 'Crear mi cuenta' && (await events(B, 'battle_answered')).some(e => e.result === 'won'));
+    await B.click('#gameRevenge'); await B.waitForSelector('#gmBWa');
+    check('The revenge is a new link with the new score, under the name already given', (await events(B, 'battle_created')).some(e => e.revenge && e.score === 5) && !(await visible(B, '#gmNickIn')));
+    await B.click('#gameOut');
+    await B.click('[data-go="dojo"]'); await B.click('[data-view-of="dojo"] [role="tab"][data-sub="batallas"]');
+    await B.waitForSelector('.nv-blist');
+    check('The friend\'s dojo: the battle won, and the revenge waiting for its rival', (await B.textContent('.nv-battles')).includes('Finalizadas') && (await B.textContent('.nv-battle.won')).includes('Facu 4 vs vos 5') && (await B.textContent('.nv-battles')).includes('Esperando rival') && (await B.textContent('#mdName')) === 'Ana');
+    // Back to the one who challenged
+    await A.click('#gameOut'); await A.click('[data-go="dojo"]'); await A.click('[data-view-of="dojo"] [role="tab"][data-sub="batallas"]');
+    await A.waitForFunction(() => document.querySelector('.nv-battles')?.textContent.includes('Finalizadas'));
+    check('Facu sees that Ana played and won, with a revenge button', (await A.textContent('.nv-battle.lost')).includes('Ana 5 vs vos 4') && await visible(A, '.nv-battle.lost [data-revenge]') && (await A.textContent('#mdName')) === 'Facu');
+    await A.click('.nv-battle.lost [data-revenge]'); await A.waitForSelector('.gm-invite');
+    check('The revenge plays against Ana\'s score', (await A.textContent('.gm-target')).includes('5 números') && (await A.textContent('.gm-invite h3')).includes('Ana'));
+    await A.click('#gameBack');
+    check('Mis marcas: the best score per game, to beat it or to challenge someone', await A.click('[data-view-of="dojo"] [role="tab"][data-sub="marcas"]').then(() => true) && (await A.textContent('[data-mark="chimpance"] .nv-rec-val')).includes('4') && await visible(A, '[data-mark="chimpance"] [data-beat]') && await visible(A, '[data-mark="chimpance"] [data-dare]') && (await A.textContent('[data-mark="speed"]')).includes('Sin marca todavía'));
+    const own = await A.context().newPage(); await own.goto(SITE + '/nueva?batalla=' + battleId); await own.waitForSelector('#mdMsg:not([hidden])');
+    check('Opening your own link does not play against yourself', (await own.textContent('#mdMsg')).includes('la creaste vos') && !(await own.isVisible('#game')));
+    await own.close();
+    // Someone who opens the link and leaves it for later: their turn, and no made-up result for anyone
+    const C = await open('/nueva?batalla=' + battleId); await C.waitForSelector('.gm-invite');
+    await C.click('#gameBack'); await C.click('[data-view-of="dojo"] [role="tab"][data-sub="batallas"]');
+    await C.waitForSelector('.nv-blist');
+    check('An invitation not played yet waits in "Tu turno"', (await C.textContent('.nv-battles')).includes('Tu turno') && (await C.textContent('#mdTurnCount')) === '1' && !(await C.textContent('.nv-battles')).includes('Finalizadas'));
+    await C.click('[data-play]'); await C.waitForSelector('.gm-invite');
+    check('…and Jugar opens it', (await C.textContent('.gm-target')).includes('4 números'));
+    const gone = await open('/nueva?batalla=zzzzzzzz'); await gone.waitForSelector('#mdMsg:not([hidden])');
+    check('A battle that no longer exists says so, in Mi dojo', (await gone.textContent('#mdMsg')).includes('ya no existe') && await onScreen(gone, 'dojo'));
+    // The API keeps the scores within what a person can do
+    const post = body => fetch(SITE + '/api/batallas', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    check('The API rejects impossible scores and unknown games', (await post({ action: 'create', game: 'chimpance', score: 99 })).status === 400 && (await post({ action: 'create', game: 'ajedrez', score: 3 })).status === 400 && (await post({ action: 'respond', id: 'zzzzzzzz', score: 3 })).status === 404);
+    const viewed = await (await fetch(SITE + '/api/batallas?ids=' + battleId)).json();
+    check('Anyone with the link sees names and scores only', viewed.battles[0].from === 'Facu' && viewed.battles[0].responses[0].name === 'Ana' && viewed.battles[0].responses[0].result === 'won' && !('user' in viewed.battles[0]));
+    const mp = await open('/nueva', phone);
+    check('On the phone, Mi dojo is in the tab bar', await mp.isVisible('.nv-tabbar [data-go="dojo"]'));
 
     // Belts: after the 26 lessons of the base course
     const BASE = ['fj','dk','sl','añ','gh','rep1','ei','ru','ty','wo','qp','rep2','nm','vb','c,','x.','z','rep3','may','til','ref','cos','ofi','tec','coc','via'];

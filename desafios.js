@@ -8,14 +8,32 @@ window.Desafios = (() => {
   const $id = id => document.getElementById(id);
   const capture = (e, p) => window.tn?.capture?.(e, p);
   const rnd = n => Math.floor(Math.random() * n);
-  const KEY = 'tn-desafios';
+  const KEY = 'tn-desafios', HKEY = 'tn-desafios-hist';
+  const history = () => { try { return JSON.parse(localStorage.getItem(HKEY)) || {}; } catch { return {}; } }; // the last scores of each game
   const bests = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch { return {}; } };
   const saveBest = (id, score, lowerIsBetter) => {
     const b = bests(), old = b[id];
     const better = old == null || (lowerIsBetter ? score < old : score > old);
     if (better) { b[id] = score; try { localStorage.setItem(KEY, JSON.stringify(b)); } catch {} }
+    const h = history(); h[id] = [...(h[id] || []), score].slice(-20); try { localStorage.setItem(HKEY, JSON.stringify(h)); } catch {}
     return { best: better ? score : old, record: better && old != null };
   };
+
+  /* ---------- Batallas: a score to beat, sent by link (api/batallas.js) ---------- */
+  const BKEY = 'tn-batallas', NICK = 'tn-nick';
+  const local = (k, v) => { try { if (v === undefined) return JSON.parse(localStorage.getItem(k)); localStorage.setItem(k, JSON.stringify(v)); } catch {} return null; };
+  const known = () => local(BKEY) || [];
+  const keep = rec => { const all = known().filter(r => r.id !== rec.id || r.role !== rec.role); all.unshift({ ...known().find(r => r.id === rec.id && r.role === rec.role), ...rec }); local(BKEY, all.slice(0, 50)); };
+  const nick = () => window.tnApp?.userName?.() || local(NICK) || '';
+  async function api(method, payload, query = '') {
+    const token = (() => { try { return localStorage.getItem('teclado-ciego-token'); } catch { return null; } })();
+    const r = await fetch('/api/batallas' + query, { method, headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: 'Bearer ' + token } : {}) }, ...(payload ? { body: JSON.stringify(payload) } : {}) });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) throw Object.assign(new Error(data.error || 'No se pudo conectar.'), { status: r.status });
+    return data;
+  }
+  const battleUrl = id => `${location.origin}${location.pathname}?batalla=${id}`;
+  const escape = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 
   const GAMES = {
     reflejos: { name: 'Reflejos', unit: 'ms', lower: true, lead: 'Cuando el recuadro se ponga verde, tocá lo más rápido que puedas. Son 5 intentos.',
@@ -30,7 +48,7 @@ window.Desafios = (() => {
       compare: s => `${s >= 12 ? 'Memoria fotográfica 📸' : s >= 8 ? '¡Muy buena memoria visual!' : 'Buen comienzo.'} Ayuda mirar el dibujo que forman los cuadros, no cada cuadro suelto.` },
   };
 
-  let cur = null, timers = [], keyHandler = null, onExit = () => {}, lastAcc = 100;
+  let cur = null, timers = [], keyHandler = null, onExit = () => {}, lastAcc = 100, battle = null;
   const CTA = {}; // an extra button for a game's result (setCta)
   const later = (fn, ms) => { const t = setTimeout(fn, ms); timers.push(t); return t; };
   const clear = () => { timers.forEach(clearTimeout); timers = []; if (keyHandler) removeEventListener('keydown', keyHandler); keyHandler = null; };
@@ -38,13 +56,25 @@ window.Desafios = (() => {
   const live = txt => { $id('gameLive').textContent = txt; };
   const onKey = fn => { if (keyHandler) removeEventListener('keydown', keyHandler); keyHandler = fn; addEventListener('keydown', fn); };
 
-  function open(id, exit) {
+  function open(id, exit, opts = {}) {
     if (!GAMES[id]) return;
-    clear(); cur = id; onExit = exit || onExit;
+    clear(); cur = id; onExit = exit || onExit; battle = opts.battle || null;
     $id('gameTitle').textContent = GAMES[id].name;
     live('');
-    intro();
-    capture('game_opened', { game: id });
+    battle ? invitation() : intro();
+    capture('game_opened', { game: id, battle: !!battle });
+  }
+  // Opened from a battle link: who challenges, in what, and the score to beat. Playing needs no account.
+  function invitation() {
+    const g = GAMES[cur], b = battle;
+    stage().className = 'gm-stage';
+    stage().innerHTML = `<div class="gm-intro gm-invite"><span class="gm-swords" aria-hidden="true">⚔️</span><span class="eyebrow">Batalla</span>
+      <h3><b>${escape(b.from)}</b> te desafía en ${g.name}</h3><div class="gm-target"><span>Marca a superar</span><b>${b.score} ${g.unit}</b></div>
+      <p>${g.lead}</p>${nick() ? '' : `<label class="gm-nick gm-nick-opt">Tu nombre (opcional, para que ${escape(b.from)} sepa quién jugó)<input id="gmInvNick" maxlength="20" autocomplete="nickname"></label>`}
+      <button class="btn primary" id="gameGo">Aceptar el desafío</button><p class="gm-fine">Sin cuenta y en un minuto.</p></div>`;
+    if (b.id) keep({ id: b.id, role: 'got', game: cur, from: b.from, target: b.score, at: Date.now() });
+    $id('gameGo').onclick = () => { const n = $id('gmInvNick')?.value.trim(); if (n) local(NICK, n.slice(0, 20)); capture('battle_accepted', { game: cur, named: !!n }); capture('game_started', { game: cur, battle: true }); RUN[cur](); };
+    $id('gameGo').focus();
   }
   function close() { clear(); cur = null; onExit(); }
 
@@ -58,26 +88,69 @@ window.Desafios = (() => {
   function finish(score) {
     clear();
     const g = GAMES[cur], { best, record } = saveBest(cur, score, g.lower);
-    capture('game_completed', { game: cur, score, record });
-    const shareText = `Hice "${g.name}" en Templo Ninja: ${score} ${g.unit}. ¿Me ganás? 🥷`;
+    capture('game_completed', { game: cur, score, record, battle: !!battle });
+    if (battle) return battleResult(score);
     stage().className = 'gm-stage';
     stage().innerHTML = `<div class="gm-result"><span class="eyebrow">Tu resultado</span><div class="gm-score">${score}<small> ${g.unit}</small></div>
       ${record ? '<p class="gm-record">🏅 ¡Nueva mejor marca!</p>' : `<p class="gm-best">Tu mejor marca: <b>${best} ${g.unit}</b></p>`}
       <p class="gm-compare">${g.compare(score)}</p>
+      <div class="gm-dare"><p>¿Tenés un amigo que pueda superarte?</p><button class="btn primary" id="gameDare">⚔️ Desafiar a un amigo</button><div id="gameDareBox"></div></div>
       ${CTA[cur] ? `<div class="actions"><button class="btn primary" id="gameCta">${CTA[cur].label}</button></div>` : ''}
-      <div class="actions"><button class="btn${CTA[cur] ? '' : ' primary'}" id="gameAgain">Otra vez</button><button class="btn" id="gameShare">Desafiar a un amigo</button><button class="btn" id="gameOut">Más desafíos</button></div></div>`;
+      <div class="actions"><button class="btn" id="gameAgain">${record || best != null ? 'Superar mi marca' : 'Otra vez'}</button><button class="btn" id="gameOut">Más desafíos</button></div></div>`;
     if (CTA[cur]) $id('gameCta').onclick = () => { capture('game_cta', { game: cur }); CTA[cur].fn(); };
     $id('gameAgain').onclick = () => { capture('game_started', { game: cur, again: true }); RUN[cur](); };
     $id('gameOut').onclick = close;
-    $id('gameShare').onclick = async () => {
-      const url = location.origin + location.pathname + '#juego-' + cur;
-      capture('game_shared', { game: cur, score });
-      if (navigator.share) { try { await navigator.share({ text: shareText, url }); return; } catch {} }
-      open_(`https://wa.me/?text=${encodeURIComponent(shareText + ' ' + url)}`);
-    };
-    ($id('gameCta') || $id('gameAgain')).focus();
+    $id('gameDare').onclick = () => dare(cur, score, $id('gameDareBox'));
+    ($id('gameCta') || $id('gameDare')).focus();
   }
   const open_ = url => window.open(url, '_blank', 'noopener');
+
+  // Challenge a friend with a score: a name to show (the account's, or one chosen once), then the link to share.
+  async function dare(game, score, box, { revenge = false } = {}) {
+    const g = GAMES[game];
+    if (!nick()) {
+      box.innerHTML = `<form class="gm-nick" id="gmNick"><label>¿Con qué nombre te ve tu amigo?<input id="gmNickIn" maxlength="20" autocomplete="nickname" required></label><button class="btn primary">Crear el desafío</button></form>`;
+      $id('gmNickIn').focus();
+      $id('gmNick').onsubmit = e => { e.preventDefault(); const n = $id('gmNickIn').value.trim(); if (!n) return; local(NICK, n.slice(0, 20)); dare(game, score, box, { revenge }); };
+      return;
+    }
+    box.innerHTML = '<p class="gm-fine">Creando el desafío…</p>';
+    try {
+      const { battle: b } = await api('POST', { action: 'create', game, score, name: nick() });
+      keep({ id: b.id, role: 'sent', game, score, at: Date.now() });
+      capture('battle_created', { game, score, revenge });
+      const url = battleUrl(b.id), text = `⚔️ ${revenge ? 'Revancha' : 'Te desafío'} en Templo Ninja: hice ${score} ${g.unit} en "${g.name}". ¿Me superás?`;
+      box.innerHTML = `<p class="gm-fine">Listo: mandale el link. Cuando lo juegue, lo ves en <b>Mi dojo › Batallas</b>.</p>
+        <div class="actions">${navigator.share ? '<button class="btn primary" id="gmBShare">Compartir…</button>' : ''}<button class="btn${navigator.share ? '' : ' primary'}" id="gmBWa">WhatsApp</button><button class="btn" id="gmBCopy">Copiar el link</button></div><p class="gm-fine" id="gmBMsg"></p>`;
+      const sent = how => capture('battle_shared', { game, how });
+      if ($id('gmBShare')) $id('gmBShare').onclick = async () => { sent('share'); try { await navigator.share({ text, url }); } catch {} };
+      $id('gmBWa').onclick = () => { sent('whatsapp'); open_(`https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`); };
+      $id('gmBCopy').onclick = async () => { sent('copy'); try { await navigator.clipboard.writeText(url); $id('gmBMsg').textContent = '✓ Link copiado.'; } catch { $id('gmBMsg').textContent = url; } };
+    } catch (err) { box.innerHTML = `<p class="gm-fine">${escape(err.message)}</p>`; }
+  }
+
+  // The friend's result against the battle: who won, the revenge, and the account (offered, never required)
+  async function battleResult(score) {
+    const g = GAMES[cur], b = battle; battle = null;
+    stage().className = 'gm-stage';
+    stage().innerHTML = '<div class="gm-result"><p class="gm-fine">Guardando tu resultado…</p></div>';
+    let result = score === b.score ? 'tie' : (g.lower ? score < b.score : score > b.score) ? 'won' : 'lost';
+    if (b.id) try { result = (await api('POST', { action: 'respond', id: b.id, score, name: nick() || 'Un ninja' })).result; } catch {}
+    if (b.id) keep({ id: b.id, role: 'got', game: cur, from: b.from, target: b.score, myScore: score, result, at: Date.now() });
+    capture('battle_answered', { game: cur, result });
+    const title = result === 'won' ? `¡Superaste a ${escape(b.from)}! 🏆` : result === 'tie' ? '¡Empate! 🤝' : `${escape(b.from)} ganó esta vez`;
+    const guest = !window.tnApp?.userName?.();
+    stage().innerHTML = `<div class="gm-result"><span class="eyebrow">Batalla</span><h3 class="gm-battle-title ${result}">${title}</h3>
+      <div class="gm-vs"><div><span>${escape(b.from)}</span><b>${b.score}</b></div><i>vs</i><div class="me"><span>Vos</span><b>${score}</b></div></div><p class="gm-fine">${g.unit} en ${g.name}</p>
+      <div class="gm-dare"><button class="btn primary" id="gameRevenge">⚔️ ${result === 'won' ? 'Mandale la revancha' : 'Pedir revancha'}</button><div id="gameDareBox"></div></div>
+      ${guest ? `<div class="gm-acct"><p>${result === 'won' ? 'Guardá tu resultado y mandale la revancha.' : 'Guardá tu resultado y seguí tus batallas desde cualquier dispositivo.'}</p><button class="btn" id="gameAcct">Crear mi cuenta</button></div>` : ''}
+      <div class="actions"><button class="btn" id="gameAgain">Jugar de nuevo</button><button class="btn" id="gameOut">Más desafíos</button></div></div>`;
+    $id('gameRevenge').onclick = () => dare(cur, score, $id('gameDareBox'), { revenge: true });
+    if (guest) $id('gameAcct').onclick = () => { capture('battle_account', { game: cur }); $id('acctBtn')?.click(); document.querySelector('#authMode [data-v="register"]')?.click(); };
+    $id('gameAgain').onclick = () => RUN[cur]();
+    $id('gameOut').onclick = close;
+    $id('gameRevenge').focus();
+  }
 
   const CELU_WORDS = 'hola como estas bien gracias nos vemos manana te llamo luego ya llegue estoy en camino que bueno dale perfecto todo listo cuando puedas avisame mas tarde un abrazo buen dia hoy no puedo el lunes si quiero ir con vos tengo que salir ahora mismo despues te cuento'.split(' ');
   const RUN = {
@@ -218,5 +291,13 @@ window.Desafios = (() => {
   };
 
   const setCta = (id, label, fn) => { CTA[id] = { label, fn }; };
-  return { open, close, setCta, GAMES, bests };
+  // The battles this browser knows, with their latest state from the server (and the account's, when signed in)
+  async function battles() {
+    const mine = known(), ids = [...new Set(mine.map(r => r.id))];
+    let remote = [];
+    try { remote = (await api('GET', null, ids.length ? '?ids=' + ids.join(',') : '')).battles || []; } catch {}
+    return { mine, remote };
+  }
+  const loadBattle = id => api('GET', null, '?ids=' + encodeURIComponent(id)).then(r => r.battles?.[0] || null);
+  return { open, close, setCta, dare, battles, loadBattle, known, GAMES, bests, history };
 })();
