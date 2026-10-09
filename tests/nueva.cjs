@@ -1,4 +1,4 @@
-// The new layout of the home page (/nueva): one page with sections, the "Seguí acá" card, lessons and quizzes with the
+// The new layout (/nueva): focused screens, profile-owned Dojo, the "Seguí acá" card, lessons and quizzes with the
 // shared engine, the belts, quick challenges, Mi dojo and its battles by link, progress checks, Agregar a mi inicio (PWA), dark mode, the phone and its bridge to the computer. Run: npm test (needs Playwright's Chromium).
 const assert = require('node:assert/strict');
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
@@ -25,9 +25,10 @@ const check = (name, ok) => { assert.ok(ok, name); console.log('PASS', name); };
     const p = await open();
     check('/nueva is not indexed', await p.getAttribute('meta[name="robots"]', 'content') === 'noindex, nofollow');
     check('Page IDs are unique', await p.evaluate(() => { const ids = [...document.querySelectorAll('[id]')].map(e => e.id); return new Set(ids).size === ids.length; }));
-    check('One page: hero, dojos, the lessons of Teclado, the paths of Mente, challenges and ranking, all while scrolling', await visible(p, '#heroTitle') && await visible(p, '#continue') && await visible(p, '#path .lc') && await visible(p, '#cogPath .lc') && await visible(p, '#nvGameIq') && await visible(p, '#rankList'));
-    check('The order is Inicio → Teclado → Mente → Desafíos → Mi dojo → Ranking', await p.evaluate(() => ['inicio', 'teclado', 'mente', 'desafios', 'dojo', 'ranking'].map(s => document.querySelector(`[data-view-of="${s}"]`).getBoundingClientRect().top).every((t, i, a) => !i || t > a[i - 1])));
-    check('"Seguí acá" points to the first lesson, out of the 26 of the course', (await p.textContent('#tkNextTitle')).includes('Lección 1') && (await p.textContent('#tkCount')) === '26 lecciones cortas' && (await p.$$('#tkKeys kbd')).length === 2);
+    check('Home shows the two entries and live rankings, with focused screens hidden', await visible(p, '#heroTitle') && await visible(p, '#continue') && await visible(p, '#homeTypingRank') && !(await visible(p, '#path')) && !(await visible(p, '#cogPath')));
+    check('Challenges are inside Mente and Dojo inside Profile', await p.evaluate(() => !!document.querySelector('[data-view-of=mente] [data-view-of=desafios]') && !!document.querySelector('[data-profile-panel=dojo] #midojo') && !document.querySelector('.nv-links [data-go=dojo]')));
+    await p.click('#continue');
+    check('"Seguí acá" points to the first lesson, out of the 26 of the course', (await p.textContent('#tkNextTitle')).includes('Lección 1') && (await p.textContent('#tkCount')) === '0 de 6 en esta etapa' && (await p.$$('#tkKeys kbd')).length === 2);
     check('Before graduating, the belts are one discreet line', await visible(p, '#path .belts-teaser') && !(await visible(p, '#path .group.belt')) && !(await visible(p, '#tkBeltsBox')));
     await p.click('#path .belts-teaser button');
     check('…that shows them on purpose', await visible(p, '#path .group.belt[data-belt="amarillo"]') && (await events(p, 'belts_preview')).some(e => e.shown));
@@ -44,18 +45,19 @@ const check = (name, ok) => { assert.ok(ok, name); console.log('PASS', name); };
     await p.click('.nv-links [data-go="ranking"]');
     check('Ranking', await onScreen(p, 'ranking'));
 
+    await p.click('.nv-links [data-go="teclado"]');
     // A lesson from "Seguí acá", and back to the same section
     await p.click('#tkContinue');
     check('Continuar opens the lesson', await visible(p, '#lesson') && !(await visible(p, '#home')) && (await p.textContent('#lName')).includes('F'));
     await p.evaluate(() => { const key = document.querySelector('#inner .c').textContent; document.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true })); });
     await p.click('#back');
     check('Leaving the lesson goes back to Teclado', await visible(p, '#home') && await onScreen(p, 'teclado'));
-    await p.click('[data-go="inicio"]'); await p.click('#nvHeroSpeed');
-    check('On a computer, Medir mi velocidad starts the 1-minute test', await visible(p, '#lesson') && (await p.textContent('#lGroup')).includes('1 minuto') && (await events(p, 'quick_start')).some(e => e.kind === 'speed'));
+    await p.click('[data-go="inicio"]'); await p.click('#testBtn'); await p.getByRole('button', { name: 'Medir a ciegas', exact: true }).click();
+    check('On a computer, Medir mi velocidad starts the 1-minute test', await visible(p, '#lesson') && (await p.textContent('#lGroup')).includes('1 minuto') );
     await p.click('#back');
     check('…and coming back shows the speed tests', await onScreen(p, 'teclado') && await visible(p, '#methods'));
     await p.click('[data-view-of="teclado"] [role="tab"][data-sub="entrenar"]');
-    await p.click('[data-go="inicio"]'); await p.click('#nvHeroIq');
+    await p.click('[data-go="inicio"]'); await p.click('#scMax'); await p.click('#nvGameIq');
     check('Desafío IQ ninja opens the 5-minute challenge', await visible(p, '#quiz') && await visible(p, '#qGo'));
     await p.click('#qBack');
     check('Leaving it goes back to Mente', await visible(p, '#home') && await onScreen(p, 'mente'));
@@ -69,7 +71,7 @@ const check = (name, ok) => { assert.ok(ok, name); console.log('PASS', name); };
 
     // Optional dark mode, remembered
     check('It starts light', await p.getAttribute('html', 'data-theme') === 'light');
-    await p.click('[data-go="inicio"]'); await p.click('#nvTheme');
+    await p.click('.nv-profile-link'); await p.click('[data-profile="preferencias"]'); await p.click('#nvTheme');
     check('The moon button switches to dark', await p.getAttribute('html', 'data-theme') === 'dark' && await p.getAttribute('#nvTheme', 'aria-pressed') === 'true');
     await p.reload(); await p.waitForLoadState('networkidle');
     check('…and dark mode survives a reload', await p.getAttribute('html', 'data-theme') === 'dark');
@@ -80,17 +82,18 @@ const check = (name, ok) => { assert.ok(ok, name); console.log('PASS', name); };
     check('On a phone there is a tab bar and the page does not scroll sideways', await visible(m, '.nv-tabbar') && await m.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
     await m.tap('.nv-tabbar [data-go="mente"]');
     check('The tab bar takes you to a section', await onScreen(m, 'mente') && await current(m, '.nv-tabbar') === 'mente');
+    await m.tap('.nv-tabbar [data-go="teclado"]');
     check('The groups are compact: the one in progress open, the others one line', await m.isVisible('#path .group:first-child .lc') && !(await m.isVisible('#path .group:nth-child(2) .lc')) && await m.isVisible('#path .group:nth-child(2) .nv-fold-btn'));
     await m.tap('#path .group:nth-child(2) .nv-fold-btn');
     check('…and open with a tap', await m.isVisible('#path .group:nth-child(2) .lc'));
-    check('The phone gets the bridge: why a keyboard, the phone challenge and saving the course', await m.isVisible('#nvBridge') && (await m.textContent('#nvHeroSpeed')).includes('Desafío de celular') && await m.isVisible('#nvHeroSave') && (await events(m, 'mobile_bridge_shown')).length === 1);
+    check('The phone gets the bridge: why a keyboard, the phone challenge and saving the course', await m.isVisible('#nvBridge') && (await m.textContent('#nvHeroSpeed')).includes('Desafío de celular') && await m.isVisible('#nvSave') && (await events(m, 'mobile_bridge_shown')).length === 1);
     await m.tap('#nvSave');
     check('Saving the course offers WhatsApp, mail and the link, and an account', await m.isVisible('#nvSavePanel') && await m.isVisible('#nvWa') && await m.isVisible('#nvMail') && await m.isVisible('#nvCopy') && await m.isVisible('#nvSaveAccount'));
     const waUrl = new Promise(res => m.context().once('page', pg => res(pg.url())));
     await m.tap('#nvWa');
     check('WhatsApp carries the link to the course for the computer', decodeURIComponent(await waUrl).includes('/nueva?desde=celu#teclado') && (await events(m, 'mobile_bridge_action')).some(e => e.action === 'whatsapp'));
     // The phone typing challenge: its own result, not the course's
-    await m.tap('.nv-tabbar [data-go="inicio"]'); await m.tap('#nvHeroSpeed');
+    await m.tap('#nvCelu');
     check('The phone challenge opens on its own screen', await m.isVisible('#game') && (await m.textContent('#gameTitle')) === 'Desafío de celular');
     await m.tap('#gameGo');
     await m.evaluate(() => { const text = [...document.querySelectorAll('#gmCeluText span')].map(s => s.textContent).join(''); const inp = document.getElementById('gmCeluIn'); inp.value = text.slice(0, 60); inp.dispatchEvent(new Event('input')); });
@@ -215,7 +218,7 @@ const check = (name, ok) => { assert.ok(ok, name); console.log('PASS', name); };
     const viewed = await (await fetch(SITE + '/api/batallas?ids=' + battleId)).json();
     check('Anyone with the link sees names and scores only', viewed.battles[0].from === 'Facu' && viewed.battles[0].responses[0].name === 'Ana' && viewed.battles[0].responses[0].result === 'won' && !('user' in viewed.battles[0]));
     const mp = await open('/nueva', phone);
-    check('On the phone, Mi dojo is in the tab bar', await mp.isVisible('.nv-tabbar [data-go="dojo"]'));
+    check('On the phone, the four-tab bar opens Profile, with Dojo inside', await mp.isVisible('.nv-tabbar [data-go="dojo"]') && (await mp.textContent('.nv-tabbar [data-go="dojo"]')).includes('Perfil') && await mp.locator('.nv-tabbar a').count() === 4);
 
     // Progress checks of the course: starting point, control at lesson 6, summary at 10, blocks, final measurement
     const BASE_IDS = ['fj','dk','sl','añ','gh','rep1','ei','ru','ty','wo','qp','rep2','nm','vb','c,','x.','z','rep3','may','til','ref','cos','ofi','tec','coc','via'];
@@ -332,7 +335,7 @@ const check = (name, ok) => { assert.ok(ok, name); console.log('PASS', name); };
     const gctx = await browser.newContext(); await gctx.addInitScript(ids => { localStorage.setItem('teclado-ciego-v1', JSON.stringify({ lessons: Object.fromEntries(ids.slice(0, -1).map(id => [id, { stars: 2, ppm: 30, acc: 96 }])) })); }, BASE);
     const gp = await gctx.newPage(); gp.on('pageerror', e => errors.push(e.message));
     await gp.goto(SITE + '/nueva#teclado'); await gp.waitForLoadState('networkidle');
-    check('One lesson to go: the count is about the course', (await gp.textContent('#tkCount')) === '25 de 26 completadas · te faltan 1');
+    check('One lesson to go: the count is about the course', (await gp.textContent('#tkCount')) === '5 de 6 en esta etapa');
     await gp.click('#tkContinue');
     await gp.evaluate(() => { const text = [...document.querySelectorAll('#inner .c')].map(s => s.textContent).join(''); for (const key of text) document.dispatchEvent(new KeyboardEvent('keydown', { key, shiftKey: key !== key.toLowerCase(), bubbles: true, cancelable: true })); });
     await gp.waitForSelector('#result:not([hidden])');

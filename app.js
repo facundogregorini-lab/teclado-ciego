@@ -201,6 +201,10 @@ const TIERS = [
     'Cuatro brazos y cero errores. Alguien llame a la NASA.'] },
 ];
 const tierShort = i => TIERS[i].name.replace(/^un /, '');
+// Difficulty labels are independent from the playful speed/IQ comparison tiers.
+const COG_BELTS = ['blanco', 'amarillo', 'naranja', 'verde', 'azul', 'negro', 'negro'];
+const cogLevel = i => window.tnLayout ? `cinturón ${COG_BELTS[i]}` : `nivel ${tierShort(i)}`;
+const cogBeltArt = i => `<span class="nv-difficulty-belt belt-${COG_BELTS[i]}" aria-hidden="true"></span>`;
 const tierFor = ppm => { let i = 0; while (i < TIERS.length - 1 && ppm >= TIERS[i + 1].min) i++; return i; };
 // Share of people who type slower, assuming speeds spread normally around the median (standard deviation 16).
 function percentile(ppm) {
@@ -1021,6 +1025,10 @@ function cogState(gi, tr = cogTrack) {
   return { done, total: ss.length, complete: done === ss.length, gold, tier: gi === FINAL ? (gold ? ALIEN : NOBEL) : gi };
 }
 function cogText(gi, st) {
+  if (window.tnLayout) {
+    if (gi === FINAL) return st.complete ? `¡Cinturón negro! Completaste las ${st.total} sesiones.${st.gold ? ' Con 3 estrellas en todas.' : ''}` : 'Completá los cinco cinturones y probá el simulacro.';
+    return st.complete ? `¡Cinturón superado! Sigue: ${cogLevel(gi + 1)}.` : `${st.done} de ${st.total} sesiones de este cinturón.`;
+  }
   if (gi === FINAL) return st.gold ? `¡Alien! Las ${st.total} sesiones con 3 estrellas.`
     : st.complete ? `¡Premio Nobel! Aprobaste las ${st.total} sesiones. Con 3 estrellas en todas, alien.`
     : `Aprobá las ${st.total} sesiones para ser premio Nobel (llevás ${st.done}). Con 3 estrellas en todas, alien.`;
@@ -1030,6 +1038,7 @@ function cogText(gi, st) {
 function cogCard(gi, tr = cogTrack) {
   const st = cogState(gi, tr);
   const steps = gi === FINAL ? '' : `<span class="evo-steps">${Array.from({ length: st.total }, (_, i) => `<i class="${i < st.done ? 'on' : ''}"></i>`).join('')}</span>`;
+  if (window.tnLayout) return `<figure class="evo-card nv-cog-belt">${cogBeltArt(st.tier)}<figcaption><b>${cap1(cogLevel(st.tier))}</b><span>${cogText(gi, st)}</span>${steps}</figcaption></figure>`;
   return `<figure class="evo-card" data-tier="${st.tier}" data-done="${st.done}">${evoArt(gi, st)}<figcaption><b>Nivel ${tierShort(st.tier)}</b><span>${cogText(gi, st)}</span>${steps}</figcaption></figure>`;
 }
 const nextSession = (tr = cogTrack) => SESSIONS[tr].find(x => !(S.cog[x.id]?.stars >= 1)) || SESSIONS[tr][SESSIONS[tr].length - 1];
@@ -1086,7 +1095,7 @@ function renderCog() {
   $('cogTitle').innerHTML = `${T.icon} ${T.name}`;
   $('cogBlurb').textContent = T.blurb;
   $('cogContinue').innerHTML = iqTest() ? 'Medí tu IQ ninja <small>desafío de 5 min</small>'
-    : `${anyDone ? 'Seguir' : 'Empezar'}: sesión ${nx.n} <small>${nx.name} · nivel ${tierShort(nx.g)}</small>`;
+    : `${anyDone ? 'Seguir' : 'Empezar'}: sesión ${nx.n} <small>${nx.name} · ${cogLevel(nx.g)}</small>`;
   $('simBtn').innerHTML = `Simulacro de entrevista <small>${T.sim.n} preguntas · ${T.sim.min} min</small>`;
   $('cogTrackName').textContent = T.short.toUpperCase();
   $('cStars').textContent = `${all.reduce((a, x) => a + (S.cog[x.id]?.stars || 0), 0)}/${all.length * 3}`;
@@ -1097,10 +1106,10 @@ function renderCog() {
   $('cogSample').className = 'cog-sample' + (sample.text ? ' txt' : '');
   $('cogSample').innerHTML = `<p>${escHtml(sample.prompt)}</p>${qFigure(sample, 'fig')}<div class="q-opts sample${sample.text ? ' txt' : ''}">${sample.options.map((o, i) => `<span class="opt${i === sample.answer ? ' right' : ''}"><b>${'ABCDE'[i]}</b>${optHtml(sample, o)}</span>`).join('')}</div><p class="q-tip">💡 ${escHtml(sample.tip)}</p>`;
   $('cogKinds').innerHTML = T.kinds.map(k => `<article class="kind"><h3>${k.name}</h3><p>${k.desc}</p><h4>Técnicas</h4><ul>${k.guide.slice(0, 3).map(g => `<li>${escHtml(g)}</li>`).join('')}</ul></article>`).join('');
-  $('cogPathTitle').textContent = `${T.icon} ${T.name}: de chimpancé a premio Nobel.`;
+  $('cogPathTitle').textContent = window.tnLayout ? 'Tu entrenamiento · 5 cinturones' : `${T.icon} ${T.name}: de chimpancé a premio Nobel.`;
   $('cogPath').replaceChildren(...T.levels.map((lv, gi) => {
     const sec = document.createElement('section'); sec.className = 'group';
-    sec.innerHTML = `<div class="group-head"><div><h2>${lv.name}</h2><p>Dificultad ${gi + 1} de 5 · ${lv.perQ} segundos por pregunta. Aprobás con ${passFor(6)} de 6${cogTrack === 'eng' ? ` (${passFor(5)} de 5 en ordenar oraciones)` : ''}; todas bien, 3 estrellas.</p></div>${cogCard(gi)}</div>`;
+    sec.innerHTML = `<div class="group-head"><div><h2>${window.tnLayout ? `<span class="nv-level-label">${cogBeltArt(gi)} ${cap1(cogLevel(gi))}</span>` : ''}${lv.name}</h2><p>Dificultad ${gi + 1} de 5 · ${lv.perQ} segundos por pregunta. Aprobás con ${passFor(6)} de 6${cogTrack === 'eng' ? ` (${passFor(5)} de 5 en ordenar oraciones)` : ''}; todas bien, 3 estrellas.</p></div>${cogCard(gi)}</div>`;
     const cards = document.createElement('div'); cards.className = 'cards';
     for (const x of all.filter(x => x.g === gi)) {
       const rec = S.cog[x.id], b = document.createElement('button');
@@ -1167,7 +1176,7 @@ function startQuiz(sess) {
   quiz = { sess, sim, co, tr, qs, i: 0, ok: 0, picks: [], limit: co ? co.min * 60000 : sim ? T.sim.min * 60000 : sess.size * T.levels[sess.d - 1].perQ * 1000, t0: performance.now() };
   quiz.guided = !sim && dojo.guided;
   mode = 'quiz'; counted = false; setQuizLabels(false); $('qIntro').hidden = true;
-  $('qGroup').textContent = co ? `🏢 ${co.name} · ${co.n} preguntas en ${co.min} minutos` : sim ? `${T.icon} ${T.short} · simulacro de ${T.sim.n} preguntas en ${T.sim.min} minutos` : `${T.icon} ${T.short} · sesión ${sess.n} · nivel ${tierShort(sess.g)} · dificultad ${sess.d}`;
+  $('qGroup').textContent = co ? `🏢 ${co.name} · ${co.n} preguntas en ${co.min} minutos` : sim ? `${T.icon} ${T.short} · simulacro de ${T.sim.n} preguntas en ${T.sim.min} minutos` : `${T.icon} ${T.short} · sesión ${sess.n} · ${cogLevel(sess.g)} · dificultad ${sess.d}`;
   $('qName').textContent = co ? co.name : sim ? 'Simulacro de entrevista' : sess.name;
   $('qPlay').hidden = false; $('qResult').hidden = true;
   show('quiz'); renderQ();
@@ -1184,7 +1193,7 @@ function startNinja() {
   clearInterval(timer);
   quiz = { ninja: true, qs: [], used: new Set(), i: 0, ok: 0, picks: [], points: 0, level: 1, limit: NINJA_MS, t0: 0 };
   mode = 'nready'; $('qGo').disabled = false; counted = false; setQuizLabels(true);
-  $('qName').textContent = 'Desafío de 5 minutos'; $('qGroup').textContent = 'Ninja mental · dificultad 1 de 5';
+  $('qName').textContent = 'Desafío de 5 minutos'; $('qGroup').textContent = window.tnLayout ? 'Ninja mental · cinturón blanco · dificultad 1 de 5' : 'Ninja mental · dificultad 1 de 5';
   $('qNum').textContent = '0'; $('qOk').textContent = '0'; $('qTime').textContent = fmt(NINJA_MS); $('qBar').style.width = '0%';
   $('qTime').parentElement.classList.remove('low');
   $('qIntro').hidden = false; $('qPlay').hidden = true; $('qResult').hidden = true;
@@ -1218,7 +1227,7 @@ function renderQ() {
   const q = quiz.qs[quiz.i];
   if (quiz.ninja) {
     $('qNum').textContent = quiz.i; $('qOk').textContent = quiz.points;
-    $('qGroup').textContent = `Ninja mental · dificultad ${quiz.level} de 5`;
+    $('qGroup').textContent = `Ninja mental · ${window.tnLayout ? cogLevel(quiz.level - 1) + ' · ' : ''}dificultad ${quiz.level} de 5`;
   } else {
     $('qNum').textContent = `${quiz.i + 1}/${quiz.qs.length}`; $('qOk').textContent = quiz.sim ? '—' : quiz.ok;
     $('qBar').style.width = (100 * quiz.i / quiz.qs.length) + '%';
@@ -1289,7 +1298,7 @@ async function answerNinja(k, ev) {
   const btns = $('qOpts').children, before = run.level;
   btns[r.answer].classList.add('right'); if (!r.right) btns[k].classList.add('wrong');
   run.ok = r.ok; run.points = r.points; run.level = r.level;
-  $('qFlash').textContent = (r.right ? `✓ ¡Bien! +${r.pts} ${r.pts === 1 ? 'punto' : 'puntos'}` : `✗ Era la ${'ABCDE'[r.answer]}`) + (run.level > before ? ` · ¡Sube la dificultad a ${run.level}!` : ' · Va la siguiente');
+  $('qFlash').textContent = (r.right ? `✓ ¡Bien! +${r.pts} ${r.pts === 1 ? 'punto' : 'puntos'}` : `✗ Era la ${'ABCDE'[r.answer]}`) + (run.level > before ? ` · ¡Sube a ${window.tnLayout ? cogLevel(run.level - 1) : 'dificultad ' + run.level}!` : ' · Va la siguiente');
   $('qFlash').className = 'q-flash ' + (r.right ? 'ok' : 'bad');
   $('qNum').textContent = run.i + 1; $('qOk').textContent = run.points;
   setTimeout(() => {
@@ -1332,11 +1341,15 @@ function finishQuiz() {
       txt = gi === FINAL ? 'Aprobá todas las sesiones para llegar a premio Nobel, y probá el simulacro.' : `Evolucionaste: ahora vas por el nivel ${tierShort(gi)}.`;
     } else if (after.gold && !before.gold) { title = `¡Nivel ${P} con 3 estrellas!`; fresh = true; }
     else if (!st && !(prev?.stars >= 1)) txt = `Acertá ${passFor(n)} de ${n} para aprobarla y avanzar en el nivel ${P}.`;
+    if (window.tnLayout) {
+      title = fin.complete ? '¡Cinturón negro!' : after.complete ? `¡${cap1(cogLevel(sess.g))} superado!` : cap1(cogLevel(sess.g));
+      txt = cogText(fin.complete ? FINAL : sess.g, fin.complete ? fin : after);
+    }
     const msg = timedOut ? 'Se terminó el tiempo: las preguntas sin responder cuentan como incorrectas.'
       : st === 3 ? '¡Perfecto! Todas bien.' : st ? `Aprobada. Con ${st === 1 ? Math.ceil(n * .8) : n} de ${n} ganás otra estrella.` : 'Todavía no: leé las explicaciones y las técnicas, y probá de nuevo.';
     html = `<h3>${st ? 'Sesión aprobada' : 'Casi: repetila'}</h3>${stars(st, 'bigstars')}
       <div class="nums"><div><b>${ok}/${n}</b><span>correctas</span></div><div><b>${pct}%</b><span>aciertos</span></div><div><b>${fmt(ms)}</b><span>tiempo</span></div></div>
-      <p>${msg}</p><div class="result-evo">${evoArt(gi, st2, fresh)}<div><b>${title}</b><p>${txt}</p></div></div>`;
+      <p>${msg}</p><div class="result-evo">${window.tnLayout ? cogBeltArt(fin.complete ? FINAL : sess.g) : evoArt(gi, st2, fresh)}<div><b>${title}</b><p>${txt}</p></div></div>`;
   }
   save();
   tn.capture('practice_completed', { ...practiceInfo(true), accuracy: pct, correct: ok, questions: n, stars: quiz.sim ? null : S.cog[sess.id]?.stars || 0, duration_ms: Math.round(ms) });
@@ -1483,12 +1496,21 @@ function renderRanking() {
   document.querySelectorAll('#rankView button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === rankView)));
   renderRankInto($('rankList'), $('rankNote'), rankView);
   renderRankInto($('ninjaRank'), $('ninjaRankNote'), 'ninja', 10);
+  if ($('homeTypingRank')) renderRankInto($('homeTypingRank'), $('homeTypingNote'), homeRankViews.typing, 3);
+  if ($('homeMentalRank')) renderRankInto($('homeMentalRank'), $('homeMentalNote'), homeRankViews.mental, 3);
 }
 function rankLine(ppm) {
   const el = $('rankLine'), me = RANK?.speed?.me;
   if (el && ppm > 250) el.textContent = 'Más de 250 palabras por minuto no entra al ranking: sospechamos de un gato sobre el teclado.';
   else if (el && me) el.textContent = `Con tu mejor marca (${me.score} ppm) estás #${me.rank} de ${RANK.speed.total + (RANK.speed.rivals || 0)} en el ranking de velocidad (con los rivales del dojo).`;
 }
+const homeRankViews = { typing: 'speed', mental: 'ninja' };
+document.querySelectorAll('[data-home-rank]').forEach(b => b.onclick = () => {
+  const view = b.dataset.homeRank, key = ['speed', 'progress'].includes(view) ? 'typing' : 'mental';
+  homeRankViews[key] = view;
+  b.parentElement.querySelectorAll('button').forEach(t => t.setAttribute('aria-pressed', String(t === b)));
+  renderRanking();
+});
 document.querySelectorAll('#rankView button').forEach(b => b.onclick = () => { rankView = b.dataset.v; renderRanking(); });
 
 /* ---------- Freemium: a few free practices per day, unlimited with a Mercado Pago subscription ---------- */

@@ -27,7 +27,7 @@
 <link rel="stylesheet" href="nueva.css">
 <script>try{const t=localStorage.getItem("tn-theme");document.documentElement.dataset.theme=t==="dark"?"dark":"light"}catch{}</script>
 </head>
-<body data-tab="inicio">
+<body data-tab="inicio" class="nv-clean">
 <a class="skip-link" href="#home">Saltar al contenido</a>
 <div class="wrap nv">
   <header class="top nv-top">
@@ -36,14 +36,12 @@
       <a href="#" data-go="inicio">Inicio</a>
       <a href="#teclado" id="tcCta" data-go="teclado">Teclado</a>
       <a href="#ninja" id="cogCta" data-go="mente">Mente</a>
-      <a href="#desafios" data-go="desafios">Desafíos</a>
-      <a href="#dojo" data-go="dojo">Mi dojo</a>
       <a href="#ranking" data-go="ranking">Ranking</a>
     </nav>
     <div class="nv-right">
-      <button class="nv-theme" id="nvTheme" type="button" aria-label="Cambiar a modo oscuro" title="Modo oscuro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+
       <button class="upgrade-cta" id="upgradeCta">✦ <span id="upgradeLabel">Ilimitado</span></button>
-      <button class="acct out" id="acctBtn">Entrar</button>
+      <a class="nv-profile-link" href="#perfil" data-go="dojo"><span aria-hidden="true">◯</span> Perfil</a>
     </div>
   </header>
   <section class="challenge-banner" id="challengeBanner" hidden aria-live="polite">
@@ -58,8 +56,8 @@
       <section class="nv-hero" aria-labelledby="heroTitle">
         <div>
           <span class="eyebrow">Teclado y mente · para tu próximo trabajo</span>
-          <h1 id="heroTitle">Escribí sin mirar.<br>Pensá más rápido.</h1>
-          <p>Entrenamiento corto y medible para lo que piden las búsquedas: tipeo veloz y tests de selección. Empezá gratis, sin descargar nada.</p>
+          <h1 id="heroTitle">Escribí sin mirar.<br><em>Pensá más rápido.</em></h1>
+          <p>Entrená a tu ritmo. Medí cómo mejorás.</p>
           <div class="actions">
             <button class="btn primary" id="nvHeroSpeed">⌨ Medir mi velocidad <small>1 min</small></button>
             <button class="btn" id="nvHeroIq">◎ Desafío IQ ninja <small>5 min</small></button>
@@ -71,7 +69,7 @@
         <div class="nv-enso" aria-hidden="true"><svg viewBox="0 0 200 200" role="presentation"><path d="M160 58 C 132 18, 52 22, 34 82 C 18 138, 70 178, 118 168 C 160 158, 182 118, 170 84" fill="none" stroke="var(--ink)" stroke-width="13" stroke-linecap="round" opacity=".88"/><path d="M168 76 C 174 92 172 104 168 112" fill="none" stroke="var(--ink)" stroke-width="7" stroke-linecap="round" opacity=".45"/><g transform="translate(68 78)" fill="none" stroke="var(--accent)" stroke-width="5" stroke-linecap="round"><path d="M0 12 H64 M6 12 V50 M58 12 V50 M-6 2 Q32 -8 70 2"/></g></svg>
 </div>
       </section>
-      <section class="nv-doors" id="sections" aria-label="Elegí tu dojo">
+      <section class="nv-doors" id="sections" aria-label="Elegí qué querés practicar">
         <article class="nv-door">
           <div class="nv-ico" aria-hidden="true"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="2" y="6" width="20" height="12" rx="3"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/></svg></div>
           <div class="nv-tags"><span>26 lecciones</span><span>Medición de velocidad</span><span>Guía de dedos</span></div>
@@ -86,16 +84,24 @@
           <h2>Ninja mental</h2>
           <p>Los tests que usan las empresas para elegir candidatos, con la técnica y la explicación de cada respuesta.</p>
           <div class="nv-stats"><div><b id="scSessions">0/45</b><span>sesiones</span></div><div><b id="scIq">—</b><span>mejor IQ ninja</span></div></div>
-          <div class="actions"><button class="btn primary" id="scNinja">Empezar a entrenar →</button><button class="btn" id="scMax">Desafío de 5 minutos</button></div>
+          <div class="actions"><button class="btn primary" id="scNinja">Empezar a entrenar →</button><button class="btn" id="scMax">Desafíos relámpago</button></div>
         </article>
       </section>
+      <section class="nv-home-ranks" aria-labelledby="homeRanksTitle">
+        <div class="nv-sh"><h2 id="homeRanksTitle">Rankings</h2><a href="#ranking" data-go="ranking">Ver todos →</a></div>
+        <div class="nv-rank-pair">
+          <article><h3>Ninja del teclado</h3><div class="seg" aria-label="Ranking del teclado"><button data-home-rank="speed" aria-pressed="true">Velocidad</button><button data-home-rank="progress" aria-pressed="false">Avance</button></div><ol class="rank-list" id="homeTypingRank"></ol><p class="rank-note" id="homeTypingNote"></p></article>
+          <article><h3>Ninja mental</h3><div class="seg" aria-label="Ranking mental"><button data-home-rank="ninja" aria-pressed="true">Desafío</button><button data-home-rank="cog" aria-pressed="false">Avance</button></div><ol class="rank-list" id="homeMentalRank"></ol><p class="rank-note" id="homeMentalNote"></p></article>
+        </div>
+      </section>
+      <a class="nv-lightning-link" href="#desafios" data-go="desafios">⚡ Desafíos relámpago <span>Memoria, reflejos y más, dentro de Ninja mental →</span></a>
     </div>
 
     <!-- ============ TECLADO ============ -->
-    <div class="nv-view" data-view-of="teclado">
+    <div class="nv-view" data-view-of="teclado" hidden>
       <div class="nv-dhead" id="teclado">
         <div class="nv-ico" aria-hidden="true"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="2" y="6" width="20" height="12" rx="3"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/></svg></div>
-        <div><span class="eyebrow">Tu dojo</span><h1 id="typingTitle">Ninja del teclado</h1></div>
+        <div><span class="eyebrow">Tu práctica</span><h1 id="typingTitle">Ninja del teclado</h1></div>
         <button class="btn nv-dhead-btn" data-sub-go="medir">⏱ Medir · 1 min</button>
       </div>
       <div class="nv-tabs" role="tablist" aria-label="Ninja del teclado">
@@ -140,7 +146,7 @@
       <span class="summary-flower" aria-hidden="true">✳</span>
     </section>
         <section class="learning" id="learning" aria-labelledby="learningTitle">
-      <div class="section-heading"><div><span class="eyebrow">TU CAMINO</span><h2 id="learningTitle">Un poquito mejor, cada día.</h2></div><span>26 lecciones · Sin apuro</span></div>
+      <div class="section-heading"><div><span class="eyebrow">TU CAMINO</span><h2 id="learningTitle">Lecciones</h2></div><span>26 lecciones · Sin apuro</span></div>
       <div class="path" id="path"></div>
     </section>
         <p class="notice" id="touchNote" hidden>En el celular podés practicar con el teclado de la pantalla, pero el método de los dedos se aprende con un teclado físico: usá una computadora o conectá un teclado a la tablet.</p>
@@ -208,15 +214,16 @@
     </div>
 
     <!-- ============ MENTE ============ -->
-    <div class="nv-view" data-view-of="mente">
+    <div class="nv-view" data-view-of="mente" hidden>
       <div class="nv-dhead" id="cog">
         <div class="nv-ico" aria-hidden="true"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9 4a3 3 0 0 0-3 3 3 3 0 0 0-2 5 3 3 0 0 0 2 5 3 3 0 0 0 6 1V5a2 2 0 0 0-3-1zM15 4a3 3 0 0 1 3 3 3 3 0 0 1 2 5 3 3 0 0 1-2 5 3 3 0 0 1-6 1"/></svg></div>
-        <div><span class="eyebrow">Tu dojo</span><h1 id="cogBlockTitle">Ninja mental</h1></div>
+        <div><span class="eyebrow">Tu práctica</span><h1 id="cogBlockTitle">Ninja mental</h1></div>
         <button class="btn nv-dhead-btn" data-sub-go="desafio">◎ Desafío IQ · 5 min</button>
       </div>
       <div class="nv-tabs" role="tablist" aria-label="Ninja mental">
         <button role="tab" data-sub="entrenar" aria-selected="true">Entrenar</button>
-        <button role="tab" data-sub="desafio" aria-selected="false">Desafío de 5 minutos</button>
+        <button role="tab" data-sub="desafio" aria-selected="false">Desafío IQ</button>
+        <button role="tab" data-sub="relampago" aria-selected="false">Desafíos relámpago</button>
         <a class="nv-tab-link" href="/profesional">Preparación por empresa ↗</a>
       </div>
       <div class="nv-sub" data-sub-of="entrenar">
@@ -272,12 +279,9 @@
       </div>
     </section>
       </div>
-    </div>
-
-    <!-- ============ DESAFÍOS RÁPIDOS ============ -->
-    <div class="nv-view" data-view-of="desafios" id="desafios">
+<div class="nv-sub" data-sub-of="relampago" data-view-of="desafios" hidden id="desafios">
       <section class="nv-quick" aria-labelledby="quickTitle">
-        <div class="nv-sh"><div><span class="eyebrow">Desafíos rápidos · gratis</span><h2 id="quickTitle">Probate en pocos minutos</h2></div></div>
+        <div class="nv-sh"><div><span class="eyebrow">Prácticas cortas · gratis</span><h2 id="quickTitle">Desafíos relámpago</h2></div></div>
         <div class="nv-games">
           <button class="nv-game" id="nvGameIq"><span class="nv-vis"><span class="nv-vis-txt">IQ <i>?</i></span></span><b>Desafío IQ ninja</b><span>Figuras, números e inglés · 5 min</span></button>
           <button class="nv-game" id="nvGameSim"><span class="nv-vis"><span class="nv-vis-txt">11<small>/11</small></span></span><b>Simulacro de entrevista</b><span>Como el día del test · 11 min</span></button>
@@ -290,9 +294,18 @@
           <div><i>✓</i><div><b>Medís tu avance</b><span>Velocidad, precisión e IQ ninja, con tu evolución.</span></div></div>
       </section>
     </div>
+    </div>
 
     <!-- ============ MI DOJO ============ -->
-    <div class="nv-view" data-view-of="dojo">
+    <div class="nv-view" data-view-of="dojo" hidden>
+      <div class="nv-profile-heading"><span class="eyebrow">Perfil</span><h1>Mi perfil</h1></div>
+      <div class="nv-tabs nv-profile-tabs" role="tablist" aria-label="Perfil">
+        <button role="tab" data-profile="dojo" aria-selected="true">Mi Dojo</button>
+        <button role="tab" data-profile="cuenta" aria-selected="false">Cuenta</button>
+        <button role="tab" data-profile="preferencias" aria-selected="false">Preferencias</button>
+      </div>
+      <div class="nv-profile-panel" data-profile-panel="dojo">
+      <h2>Mi Dojo</h2>
       <section class="nv-card nv-me" id="midojo" aria-labelledby="mdName">
         <span class="nv-me-av" id="mdAv" aria-hidden="true">🥷</span>
         <div><span class="eyebrow">Mi dojo</span><h2 id="mdName">Ninja invitado</h2><p id="mdLevel"></p></div>
@@ -324,10 +337,21 @@
         <div class="nv-battles" id="mdBattles" aria-live="polite"></div>
         <div class="actions"><button class="btn primary" id="mdNewBattle">⚔️ Crear batalla</button></div>
       </div>
+      </div>
+      <section class="nv-card nv-profile-panel" data-profile-panel="cuenta" hidden>
+        <h2>Tu cuenta</h2><p>Entrá para guardar tu progreso en todos tus dispositivos, editar tu nombre y gestionar tu acceso.</p>
+        <button class="acct out" id="acctBtn">Entrar</button>
+        <a href="/precios.html">Ver planes y acceso ilimitado →</a>
+      </section>
+      <section class="nv-card nv-profile-panel" data-profile-panel="preferencias" hidden>
+        <h2>Preferencias</h2><div class="nv-theme-row"><span>Apariencia clara u oscura</span><button class="nv-theme" id="nvTheme" type="button" aria-label="Cambiar a modo oscuro" title="Modo oscuro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button></div>
+        <button class="btn" id="profileKeyboardSettings">Teclado y ayudas →</button>
+        <div id="profilePracticeOptions"></div>
+      </section>
     </div>
 
     <!-- ============ RANKING ============ -->
-    <div class="nv-view" data-view-of="ranking">
+    <div class="nv-view" data-view-of="ranking" hidden>
       <section class="ranking" id="ranking" aria-labelledby="rankTitle">
       <div class="rank-head">
         <div>
@@ -465,8 +489,7 @@
   <a href="#" data-go="inicio"><span aria-hidden="true">⌂</span>Inicio</a>
   <a href="#teclado" data-go="teclado"><span aria-hidden="true">⌨</span>Teclado</a>
   <a href="#ninja" data-go="mente"><span aria-hidden="true">◎</span>Mente</a>
-  <a href="#desafios" data-go="desafios"><span aria-hidden="true">⚡</span>Desafíos</a>
-  <a href="#dojo" data-go="dojo"><span aria-hidden="true">⛩</span>Mi dojo</a>
+  <a href="#perfil" data-go="dojo"><span aria-hidden="true">◯</span>Perfil</a>
 </nav>
 
 <dialog id="authDlg" aria-labelledby="authTitle">
