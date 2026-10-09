@@ -1,5 +1,17 @@
 # Templo Ninja
 
+## Nueva versión: pantallas simples y perfil
+
+`/nueva` usa pantallas separadas para Inicio, Teclado, Mente, Ranking y Perfil. Los dos accesos de Inicio llevan a entrenar o medirse; debajo hay rankings reales de teclado y mente. Las etapas se despliegan tanto en desktop como en mobile y el siguiente paso muestra el progreso de la etapa, sin repetir todos los contadores.
+
+- **Ninja mental → Desafíos relámpago:** conserva IQ ninja, simulacro, chimpancé, memoria de números, memoria visual y reflejos. En dispositivos táctiles también conserva el desafío de escritura en celular.
+- **Perfil → Mi Dojo:** reúne el siguiente entrenamiento, el progreso, las marcas y las batallas. Cuenta conserva el acceso y la edición del nombre; Preferencias reúne la apariencia y las opciones de práctica.
+- **Cinturones de dificultad mental:** blanco, amarillo, naranja, verde y azul para los cinco niveles; negro al completar la pista. Es una escala del producto. No cambia tiempos, preguntas, puntajes ni requisitos para aprobar. La mecanografía conserva sus 26 lecciones base y las 40 adicionales de cinturones.
+- Se mantienen los identificadores y claves de progreso. Los enlaces anteriores `#dojo`, `#desafios`, juegos, invitaciones y la instalación PWA siguen funcionando; el perfil usa ahora `#perfil`.
+- La página original `/` mantiene su presentación. El motor compartido aplica los nuevos cinturones de dificultad solamente cuando está activo el diseño de `/nueva`.
+
+Validación: `npm test`. `npm run test:redesign` comprueba la navegación, la disponibilidad de todo el contenido y el ancho a 320, 390, 768 y 1280 px. Para usar un Chrome instalado, definir `CHROME_PATH`; para guardar capturas de revisión, definir `QA_OUTPUT` con un directorio local. Las pruebas usan una base en memoria y desactivan analítica publicitaria.
+
 > Nueva experiencia: plan diario (debajo de las tarjetas de cada sección) para cuatro áreas y tres niveles, repaso de errores, práctica guiada sin reloj, humor configurable, retos con el mismo texto y mejoras de accesibilidad y mobile. Ver [MEJORAS.md](MEJORAS.md) para decisiones, referentes, validación y límites. `dojo.js` contiene las funciones de aprendizaje y `dojo.css`, los estilos nuevos.
 
 Aplicación en español con dos secciones: **⌨️ Teclado Ciego**, para aprender a escribir sin mirar el teclado, y **🥷 Ninja mental**, para entrenar los tests de razonamiento de las entrevistas laborales. El frontend no requiere compilación: `index.html` contiene las lecciones y la práctica; `scenery.css` y `scenery.js` agregan el diseño y los paisajes de `assets/`; `typists.js` y `typists.css` dibujan (en SVG) los personajes que escriben; `figures.js`, `numeric.js`, `english.js`, `logic.js` y `cognitive.css`, Ninja mental; `profesional.html` (`/profesional`), la página de preparación para los tests de selección por empresa.

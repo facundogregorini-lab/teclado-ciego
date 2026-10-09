@@ -1,14 +1,14 @@
 // /nueva: the new layout of the home page (a candidate for an A/B test against index.html). Same engine (app.js).
-// One page that scrolls: Inicio → Teclado (with its lessons) → Mente (with its paths) → Desafíos → Mi dojo → Ranking; the
-// header and the phone's tab bar take you to each section. It also adds the "Seguí acá" card, compact groups on
+// Focused screens: Inicio, Teclado, Mente, Ranking and Perfil. Lightning challenges belong to Mente;
+// Mi Dojo belongs to Perfil. Legacy #dojo/#desafios and battle links keep working. It also adds compact groups on
 // the phone, the bridge from the phone to the computer and the optional dark mode. Loaded before app.js, so that
 // app.js finds window.tnLayout and tells it where it goes; the buttons are wired once the page is ready.
 (() => {
   const $id = id => document.getElementById(id);
   const SECTIONS = ['inicio', 'teclado', 'mente', 'desafios', 'dojo', 'ranking'];
-  const HASH = { inicio: '', teclado: '#teclado', mente: '#ninja', desafios: '#desafios', dojo: '#dojo', ranking: '#ranking' };
+  const HASH = { inicio: '', teclado: '#teclado', mente: '#ninja', desafios: '#desafios', dojo: '#perfil', ranking: '#ranking' };
   const gameOf = hash => (/^#juego-(\w+)$/.exec(hash) || [])[1];
-  const secOf = hash => hash === '#teclado' ? 'teclado' : /^#(ninja|entrevistas)$/.test(hash) ? 'mente' : hash === '#desafios' ? 'desafios' : hash === '#dojo' ? 'dojo' : hash === '#ranking' ? 'ranking' : 'inicio';
+  const secOf = hash => hash === '#teclado' ? 'teclado' : /^#(ninja|entrevistas)$/.test(hash) ? 'mente' : hash === '#desafios' ? 'desafios' : /^#(dojo|perfil)$/.test(hash) ? 'dojo' : hash === '#ranking' ? 'ranking' : 'inicio';
   const capture = (e, p) => window.tn?.capture?.(e, p);
   const anchor = sec => document.querySelector(`[data-view-of="${sec}"]`);
   // A phone or tablet without a physical keyboard ("Tengo teclado físico" turns this off, remembered).
@@ -23,16 +23,25 @@
     if (sec === 'teclado' && sub === 'medir' && window.tnApp?.chartShown()) tnApp.drawChart(); // the chart sizes itself to a visible box
     if (sec === 'dojo' && sub === 'batallas') renderBattles(true);
   }
-  let holdMark = 0; // while the page scrolls to a section by itself, the sections it passes don't light up
-  function markCurrent(sec) { document.querySelectorAll('[data-go]').forEach(a => a.toggleAttribute('aria-current', a.dataset.go === sec)); }
+  let navigationEpoch = 0; // Explicit navigation wins over a pending return from a practice.
+  function markCurrent(sec) { document.querySelectorAll('[data-go]').forEach(a => { if (a.dataset.go === sec) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); }); }
+  function profileTab(tab) {
+    document.querySelectorAll('[data-profile-panel]').forEach(p => { p.hidden = p.dataset.profilePanel !== tab; });
+    document.querySelectorAll('[data-profile]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.profile === tab)));
+  }
   // Go to a section: scroll there (instantly when coming back from a lesson), say where we are in the address.
   function goTo(sec, { sub, scroll = true, smooth = true } = {}) {
+    navigationEpoch++;
     if (!SECTIONS.includes(sec)) sec = 'inicio';
-    if (sub) setSub(sec, sub);
-    markCurrent(sec); if (scroll) holdMark = performance.now() + 1200;
+    const screen = sec === 'desafios' ? 'mente' : sec;
+    document.querySelectorAll('#home > .nv-view').forEach(v => { v.hidden = v.dataset.viewOf !== screen; });
+    if (sec === 'desafios') setSub('mente', 'relampago');
+    else if (sub) setSub(sec, sub);
+    if (sec === 'dojo') profileTab('dojo');
+    markCurrent(screen);
     const want = location.pathname + location.search + HASH[sec];
     if (location.pathname + location.search + location.hash !== want) history.replaceState(null, '', want);
-    if (scroll) sec === 'inicio' ? scrollTo({ top: 0, behavior: smooth ? 'smooth' : 'auto' }) : anchor(sec).scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' });
+    if (scroll) scrollTo({ top: 0, behavior: 'instant' });
   }
 
   // Desafíos rápidos (desafios.js): their tiles, and their own screen next to the lesson and quiz ones.
@@ -87,9 +96,10 @@
     $id('tkNextEyebrow').textContent = allDone ? 'Cinturón negro completo 🥋' : inBelt ? `Seguí acá · ${B.name}` : `Seguí acá · ${GROUPS[nl.g].name}`;
     $id('tkNextTitle').textContent = allDone ? 'Repasá o medí tu velocidad' : `Lección ${nl.n}: ${nl.name}`;
     $id('tkNextDesc').textContent = allDone ? 'Terminaste el curso y los cinco cinturones. Volvé a cualquier lección para sumar estrellas.' : inBelt ? `${B.theme}. Meta: ${nl.goal} palabras por minuto.` : GROUPS[nl.g].desc;
-    const done = inBelt ? bs.done : baseDone, total = inBelt ? bs.total : LESSONS.length;
+    const groupLessons = LESSONS.filter(l => l.g === nl.g);
+    const done = inBelt ? bs.done : groupLessons.filter(passed).length, total = inBelt ? bs.total : groupLessons.length;
     $id('tkBar').style.width = Math.round(done / total * 100) + '%';
-    $id('tkCount').textContent = inBelt ? `${done} de ${total}` : baseAll ? `${total} de ${total} · curso completo` : done ? `${done} de ${total} completadas · te faltan ${total - done}` : `${total} lecciones cortas`;
+    $id('tkCount').textContent = inBelt ? `${done} de ${total}` : `${done} de ${total} en esta etapa`;
     $id('tkContinue').textContent = allDone ? 'Repasar →' : done || baseAll ? 'Continuar →' : 'Empezar →';
     $id('tkKeys').innerHTML = inBelt ? `<span class="belt-badge nv-belt-big" style="--bc:${B.color}"></span>` : nl.type === 'keys' ? [...nl.keys].map(k => `<kbd style="--fc:${tnApp.fcol(tnApp.key(k)?.f || 'th')}">${k.toUpperCase()}</kbd>`).join('') : '';
     const cb = baseAll ? tnApp.currentBelt() : -1;
@@ -100,6 +110,8 @@
     const white = $id('tkBelts').firstElementChild; // finished, the course hides; its belt shows it again
     if (baseAll) { white.tabIndex = 0; white.setAttribute('role', 'button'); white.title = 'Ver las lecciones del curso'; white.onclick = white.onkeydown = e => { if (e.type === 'keydown' && e.key !== 'Enter') return; document.body.classList.toggle('nv-show-base'); }; }
     fold(); renderDojo(); renderCheck();
+    $id('continue').textContent = 'Entrenar';
+    $id('scNinja').textContent = 'Entrenar';
   }
 
   // Mi dojo: who you are and your next goal; the training in its current block (not the whole mountain of
@@ -341,7 +353,7 @@
         const open = !!g.querySelector('.lc.next');
         g.classList.toggle('nv-folded', !open);
         const b = document.createElement('button'); b.type = 'button'; b.className = 'nv-fold-btn';
-        const label = () => { b.textContent = g.classList.contains('nv-folded') ? `Ver las ${n} ${path.id === 'path' ? 'lecciones' : 'sesiones'} ▾` : 'Ocultar ▴'; };
+        const label = () => { const expanded = !g.classList.contains('nv-folded'); b.textContent = expanded ? 'Ocultar ▴' : `Ver las ${n} ${path.id === 'path' ? 'lecciones' : 'sesiones'} ▾`; b.setAttribute('aria-expanded', String(expanded)); };
         b.onclick = () => { g.classList.toggle('nv-folded'); label(); };
         label(); g.querySelector('.group-head > div')?.append(b);
       });
@@ -384,21 +396,37 @@
     cog: () => { if (window.tnApp) goTo('mente', { sub: 'entrenar' }); else returnTo = { sec: 'mente', sub: 'entrenar' }; },
     home: () => {
       renderNext();
-      if (returnTo && window.tnApp) { const r = returnTo; returnTo = null; requestAnimationFrame(() => { goTo(r.sec, { sub: r.sub, smooth: false }); if (activityDone) maybeNudge('activity'); }); }
+      if (returnTo && window.tnApp) { const r = returnTo, epoch = navigationEpoch; returnTo = null; requestAnimationFrame(() => { if (epoch !== navigationEpoch) return; goTo(r.sec, { sub: r.sub, smooth: false }); if (activityDone) maybeNudge('activity'); }); }
     },
   };
 
   addEventListener('DOMContentLoaded', () => {
     returnTo = null; // whatever app.js did while starting up, the address decides below
     window.tn?.people?.({ site_version: 'nueva' }); // every event of this page says which version it came from
+    // Relocate existing nodes: their IDs, engine handlers and stored progress are preserved.
+    const training = anchor('dojo').querySelector('[data-sub-of="entrenamiento"]');
+    document.querySelectorAll('#home .progress-summary').forEach(s => training.append(s));
+    const techniques = document.createElement('details'); techniques.className = 'nv-techniques';
+    const summary = document.createElement('summary'); summary.textContent = 'Técnicas y explicaciones'; techniques.append(summary);
+    $id('cogKinds').before(techniques); techniques.append($id('cogKinds'));
+    document.querySelector('#profilePracticeOptions').append(document.querySelector('#dojo .dojo-options'));
+    const guide = document.createElement('button'); guide.className = 'linkbtn'; guide.textContent = 'Guía de dedos y ajustes →';
+    guide.onclick = () => setSub('teclado', 'ajustes'); $id('learning').after(guide);
+    const progress = document.createElement('button'); progress.className = 'linkbtn'; progress.textContent = 'Mi progreso en el perfil →'; progress.onclick = () => goTo('dojo');
+    techniques.after(progress);
+    document.querySelectorAll('[data-profile]').forEach(b => b.onclick = () => profileTab(b.dataset.profile));
+    $id('profileKeyboardSettings').onclick = () => goTo('teclado', { sub: 'ajustes' });
     document.querySelectorAll('[data-go]').forEach(a => a.addEventListener('click', e => {
       e.preventDefault(); if (tnApp.mode() !== 'home' || !$id('game').hidden) { Desafios.close(); tnApp.goHome(); }
       goTo(a.dataset.go); capture('nav_section', { section: a.dataset.go });
     }));
-    document.querySelectorAll('[role="tab"][data-sub]').forEach(b => b.onclick = () => { const sec = b.closest('[data-view-of]').dataset.viewOf; setSub(sec, b.dataset.sub); capture('nav_tab', { tab: sec, sub: b.dataset.sub }); });
+    document.querySelectorAll('[role="tab"][data-sub]').forEach(b => b.onclick = () => { const sec = b.closest('[data-view-of]').dataset.viewOf; setSub(sec, b.dataset.sub); if (sec === 'mente') history.replaceState(null, '', location.pathname + location.search + (b.dataset.sub === 'relampago' ? '#desafios' : '#ninja')); capture('nav_tab', { tab: sec, sub: b.dataset.sub }); });
     document.querySelectorAll('[data-sub-go]').forEach(b => b.onclick = () => setSub(b.closest('[data-view-of]').dataset.viewOf, b.dataset.subGo));
     $id('testBtn').onclick = () => goTo('teclado', { sub: 'medir' });
+    $id('homeBtn').onclick = () => { Desafios.close(); tnApp.goHome(); returnTo = null; goTo('inicio'); };
+    $id('continue').onclick = () => goTo('teclado', { sub: 'entrenar' });
     $id('scNinja').onclick = () => goTo('mente', { sub: 'entrenar' });
+    $id('scMax').onclick = () => goTo('desafios');
     $id('nvHeroSpeed').onclick = () => { if (touchOnly()) { capture('quick_start', { kind: 'celu' }); openGame('celu'); } else { capture('quick_start', { kind: 'speed' }); tnApp.start('test'); } };
     $id('nvHeroIq').onclick = $id('nvGameIq').onclick = () => { capture('quick_start', { kind: 'iq' }); tnApp.startQuiz('ninja'); };
     $id('nvGameSim').onclick = () => { capture('quick_start', { kind: 'sim' }); tnApp.startQuiz('sim'); };
@@ -462,19 +490,13 @@
     paintTheme();
 
     // The section on screen lights up in the header and the tab bar
-    const seen = new IntersectionObserver(entries => {
-      if (tnApp.mode() !== 'home' || performance.now() < holdMark) return;
-      const vis = entries.filter(e => e.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
-      if (vis) markCurrent(vis.target.dataset.viewOf);
-    }, { rootMargin: '-35% 0px -60% 0px' });
-    SECTIONS.forEach(s => anchor(s) && seen.observe(anchor(s)));
     // The paths are drawn again when something changes (a track, an account): keep them compact
     for (const p of [$id('path'), $id('cogPath')]) new MutationObserver(fold).observe(p, { childList: true });
 
     $id('gameBack').onclick = () => Desafios.close();
     renderTiles(); renderNext(); renderBridge();
     const linkedGame = gameOf(location.hash);
-    if (tnApp.mode() === 'home' && !battleId) { if (linkedGame) openGame(linkedGame); else if (location.hash) goTo(secOf(location.hash), { smooth: false }); else markCurrent('inicio'); }
+    if (tnApp.mode() === 'home' && !battleId) { if (linkedGame) openGame(linkedGame); else goTo(secOf(location.hash), { smooth: false }); }
     addEventListener('hashchange', () => { if (tnApp.mode() !== 'home' || !$id('game').hidden) return; if (gameOf(location.hash)) openGame(gameOf(location.hash)); else goTo(secOf(location.hash)); });
   });
 })();

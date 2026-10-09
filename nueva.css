@@ -1,4 +1,4 @@
-/* /nueva: calm "zen paper" look over app.css (same components, new palette and layout), with an optional dark mode. */
+/* /nueva: calm "zen paper" look over app.css (same engine, focused screens), with an optional dark mode. */
 :root,:root[data-theme="light"]{
   --bg:#F5F3ED; --panel:#FBFAF6; --card:#FFFFFF; --ink:#17201C; --muted:#646E69; --line:#E2DED3;
   --accent:#1E5B4B; --accent-ink:#FFFFFF; --accent-soft:#DDEBE5; --gold:#B9801A; --gold-soft:#F6E8C9;
@@ -325,3 +325,144 @@ body.nv-base-done:not(.nv-show-base) #learning .section-heading{display:none}
 .nv-nudge .linkbtn{grid-column:1/-1;justify-self:center}
 body[data-view="game"] .nv-nudge,body[data-view="lesson"] .nv-nudge,body[data-view="quiz"] .nv-nudge{display:none}
 @media (max-width:760px){.nv-install{grid-template-columns:auto 1fr}.nv-install .btn{grid-column:1/-1}}
+
+/* Focused version: only the active screen, with quiet surfaces and progressive disclosure. */
+.nv-clean [hidden]{display:none!important}
+.nv-clean{--nv-shadow:none}
+.nv-clean .wrap.nv{max-width:1120px;gap:24px}
+.nv-clean .nv-view,.nv-clean .nv-sub{gap:24px}
+.nv-clean .nv-top{gap:20px}
+.nv-clean .nv-links{gap:20px}
+.nv-clean .nv-profile-link{display:flex;align-items:center;gap:8px;color:var(--ink);text-decoration:none;padding:10px 14px;border:1px solid var(--line);border-radius:24px;background:var(--card)}
+.nv-clean .nv-profile-link[aria-current]{border-color:var(--accent);color:var(--accent)}
+.nv-clean .upgrade-cta{background:none;color:var(--accent);font-size:.85rem;padding:8px}
+.nv-clean .nv-hero{display:block;text-align:center;padding:20px 0 4px}
+.nv-clean .nv-hero h1{font-size:clamp(2rem,4vw,3.25rem);line-height:1.12;margin:0 0 14px}
+.nv-clean .nv-hero h1 em{font-family:Georgia,serif;font-weight:400;color:var(--accent)}
+.nv-clean .nv-hero p{margin:0 auto;font-size:1.05rem}
+.nv-clean .nv-hero .eyebrow,.nv-clean .nv-hero .actions,.nv-clean .nv-enso,.nv-clean .nv-trust,.nv-clean .nv-hero-save{display:none}
+.nv-clean .nv-door{padding:24px;gap:12px;grid-template-columns:44px 1fr;align-items:center;border-radius:16px}
+.nv-clean .nv-door .nv-ico{width:44px;height:44px;border-radius:12px;grid-column:1;grid-row:1}
+.nv-clean .nv-door h2{grid-column:2;grid-row:1;font-size:1.55rem}
+.nv-clean .nv-door p,.nv-clean .nv-door .nv-tags,.nv-clean .nv-door .actions{grid-column:1/-1}
+.nv-clean .nv-door .nv-tags{order:2;gap:6px 12px}
+.nv-clean .nv-door .nv-tags span{border:0;padding:0;background:none;font-size:.8rem}
+.nv-clean .nv-door .actions{order:3;margin-top:6px}
+.nv-clean .nv-door .nv-stats{display:none}
+.nv-clean .btn{border-radius:10px}
+.nv-clean .nv-sh{display:flex;justify-content:space-between;align-items:center;gap:16px}
+.nv-clean a{color:var(--accent)}
+.nv-clean .nv-rank-pair{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:16px}
+.nv-clean .nv-rank-pair article{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;min-width:0}
+.nv-clean .nv-rank-pair h3{margin:0 0 12px;font-size:1.1rem}
+.nv-clean .nv-rank-pair .seg{margin-bottom:12px}
+.nv-clean .nv-rank-pair .rank-list li{background:none;padding:10px 0;border-radius:0;border-width:0 0 1px;gap:10px}
+.nv-clean .nv-rank-pair .rank-list .bar,.nv-clean .nv-rank-pair .val small{display:none}
+.nv-clean .nv-rank-pair .rank-note{font-size:.8rem;line-height:1.45}
+.nv-clean .nv-lightning-link{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;text-decoration:none;border-top:1px solid var(--line);padding:18px 0;font-weight:700}
+.nv-clean .nv-lightning-link span{font-weight:400;color:var(--muted)}
+.nv-clean .nv-dhead h1,.nv-clean .nv-profile-heading h1{font-size:2.15rem;margin:0}
+.nv-clean .nv-dhead>.nv-ico,.nv-clean .nv-dhead .eyebrow,.nv-clean .nv-dhead-btn{display:none}
+.nv-clean .nv-tabs{gap:22px;flex-wrap:wrap;overflow:visible}
+.nv-clean .nv-tabs button{font-size:.95rem;min-height:44px}
+.nv-clean .nv-tab-link{font-size:.85rem}
+.nv-clean .nv-next{padding:22px;border-radius:14px}
+.nv-clean .nv-next h2{font-size:1.5rem}
+.nv-clean .nv-next p{margin-bottom:12px}
+.nv-clean .nv-bar{border:0;background:var(--accent-soft);height:6px}
+.nv-clean .nv-prog{flex-wrap:wrap;margin:12px 0}
+.nv-clean .nv-keys kbd{width:50px;height:54px;font-size:1.25rem}
+.nv-clean .learning{gap:12px}
+.nv-clean .path{gap:12px}
+.nv-clean .nv-level-label{display:flex;align-items:center;gap:10px;font:700 .8rem var(--body);color:var(--muted);margin-bottom:8px}
+.nv-clean .learning .section-heading h2{font-size:1.5rem}
+.nv-clean .learning .section-heading .eyebrow{display:none}
+.nv-clean .learning .group{border-radius:12px;padding:18px;box-shadow:none}
+.nv-clean .group-head{gap:12px;align-items:center}
+.nv-clean .group-head h2{font-size:1.15rem;margin:0}
+.nv-clean .group-head p{font-size:.85rem;line-height:1.45}
+.nv-clean .nv-fold-btn{display:inline-block;min-height:44px;margin:0}
+.nv-clean .group.nv-folded .cards,.nv-clean .group.nv-folded .evo-card,.nv-clean .group.nv-folded .belt-card,.nv-clean .group.nv-folded .group-head p{display:none}
+.nv-clean #path .group:not(.belt) .evo-card{display:none}
+.nv-clean .lc{min-height:100px;padding:14px;border-radius:10px}
+.nv-clean .lc .caps{font-size:1.3rem}
+.nv-clean .track-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.nv-clean .track-tabs button{border-radius:10px;padding:12px;min-width:0}
+.nv-clean .track-tabs button b{font-size:.9rem}
+.nv-clean .track-tabs button small{display:none}
+.nv-clean .cog-hero{padding:20px;border-radius:14px;display:block}
+.nv-clean .cog-sample,.nv-clean .cog-hero .eyebrow{display:none}
+.nv-clean .cog-title{font-size:1.5rem}
+.nv-clean .cog-learn{font-size:.9rem}
+.nv-clean .nv-cog-belt{display:flex;align-items:center;gap:12px;border:0;background:var(--panel);max-width:280px}
+.nv-clean .nv-cog-belt figcaption{display:grid;gap:4px}
+.nv-clean .nv-difficulty-belt{display:inline-block;flex:none;width:36px;height:12px;background:var(--belt-color);border:1px solid var(--line);border-radius:2px;position:relative}
+.nv-clean .nv-difficulty-belt:after{content:"";position:absolute;left:14px;top:-3px;width:8px;height:18px;background:var(--belt-color);border:1px solid var(--line);transform:rotate(-18deg)}
+.belt-blanco{--belt-color:#f6f3e9}.belt-amarillo{--belt-color:#e7c64a}.belt-naranja{--belt-color:#df8e43}.belt-verde{--belt-color:#498566}.belt-azul{--belt-color:#4b75a1}.belt-negro{--belt-color:#25282b}
+.nv-clean .nv-techniques{border-top:1px solid var(--line);padding:16px 0}
+.nv-clean .nv-techniques summary{font-weight:700;padding:8px 0;color:var(--accent)}
+.nv-clean #cogKinds{display:grid;margin-top:16px}
+.nv-clean .nv-games{grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.nv-clean .nv-game{border-radius:14px;padding:16px}
+.nv-clean .nv-vis{height:66px;border:0;background:var(--panel);border-radius:8px}
+.nv-clean .nv-game b{font-size:1.05rem}
+.nv-clean .nv-why{border:0;background:none;padding:16px 0;box-shadow:none}
+.nv-clean .nv-profile-panel{display:grid;gap:20px}
+.nv-clean .nv-profile-panel>h2{margin:0;font-size:1.45rem}
+.nv-clean .nv-me{border:0;background:none;padding:0;box-shadow:none}
+.nv-clean .nv-me h2{font-size:1.4rem}
+.nv-clean .nv-me-goal{background:var(--accent-soft);font-size:.9rem}
+.nv-clean .nv-me .eyebrow{display:none}
+.nv-clean .nv-theme-row{display:flex;align-items:center;gap:20px}
+.nv-clean .nv-card,.nv-clean .progress-summary,.nv-clean .evo,.nv-clean .ranking,.nv-clean .ninja-max{border-radius:14px}
+.nv-clean .progress-summary{padding:20px}
+.nv-clean .nv-bridge{background:var(--panel);border-color:var(--line);padding:18px}
+.nv-clean .nv-bridge h2{font-size:1.1rem}
+.nv-clean .nv-bridge p{font-size:.9rem}
+.nv-clean .nv-check{padding:18px}
+.nv-clean .nv-check h2{font-size:1.2rem}
+@media(max-width:1000px){.nv-clean .nv-links{gap:12px}.nv-clean .nv-top .brand{font-size:1.15rem}.nv-clean .nv-top{gap:14px}.nv-clean .nv-right{gap:6px}}
+@media(max-width:760px){
+  .nv-clean .wrap.nv{gap:18px;padding-bottom:110px}
+  .nv-clean .nv-top .brand{font-size:1.05rem}
+  .nv-clean .nv-profile-link{padding:8px 10px;font-size:.85rem}
+  .nv-clean .nv-profile-link span{display:none}
+  .nv-clean .nv-right .upgrade-cta{display:none}
+  .nv-clean .nv-hero{text-align:left;padding:8px 0}
+  .nv-clean .nv-hero h1{font-size:2rem}
+  .nv-clean .nv-door{padding:18px;gap:10px}
+  .nv-clean .nv-door h2{font-size:1.3rem}
+  .nv-clean .nv-door p{font-size:.95rem}
+  .nv-clean .nv-door .actions{display:grid;grid-template-columns:1fr;width:100%}
+  .nv-clean .nv-doors{gap:14px}
+  .nv-clean .nv-rank-pair{grid-template-columns:1fr;gap:14px}
+  .nv-clean .nv-rank-pair article{padding:16px}
+  .nv-clean .nv-tabs{gap:12px}
+  .nv-clean .nv-tabs button{font-size:.85rem}
+  .nv-clean .nv-tab-link{display:block;margin:0;flex-basis:100%;padding:0 0 10px}
+  .nv-clean .nv-dhead h1,.nv-clean .nv-profile-heading h1{font-size:1.75rem}
+  .nv-clean .nv-next{grid-template-columns:1fr auto;padding:18px;gap:10px}
+  .nv-clean .nv-keys{gap:6px}.nv-clean .nv-keys kbd{width:32px;height:38px;font-size:1rem}
+  .nv-clean .nv-next h2{font-size:1.25rem}
+  .nv-clean .nv-next p{font-size:.9rem}
+  .nv-clean .nv-prog{align-items:flex-start;flex-direction:column;gap:6px}
+  .nv-clean .nv-bar{width:min(100%,180px)}
+  .nv-clean .track-tabs{grid-template-columns:1fr 1fr}
+  .nv-clean .track-tabs button{padding:10px}
+  .nv-clean .learning .group{padding:14px}
+  .nv-clean .group-head{display:grid;grid-template-columns:1fr}
+  .nv-clean .nv-cog-belt{max-width:none;padding:10px}
+  .nv-clean .cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .nv-clean #cogPath .cards{grid-template-columns:1fr}
+  .nv-clean #cogPath .lc{min-height:0;padding:10px 12px;gap:4px}
+  .nv-clean #cogPath .lc .caps{min-height:22px}
+  .nv-clean .nv-games{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .nv-clean .nv-game{padding:12px}.nv-clean .nv-vis{height:58px}
+  .nv-clean .nv-game b{font-size:.95rem}
+  .nv-clean .nv-me{grid-template-columns:auto 1fr}
+  .nv-clean .nv-me-goal{grid-column:1/-1;max-width:none}
+  .nv-clean .nv-tabbar a{min-height:44px;min-width:64px;align-content:center;font-size:.75rem}
+  .nv-clean .nv-tabbar{height:calc(64px + env(safe-area-inset-bottom))!important}
+  .nv-clean .nv-home-ranks .nv-sh h2{font-size:1.4rem}
+  .nv-clean .nv-lightning-link{font-size:.95rem}
+}
